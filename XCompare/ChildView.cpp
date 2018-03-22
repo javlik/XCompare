@@ -1434,7 +1434,13 @@ void CChildView::updateCombos1()
 		// Loop through the data and report the contents.
 		index[0] = table1.RowWithNames;
 		index[1] = i;
-		saRet1.GetElement(index, vData);
+		try {
+			saRet1.GetElement(index, vData); vData = (CString)vData;
+		}
+		catch (COleException* e)
+		{
+			vData = L"";
+		}
 		szdata = vData;
 		if (szdata == "") szdata = CMsg(IDS_NO_NAME); // CMsg(IDS_NO_NAME)
 		for (int i1 = 1; i1 < i; i1++)
@@ -1554,7 +1560,13 @@ void CChildView::updateCombos2()
 	{
 		index[0] = table2.RowWithNames;
 		index[1] = i;
-		saRet2.GetElement(index, vData);
+		try {
+			saRet2.GetElement(index, vData); vData = (CString)vData;
+		}
+		catch (COleException* e)
+		{
+			vData = L"";
+		}
 		szdata = vData;
 		if (szdata == "") szdata = CMsg(IDS_NO_NAME); // CMsg(IDS_NO_NAME)
 		for (int i1 = 1; i1 < i; i1++)
@@ -1699,7 +1711,7 @@ void CChildView::makeCharArr1()
 				index[0] = i_r;
 				index[1] = i_c;
 				try {
-					saRet1.GetElement(index, vData);
+					saRet1.GetElement(index, vData); vData = (CString)vData;
 					szdata = vData;
 				}
 				catch (COleException* e)
@@ -1751,7 +1763,7 @@ void CChildView::makeCharArr2()
 				index[0] = i_r;
 				index[1] = i_c;
 				try {
-					saRet2.GetElement(index, vData);
+					saRet2.GetElement(index, vData); vData = (CString)vData;
 					szdata = vData;
 				}
 				catch (COleException* e)
@@ -2227,7 +2239,13 @@ int CChildView::createKeyArrays1()
 			// Loop through the data and report the contents.
 			index[0] = i_i;
 			index[1] = table1.keys[0];
-			saRet1.GetElement(index, vData);
+			try {
+				saRet1.GetElement(index, vData); vData = (CString)vData;
+			} 
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
 			szdata+= vData;
 		}
 		if (table1.keys[1])
@@ -2236,7 +2254,13 @@ int CChildView::createKeyArrays1()
 			// Loop through the data and report the contents.
 			index[0] = i_i;
 			index[1] = table1.keys[1];
-			saRet1.GetElement(index, vData);
+			try {
+				saRet1.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
 			szdata+= vData;
 		}
 		if (table1.keys[2])
@@ -2245,7 +2269,13 @@ int CChildView::createKeyArrays1()
 			// Loop through the data and report the contents.
 			index[0] = i_i;
 			index[1] = table1.keys[2];
-			saRet1.GetElement(index, vData);
+			try {
+				saRet1.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
 			szdata+= vData;
 		}
 		keyArr11[i_i] = szdata;
@@ -2303,7 +2333,13 @@ int CChildView::createKeyArrays2()
 			// Loop through the data and report the contents.
 			index[0] = i_i;
 			index[1] = table2.keys[0];
-			saRet2.GetElement(index, vData);
+			try {
+				saRet2.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
 			szdata += vData;
 		}
 		if (table2.keys[1])
@@ -2311,7 +2347,13 @@ int CChildView::createKeyArrays2()
 			// Loop through the data and report the contents.
 			index[0] = i_i;
 			index[1] = table2.keys[1];
-			saRet2.GetElement(index, vData);
+			try {
+				saRet2.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
 			szdata += vData;
 		}
 		if (table2.keys[2])
@@ -2320,7 +2362,13 @@ int CChildView::createKeyArrays2()
 			// Loop through the data and report the contents.
 			index[0] = i_i;
 			index[1] = table2.keys[2];
-			saRet2.GetElement(index, vData);
+			try {
+				saRet2.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
 			szdata += vData;
 		}
 		keyArr21[i_i] = szdata;
@@ -2346,7 +2394,13 @@ CString CChildView::getCellValue1(int column, int row)
 
 	index[0] = row;
 	index[1] = column;
-	saRet1.GetElement(index, vData);
+	try {
+		saRet1.GetElement(index, vData); vData = (CString)vData;
+	}
+	catch (COleException* e)
+	{
+		vData = L"";
+	}
 	szdata = vData;
 
 	return szdata;
@@ -2362,7 +2416,13 @@ CString CChildView::getCellValue2(int column, int row)
 
 	index[0] = row;
 	index[1] = column;
-	saRet2.GetElement(index, vData);
+	try {
+		saRet2.GetElement(index, vData); vData = (CString)vData;
+	}
+	catch (COleException* e)
+	{
+		vData = L"";
+	}
 	szdata = vData;
 
 	return szdata;
