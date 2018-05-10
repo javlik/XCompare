@@ -21,7 +21,7 @@
 #define IDS_STATUS_PANE2                123
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAME_256               129
-#define IDR_XCompareTYPE         130
+#define IDR_XCompareTYPE                130
 #define IDR_PASTE_MENU                  151
 #define IDR_WINDOWS_MENU                152
 #define IDR_THEME_MENU                  200
@@ -77,6 +77,7 @@
 #define ID_SEL1                         32839
 #define ID_BUTTON6                      32841
 #define ID_PUT2FRONT                    32842
+#define ID_COMBO2                       32848
 #define IDS_EMPTY                       61204
 #define IDS_WAIT_TILL_IN_EXCEL          61205
 #define IDS_PATH_TO_FILE                61206
@@ -102,13 +103,14 @@
 #define IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS 61226
 #define IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS 61227
 #define IDS_DURING_MARKING_THREAD_BLOCKED 61228
+#define IDS_NOT_SELECTED                61229
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        326
-#define _APS_NEXT_COMMAND_VALUE         32843
+#define _APS_NEXT_COMMAND_VALUE         32849
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

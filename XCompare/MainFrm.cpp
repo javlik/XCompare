@@ -222,7 +222,13 @@ void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
 
 void CMainFrame::updateStatusBar(CString text)
 {
-	m_wndStatusBar.SetInformation(text);
+	try {
+		m_wndStatusBar.SetInformation(text);
+	}
+	catch (...)
+	{
+
+	}
 }
 
 

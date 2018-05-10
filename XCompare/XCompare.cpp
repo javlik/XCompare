@@ -159,6 +159,7 @@ protected:
 public:
 //	void initScrollBars();
 	afx_msg void OnUpdateCheck6(CCmdUI *pCmdUI);
+//	bool AreThereAnyKeys(int table);
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -216,3 +217,9 @@ void CAboutDlg::OnUpdateCheck6(CCmdUI *pCmdUI)
 	// TODO: Add your command update UI handler code here
 }
 
+
+
+//bool CAboutDlg::AreThereAnyKeys(int table)
+//{
+//	return false;
+//}

@@ -1,6 +1,8 @@
-﻿
+﻿#pragma once
+
 #include "stdafx.h"
 #include <cstring>
+#include <map>
 #include "XCompare.h"
 #include "ChildView.h"
 #include "MainFrm.h"
@@ -13,6 +15,14 @@ extern CMainFrame* g_pMainFrame; // pointer to FrameWindow
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+#define swap(a,b) (a ^= b), (b ^= a), (a ^= b);
+
+#define sgn(x) ( (int) ( (x > 0) - (x < 0) ) )
+
+#define SUGKEYS 10
+
+#define MAX_ATTEMPTS 1000000
 
 #define MAX_CFileDialog_FILE_COUNT 1 // Number of selectable files in file selectors
 #define FILE_LIST_BUFFER_SIZE ((MAX_CFileDialog_FILE_COUNT * (MAX_PATH + 1)) + 1) 
@@ -35,7 +45,26 @@ bool waitingForKeys; // indicates status of waiting for maps of keys
 bool keys1done; // indicates status of readiness of keys for the first table
 bool keys2done; // indicates status of readiness of keys for the second table
 
+bool keysGathering1done;
+bool keysGathering2done;
+
+int complexity;
+
 CString rsltTxt; // human understandable text indicating some information related to the matrix - displayed in the status bar
+
+struct PossibleKeys {
+	int k[256];
+};
+
+//char autoKey1[256];
+//char autoKey2[256];
+
+
+unsigned long long checkedKeys1[MAX_ATTEMPTS + 1];
+unsigned long long checkedKeys2[MAX_ATTEMPTS + 1];
+
+int checkedKeysCounter1;
+int checkedKeysCounter2;
 
 struct Palette {
 	int red;
@@ -43,7 +72,7 @@ struct Palette {
 	int blue;
 }; // structure type for color of cells
 
-int threadCnt;
+// int threadCnt;
 
 struct Table {
 	int WorkSheetNumber;
@@ -51,14 +80,22 @@ struct Table {
 	int FirstRowWithData;
 	int RowWithNames;
 	int NumberOfColumns;
-	CString Columns[255];
-	int keys[3];
+	CString Columns[256];
+	bool keys[256];
+	int keysCnt;
 }; // structure type for description of tables
 
 struct VisTopLeft {
 	int top;
 	int left;
 }; // contains coords (in the units of matrix cells) of scrolled matrix
+
+
+struct  KeyPair {
+	int tab1;
+	int tab2;
+};
+
 
 
 struct ChosenCell {
@@ -71,17 +108,41 @@ struct Clnt {
 	int h;
 }; // Size of client area (in pixels)
 
+struct BestKeyComb {
+	int pk1;
+	int pk2;
+	int rating;
+	long cnt;
+};
+
 struct NotUniqueKeys {
 	long firstRow;
 	long secondRow;
 	CString keyString;
 }; // if keys are found to not be unique, this structure contains the rows of the first found duplicate
-NotUniqueKeys notUniqueKeys; 
+NotUniqueKeys notUniqueKeys1, notUniqueKeys2;
 
 //int threadCounter; // to be even more scallable in future
 //int stepCounter;
 
 Palette palette[20]; // user can choose one of the 20 colors that will be used for background of found difference 
+
+PossibleKeys possibleKeys1[256];
+PossibleKeys possibleKeys2[256];
+
+KeyPair keyPair[256];
+int		keyPairCounter;
+
+BestKeyComb bestKeyComb;
+
+int possibleKeyCounter1 = 0;
+int possibleKeyCounter2 = 0;
+
+long invEntropy1[256];
+long invEntropy2[256];
+
+int sortedEntropy1[256];
+int sortedEntropy2[256];
 
 bool prereq1valid, prereq2valid; // are prerequisities for execution of main process fulfilled
 
@@ -111,14 +172,26 @@ bool *markIn1Arr; // this 2D array indicates whether a cell at its coordinates (
 bool *markIn2Arr; // ... in the second file.
 
 CString *keyArr11; // array of the strings found in the first key column in the first file
-CString *keyArr12; // ... the second key ... the first file
-CString *keyArr13; // ... the third key ... the first file
+				   //CString *keyArr12; // ... the second key ... the first file
+				   //CString *keyArr13; // ... the third key ... the first file
 CString *keyArr21; // ... the first key ... the second file
-CString *keyArr22; // ... the second key ... the second file
-CString *keyArr23; // ... the third key ... the second file
+				   //CString *keyArr22; // ... the second key ... the second file
+				   //CString *keyArr23; // ... the third key ... the second file
+
+CString *tmpKeyArr11;
+CString *tmpKeyArr21;
 
 bool *keyMissing1;
 bool *keyMissing2;
+
+bool *tmpKeyMissing1;
+bool *tmpKeyMissing2;
+
+int examinedKeys1[SUGKEYS + 4];
+int examinedKeys2[SUGKEYS + 4];
+
+int tmpKeys1[SUGKEYS + 4];
+int tmpKeys2[SUGKEYS + 4];
 
 int *mainMatrix; // 2D array representing the result matrix
 bool *markedMatrix; // 2D array indicating marked cells in the result matrix
@@ -131,13 +204,16 @@ long *foundDifferences; // number of differences found between intersected colum
 long selectedDifference; // difference picked by user in the drop down box in the "analysis" tab
 
 CMFCRibbonBar* pRibbon; // pointer to ribbon object
-//CMFCRibbonStatusBarPane *statusBarPane;
+						//CMFCRibbonStatusBarPane *statusBarPane;
 
-Table table1; 
+Table table1;
 Table table2;
 
 COleSafeArray saRet1; // OLE object for connection to first Excel file
 COleSafeArray saRet2; // ... second Excel file
+
+COleSafeArray saTmpRet1;
+COleSafeArray saTmpRet2;
 
 CString filename1; // name of the first file that is to be compared
 CString filename2; // .... second ....
@@ -167,7 +243,11 @@ CApplication app; // application object
 
 CMap <CString, LPCTSTR, long, long> map1; // map for keys in the first file
 CMap <CString, LPCTSTR, long, long> map2; // ... second file
+										  //CMap <CString, LPCTSTR, long, long> tmpMap1; // map for keys in the first file
+										  //CMap <CString, LPCTSTR, long, long> tmpMap2; // ... second file
 
+std::map<CString, long> tmpMap1; // searching for appropriate keys
+std::map<CString, long> tmpMap2;
 
 int nUiToBeRefreshed; // how many times the UI is to be refreshed (just a workaround)
 float fZoom; // not used at the moment
@@ -175,18 +255,14 @@ int prgval1; // not used
 CMFCRibbonProgressBar* pProgressBar1; // CMFCRibbon UI objects
 CMFCRibbonProgressBar* pProgressBar2;
 
+CMFCRibbonComboBox* pCombo2;
 CMFCRibbonComboBox* pSheetCombo1;
 CMFCRibbonComboBox* pSheetCombo2;
 CMFCRibbonEdit* pSpinner1_Fdata;
 CMFCRibbonEdit* pSpinner1_Names;
 CMFCRibbonEdit* pSpinner2_Fdata;
 CMFCRibbonEdit* pSpinner2_Names;
-CMFCRibbonComboBox* pKeyCombo11;
-CMFCRibbonComboBox* pKeyCombo12;
-CMFCRibbonComboBox* pKeyCombo13;
-CMFCRibbonComboBox* pKeyCombo21;
-CMFCRibbonComboBox* pKeyCombo22;
-CMFCRibbonComboBox* pKeyCombo23;
+
 CMFCRibbonCheckBox* pMarkIn1;
 CMFCRibbonCheckBox* pMarkIn2;
 CMFCRibbonSlider* pSlider;
@@ -208,6 +284,10 @@ bool toFront; // should Excel be moved to front when the difference is requested
 int scrolled_X; // how many cells did we scroll horizontally?
 int scrolled_Y; // how many cells did we scroll vertically?
 ChosenCell cCell; // this structure contains coordinates of the cell the mouse pointer is hovering above.
+ChosenCell cClickedCell;
+ChosenCell cPrevClickedCell;
+ChosenCell oldCell;
+
 VisTopLeft visTopLeft; // the coordinates of the topmost and leftmost visible cell
 
 bool in1file; // whether are differences to be marked in the first file
@@ -234,7 +314,7 @@ bool forceNotOnlyPcnt; // inverse of the above (just a helper)
 
 int sldr; // value set on the slider in the "analysis" tab
 
-// CChildView
+		  // CChildView
 
 // <Declaration of threads>
 
@@ -246,6 +326,9 @@ UINT CreateKeys1ThreadProc(LPVOID pParam);
 UINT CreateKeys2ThreadProc(LPVOID pParam);
 UINT makePrereq1ThreadProc(LPVOID pParam);
 UINT makePrereq2ThreadProc(LPVOID pParam);
+UINT SuggestKeys1ThreadProc(LPVOID pParam);
+UINT SuggestKeys2ThreadProc(LPVOID pParam);
+UINT MutualCheckThreadProc(LPVOID pParam);
 
 CString mszRsrcs;
 
@@ -253,7 +336,7 @@ CString mszRsrcs;
 
 CChildView::CChildView()
 {
-	threadCnt = 1;
+	//threadCnt = 1;
 	mszRsrcs = L"";
 	toFront = false;
 	selectedDifference = 0;
@@ -280,7 +363,7 @@ CChildView::CChildView()
 	palette[15] = { 255, 255,   0 };
 	palette[16] = { 0,   0,   255 };
 	palette[17] = { 255,   0, 255 };
-	palette[18] = {   0, 255, 255 };
+	palette[18] = { 0, 255, 255 };
 	palette[19] = { 255, 255, 255 };
 
 	autoMark = false;
@@ -296,7 +379,7 @@ CChildView::CChildView()
 	nUiToBeRefreshed = 3;
 	fZoom = 100;
 	prgval1 = 100; // just for test
-	//CMFCRibbonBar* pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+				   //CMFCRibbonBar* pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar(); // in the constructor is too early
 
 
 	mainArr1 = new char[1]; // this 2D array contains first character of content of each cell taken from the first XLS file (first horizontally, then vertically)
@@ -306,14 +389,20 @@ CChildView::CChildView()
 	markIn2Arr = new bool[1]; // ... in the second file.
 
 	keyArr11 = new CString[1]; // array of the strings found in the first key column in the first file
-	keyArr12 = new CString[1]; // ... the second key ... the first file
-	keyArr13 = new CString[1]; // ... the third key ... the first file
+							   //keyArr12 = new CString[1]; // ... the second key ... the first file
+							   //keyArr13 = new CString[1]; // ... the third key ... the first file
 	keyArr21 = new CString[1]; // ... the first key ... the second file
-	keyArr22 = new CString[1]; // ... the second key ... the second file
-	keyArr23 = new CString[1]; // ... the third key ... the second file
+							   //keyArr22 = new CString[1]; // ... the second key ... the second file
+							   //keyArr23 = new CString[1]; // ... the third key ... the second file
+
+	tmpKeyArr11 = new CString[1];
+	tmpKeyArr21 = new CString[1];
 
 	keyMissing1 = new bool[1];
 	keyMissing2 = new bool[1];
+
+	tmpKeyMissing1 = new bool[1];
+	tmpKeyMissing2 = new bool[1];
 
 	mainMatrix = new int[1]; // 2D array representing the result matrix
 	markedMatrix = new bool[1]; // 2D array indicating marked cells in the result matrix
@@ -331,9 +420,6 @@ CChildView::CChildView()
 
 	sameNames = false;
 
-	cCell.x = 0;
-	cCell.y = 0;
-
 	onlyPcnt = false;
 
 
@@ -342,15 +428,57 @@ CChildView::CChildView()
 	visTopLeft.left = 0;
 	visTopLeft.top = 0;
 
+	bestKeyComb.pk1 = 0;
+	bestKeyComb.pk2 = 0;
+	bestKeyComb.rating = 0;
+
 
 	sldr = 90;
 
 	effMax = 0;
 
+
+	cCell.x = 0; cCell.y = 0;
+	oldCell.x = 0; oldCell.y = 0;
+	table1.NumberOfColumns = 0;
+	table2.NumberOfColumns = 0;
+
+	complexity = 100000;
 }
 
 CChildView::~CChildView()
 {
+	delete[] mainArr1;
+	delete[] mainArr2; //char[1]; // ....  XLS files
+
+	delete[] markIn1Arr; //bool[1]; // this 2D array indicates whether a cell at its coordinates (see above) is to be marked in the first file
+	delete[] markIn2Arr; //bool[1]; // ... in the second file.
+
+	delete[] keyArr11; //CString[1]; // array of the strings found in the first key column in the first file
+							   //keyArr12; //CString[1]; // ... the second key ... the first file
+							   //keyArr13; //CString[1]; // ... the third key ... the first file
+	delete[] keyArr21; //CString[1]; // ... the first key ... the second file
+							   //keyArr22; //CString[1]; // ... the second key ... the second file
+							   //keyArr23; //CString[1]; // ... the third key ... the second file
+
+	delete[] tmpKeyArr11; //CString[1];
+	delete[] tmpKeyArr21; //CString[1];
+
+	delete[] keyMissing1; //bool[1];
+	delete[] keyMissing2; //bool[1];
+
+	delete[] tmpKeyMissing1; //bool[1];
+	delete[] tmpKeyMissing2; //bool[1];
+
+	delete[] mainMatrix; //int[1]; // 2D array representing the result matrix
+	delete[] markedMatrix; //bool[1]; // 2D array indicating marked cells in the result matrix
+	delete[] emptyClms1; //bool[1]; // 1D array indicating empty columns in the first file
+	delete[] emptyClms2; //bool[1]; // .... the second file
+	delete[] greenClms1; //bool[1]; // 1D array indicating whether a column has its "lookalike" in the second file
+	delete[] greenClms2; //bool[1]; // 1D array indicating whether a column has its "lookalike" in the first file
+
+	delete[] foundDifferences; //long[1]; // number of differences found between intersected columns (for the doubleclicked cell) 
+
 }
 
 
@@ -361,7 +489,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_COMMAND(ID_CREATE_MATRIX, &CChildView::OnCreateMatrix)
 	ON_UPDATE_COMMAND_UI(ID_PICK_FIRST_SHEET, &CChildView::OnUpdatePickFirstSheet)
 	ON_UPDATE_COMMAND_UI(ID_CREATE_MATRIX, &CChildView::OnUpdateCreateMatrix)
-//	ON_WM_MOUSEHWHEEL()
+	//	ON_WM_MOUSEHWHEEL()
 	ON_UPDATE_COMMAND_UI(IDC_FILENAME1, &CChildView::OnUpdateFilename1)
 	ON_UPDATE_COMMAND_UI(IDC_FILENAME2, &CChildView::OnUpdateFilename2)
 	ON_WM_MOUSEWHEEL()
@@ -374,23 +502,11 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_UPDATE_COMMAND_UI(ID_SPIN1_NAMES, &CChildView::OnUpdateSpin1Names)
 	ON_UPDATE_COMMAND_UI(ID_SPIN1_FDATA, &CChildView::OnUpdateSpin1Fdata)
 	ON_COMMAND(ID_SPIN1_FDATA, &CChildView::OnSpin1Fdata)
-	ON_UPDATE_COMMAND_UI(ID_KEY1_1, &CChildView::OnUpdateKey11)
-	ON_UPDATE_COMMAND_UI(ID_KEY1_2, &CChildView::OnUpdateKey12)
-	ON_UPDATE_COMMAND_UI(ID_KEY1_3, &CChildView::OnUpdateKey13)
-	ON_COMMAND(ID_KEY1_1, &CChildView::OnKey11)
-	ON_COMMAND(ID_KEY1_2, &CChildView::OnKey12)
-	ON_COMMAND(ID_KEY1_3, &CChildView::OnKey13)
 	ON_COMMAND(ID_PICK_SECOND_SHEET, &CChildView::OnPickSecondSheet)
 	ON_UPDATE_COMMAND_UI(ID_SPIN2_FDATA, &CChildView::OnUpdateSpin2Fdata)
 	ON_COMMAND(ID_SPIN2_FDATA, &CChildView::OnSpin2Fdata)
 	ON_UPDATE_COMMAND_UI(ID_SPIN2_NAMES, &CChildView::OnUpdateSpin2Names)
 	ON_COMMAND(ID_SPIN2_NAMES, &CChildView::OnSpin2Names)
-	ON_COMMAND(ID_KEY2_1, &CChildView::OnKey21)
-	ON_UPDATE_COMMAND_UI(ID_KEY2_1, &CChildView::OnUpdateKey21)
-	ON_UPDATE_COMMAND_UI(ID_KEY2_2, &CChildView::OnUpdateKey22)
-	ON_UPDATE_COMMAND_UI(ID_KEY2_3, &CChildView::OnUpdateKey23)
-	ON_COMMAND(ID_KEY2_2, &CChildView::OnKey22)
-	ON_COMMAND(ID_KEY2_3, &CChildView::OnKey23)
 	ON_WM_LBUTTONDBLCLK()
 	ON_WM_MOUSEMOVE()
 	ON_COMMAND(ID_SLIDER2, &CChildView::OnSlider2)
@@ -427,13 +543,17 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_COMMAND(ID_BUTTON6, &CChildView::OnButton6)
 	ON_COMMAND(ID_PUT2FRONT, &CChildView::OnPut2front)
 	ON_UPDATE_COMMAND_UI(ID_PUT2FRONT, &CChildView::OnUpdatePut2front)
+	ON_WM_LBUTTONUP()
+	ON_WM_RBUTTONUP()
+	ON_UPDATE_COMMAND_UI(ID_COMBO2, &CChildView::OnUpdateCombo2)
+	ON_COMMAND(ID_COMBO2, &CChildView::OnCombo2)
 END_MESSAGE_MAP()
 
 
 
 // CChildView message handlers
 
-BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs) 
+BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if (!CWnd::PreCreateWindow(cs))
 		return FALSE;
@@ -441,8 +561,8 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 	cs.dwExStyle |= WS_EX_CLIENTEDGE;
 	cs.style &= ~WS_BORDER;
 	cs.style |= WS_VSCROLL | WS_HSCROLL;
-	cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, 
-		::LoadCursor(NULL, IDC_ARROW), reinterpret_cast<HBRUSH>(COLOR_WINDOW+1), NULL);
+	cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS,
+		::LoadCursor(NULL, IDC_ARROW), reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1), NULL);
 
 	pRibbon = NULL;
 
@@ -452,11 +572,10 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 	return TRUE;
 }
 
-void CChildView::OnPaint() 
+void CChildView::OnPaint()
 {
 
-
-		CPaintDC dc(this); // device context for painting
+	CPaintDC dc(this); // device context for painting
 
 
 #define TMPINT 64
@@ -469,8 +588,8 @@ void CChildView::OnPaint()
 	clnt.h = (rect.Height());
 
 
-	CPen pen1, pen2, pen3, pen4, pen5, pen6, pen7, pen8, pen9;
-	CBrush brush0, brush1, brush2, brush3, brush4;
+	CPen pen1, pen2, pen3, pen4, pen5, pen6, pen7, pen8, pen9, pen10;
+	CBrush brush0, brush1, brush2, brush3, brush4, brush5, brush6;
 
 	pen1.CreatePen(PS_SOLID, 1, RGB(220, 220, 220));
 	pen2.CreatePen(PS_SOLID, 1, RGB(200, 200, 200));
@@ -481,25 +600,31 @@ void CChildView::OnPaint()
 	pen7.CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
 	pen8.CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
 	pen9.CreatePen(PS_SOLID, 2, RGB(155, 155, 255));
+	pen10.CreatePen(PS_SOLID, 1, RGB(235, 235, 245));
 
 	brush0.CreateSolidBrush(RGB(255, 255, 255));
 	brush1.CreateSolidBrush(RGB(100, 255, 100));
 	brush2.CreateSolidBrush(RGB(255, 255, 0));
 	brush3.CreateSolidBrush(RGB(255, 127, 50));
 	brush4.CreateSolidBrush(RGB(255, 80, 80));
-		
+	brush5.CreateSolidBrush(RGB(180, 180, 230));
+	brush6.CreateSolidBrush(RGB(240, 240, 240));
+
+
 
 	dc.SelectObject(&pen2);
 	dc.SelectObject(&brush1);
 
 
-	CFont font1, font2, font3, font4;
+	CFont font1, font2, font3, font4, font1B, font2B;
 
 	font1.CreateFontW(16, 0, 0, 0, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 	font2.CreateFontW(16, 0, 900, 900, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 	font3.CreateFontW(12, 0, 0, 0, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 	font4.CreateFontW(30, 0, 0, 0, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 
+	font1B.CreateFontW(16, 0, 0, 0, FW_EXTRABOLD, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
+	font2B.CreateFontW(16, 0, 900, 900, FW_EXTRABOLD, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 
 
 	int bnd_X_min = 1;
@@ -507,11 +632,41 @@ void CChildView::OnPaint()
 	int bnd_Y_min = 1;
 	int bnd_Y_max = table1.NumberOfColumns; // ?????
 
-	//visTopLeft.left = 3;
+											//visTopLeft.left = 3;
+	bool cursor = false;
 
+	// Info area redrawing
+	dc.SelectObject(&font4);
+	CString prcnt;
+	prcnt = L"";
+	if (cCell.x * cCell.y && matrixDone)
+	{
+		dc.SetBkMode(TRANSPARENT);
+		if (cCell.x <= bnd_X_max && cCell.y <= bnd_Y_max)
+		{
+			long sameness = mxGet(cCell.x, cCell.y);
+			//dc.SelectObject(&pen8);
+			if (table1.Columns[cCell.y] == table2.Columns[cCell.x] && sameness < effMax)
+				dc.SetTextColor(RGB(255, 0, 0));
+			else
+				dc.SetTextColor(RGB(0, 0, 0));
 
+			prcnt.Format(L"Δ:%i", effMax - sameness);
+			dc.TextOutW(5, 20, prcnt);
+			dc.SetTextColor(RGB(0, 255, 0));
 
-	//dc.TextOutW(100, 100, L"+ěščřžýá"); // test of the ability to make an output in czech lang.
+			prcnt.Format(L"=:%i", sameness);
+			dc.TextOutW(5, 50, prcnt);
+			if (emptyClms1[cCell.y] && emptyClms2[cCell.x])
+			{
+				dc.SetTextColor(RGB(0, 0, 0));
+				dc.TextOutW(5, 80, CMsg(IDS_EMPTY)); // CMsg(IDS_EMPTY)
+			}
+		}
+
+	}
+	// /Info area redrawing
+											//dc.TextOutW(100, 100, L"+ěščřžýá"); // test of the ability to make an output in czech lang.
 	dc.SelectObject(&brush0);
 
 	int mx_x_adj, mx_y_adj; // for access to data
@@ -531,47 +686,6 @@ void CChildView::OnPaint()
 		dc.LineTo(clnt.w, i_0);
 	}
 
-	if (matrixDone && !onlyPcnt)
-	{
-		for (int mx_y = bnd_Y_min; mx_y <= bnd_Y_max; mx_y++)
-		{
-			if (((mx_y - visTopLeft.top) > 0))
-			{
-				if (greenClms1[mx_y])
-				{
-					dc.SelectObject(&pen5);
-					dc.SelectObject(&brush1);
-					dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - visTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - visTopLeft.top) * STEP_Y);
-
-				}
-				if (emptyClms1[mx_y])
-				{
-					dc.SelectObject(&pen6);
-					dc.SelectObject(&brush2);
-					dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - visTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - visTopLeft.top) * STEP_Y);
-				}
-			}
-
-		}
-		for (int mx_x = bnd_X_min; mx_x <= bnd_X_max; mx_x++)
-		{
-			if (((mx_x - visTopLeft.left) > 0))
-			{
-				if (greenClms2[mx_x])
-				{
-					dc.SelectObject(&pen5);
-					dc.SelectObject(&brush1);
-					dc.Ellipse(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y, OFFSET_X + STEP_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
-				}
-				if (emptyClms2[mx_x])
-				{
-					dc.SelectObject(&pen6);
-					dc.SelectObject(&brush2);
-					dc.Ellipse(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y, OFFSET_X + STEP_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
-				}
-			}
-		}
-	}
 
 
 	dc.SelectObject(&pen2);
@@ -579,29 +693,207 @@ void CChildView::OnPaint()
 
 
 
-	dc.SelectObject(&font1);
+	//dc.SelectObject(&font1);
 	for (int mx_y = bnd_Y_min; mx_y <= bnd_Y_max; mx_y++)
 	{
+		cursor = false;
 		mx_y_adj = mx_y + visTopLeft.top;
 		dc.SetBkMode(OPAQUE);
 
-		dc.Rectangle(0, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X, 1 + OFFSET_Y + mx_y * STEP_Y);
+		if (isThisAKey(1, mx_y_adj))
+		{
+			if (mx_y_adj == oldCell.y)
+			{
+				dc.SelectObject(&brush6);
+			}
+			else
+			{
+				if (mx_y_adj == cCell.y)
+				{
+					if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+					{
+						cursor = true;
+					}
+					else
+					{
+						dc.SelectObject(&brush0);
+					}
+				}
+				else
+				{
+					dc.SelectObject(&brush6);
+				}
+			}
+		}
+		else
+		{
+			dc.SelectObject(&brush0);
+		}
+		if (mx_y_adj == cCell.y)
+		{
+			if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+			{
+				 cursor = true;
+			}
+			else
+			{
+				if (isThisAKey(1, mx_y_adj))
+				{
+					dc.SelectObject(&brush6);
+				}
+				else
+				{
+					dc.SelectObject(&brush0);
+				}
+
+			}
+		}
+		dc.SelectObject(&pen2);
+
+		//else
+			dc.Rectangle(0, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X, 1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
+
+
+		if (matrixDone && !onlyPcnt && ((mx_y - visTopLeft.top) > 0))
+		{
+			if (greenClms1[mx_y])
+			{
+				dc.SelectObject(&pen5);
+				dc.SelectObject(&brush1);
+				dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - visTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - visTopLeft.top) * STEP_Y);
+
+			}
+			if (emptyClms1[mx_y])
+			{
+				dc.SelectObject(&pen6);
+				dc.SelectObject(&brush2);
+				dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - visTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - visTopLeft.top) * STEP_Y);
+			}
+		}
+		if (cursor)
+		{
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(&brush0);
+			dc.SelectObject(&pen4);
+			dc.Rectangle(2, 2 + OFFSET_Y + mx_y * STEP_Y, OFFSET_X + STEP_X - 1, -1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
+			dc.SetBkMode(OPAQUE);
+		}
+
+
 		dc.SetBkMode(TRANSPARENT);
+		if (isThisAKey(1, mx_y_adj))
+		{
+			dc.SelectObject(&font1B);
+			dc.SetTextColor(RGB(0, 0, 170));
+		}
+		else
+		{
+			dc.SelectObject(&font1);
+			dc.SetTextColor(RGB(0, 0, 0));
+		}
 		dc.TextOutW(2, OFFSET_Y + 5 + mx_y * STEP_Y, table1.Columns[mx_y_adj]);
 	}
-	dc.SelectObject(&font2);
+	//dc.SelectObject(&font2);
 	for (int mx_x = bnd_X_min; mx_x <= bnd_X_max; mx_x++)
 	{
+		cursor = false;
 		mx_x_adj = mx_x + visTopLeft.left;
 		dc.SetBkMode(OPAQUE);
 
+		if (isThisAKey(2, mx_x_adj))
+		{
+			if (mx_x_adj == oldCell.x)
+			{
+				dc.SelectObject(&brush6);
+			}
+			else
+			{
+				if (mx_x_adj == cCell.x)
+				{
+					if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+					{
+						cursor = true;
+					}
+					else
+					{
+						dc.SelectObject(&brush0);
+					}
+				}
+				else
+				{
+					dc.SelectObject(&brush6);
+				}
+			}
+		}
+		else
+		{
+			dc.SelectObject(&brush0);
+		}
+		if (mx_x_adj == cCell.x)
+		{
+			if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+			{
+				 cursor = true;
+			}
+			else
+			{
+				if (isThisAKey(2, mx_x_adj))
+				{
+					dc.SelectObject(&brush6);
+				}
+				else
+				{
+					dc.SelectObject(&brush0);
+				}
+			}
+		}
 
-		dc.Rectangle(OFFSET_X + mx_x * STEP_X, 0, 1 + OFFSET_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y );
+		dc.SelectObject(&pen2);
+
+		//else
+			dc.Rectangle(OFFSET_X + mx_x * STEP_X, 0, 1 + OFFSET_X + mx_x * STEP_X + STEP_X, 1 + OFFSET_Y + STEP_Y);
+
+
+		if (matrixDone && !onlyPcnt && ((mx_x - visTopLeft.left) > 0))
+		{
+			if (greenClms2[mx_x])
+			{
+				dc.SelectObject(&pen5);
+				dc.SelectObject(&brush1);
+				dc.Ellipse(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y, OFFSET_X + STEP_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
+			}
+			if (emptyClms2[mx_x])
+			{
+				dc.SelectObject(&pen6);
+				dc.SelectObject(&brush2);
+				dc.Ellipse(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y, OFFSET_X + STEP_X + (mx_x - visTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
+			}
+		}
+
+		if (cursor)
+		{
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(&brush0);
+			dc.SelectObject(&pen4);
+			dc.Rectangle(2 + OFFSET_X + mx_x * STEP_X, 2, -1 + OFFSET_X + mx_x * STEP_X + STEP_X, OFFSET_Y + STEP_Y - 1);
+			dc.SetBkMode(OPAQUE);
+		}
+
 		dc.SetBkMode(TRANSPARENT);
+		if (isThisAKey(2, mx_x_adj))
+		{
+			dc.SelectObject(&font2B);
+			dc.SetTextColor(RGB(0, 0, 170));
+		}
+		else
+		{
+			dc.SelectObject(&font2);
+			dc.SetTextColor(RGB(0, 0, 0));
+		}
 		dc.TextOutW(OFFSET_X + 5 + mx_x * STEP_X, -2 + OFFSET_Y + STEP_Y, table2.Columns[mx_x_adj]);
 	}
 
-
+	dc.SelectObject(&pen2);
 	if (matrixDone && !onlyPcnt)
 	{
 		dc.SetBkMode(OPAQUE);
@@ -638,7 +930,7 @@ void CChildView::OnPaint()
 								dc.SelectObject(&brush1);
 							}
 						}
- 
+
 						if (valSimil < 100)
 						{
 							if (valSimil > sldr)
@@ -647,16 +939,34 @@ void CChildView::OnPaint()
 							}
 							else
 							{
-								dc.SelectObject(&brush0);
+								if (isThisAKey(1, mx_y_adj) || isThisAKey(2, mx_x_adj))
+								{
+									dc.SelectObject(&brush6);
+								}
+								else
+								{
+									dc.SelectObject(&brush0);
+								}
 							}
 
 						}
 					}
 					else
 					{
-						dc.SelectObject(&brush0);
+						if (isThisAKey(1, mx_y_adj) || isThisAKey(2, mx_x_adj))
+						{
+							dc.SelectObject(&brush6);
+						}
+						else
+						{
+							dc.SelectObject(&brush0);
+						}
 					}
 
+					if (mx_y_adj == cClickedCell.y && mx_x_adj == cClickedCell.x)
+					{
+						dc.SelectObject(&brush6);
+					}
 
 					dc.Rectangle(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y);
 					dc.SetBkMode(TRANSPARENT);
@@ -669,6 +979,7 @@ void CChildView::OnPaint()
 						dc.LineTo(OFFSET_X + mx_x * STEP_X, OFFSET_Y + STEP_Y + mx_y * STEP_Y);
 						dc.SelectObject(&pen2);
 					}
+					dc.SetTextColor(RGB(0, 0, 0));
 					dc.TextOutW(OFFSET_X + mx_x * STEP_X + 1, OFFSET_Y + mx_y * STEP_Y + 7, strSimil);
 
 
@@ -678,79 +989,49 @@ void CChildView::OnPaint()
 			}
 
 
-				dc.SetBkMode(TRANSPARENT);
-				dc.SelectObject(GetStockObject(NULL_BRUSH));
-				dc.SelectObject(&pen3);
-				for (int mx_y = bnd_Y_min; mx_y <= bnd_Y_max - visTopLeft.top; mx_y++)
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(GetStockObject(NULL_BRUSH));
+			dc.SelectObject(&pen3);
+			for (int mx_y = bnd_Y_min; mx_y <= bnd_Y_max - visTopLeft.top; mx_y++)
+			{
+				for (int mx_x = bnd_X_min; mx_x <= bnd_X_max - visTopLeft.left; mx_x++)
 				{
-					for (int mx_x = bnd_X_min; mx_x <= bnd_X_max - visTopLeft.left; mx_x++)
+
+					mx_y_adj = mx_y + visTopLeft.top;
+					mx_x_adj = mx_x + visTopLeft.left;
+
+					if (table1.Columns[mx_y_adj] == table2.Columns[mx_x_adj])
 					{
 
-						mx_y_adj = mx_y + visTopLeft.top;
-						mx_x_adj = mx_x + visTopLeft.left;
-
-						if (table1.Columns[mx_y_adj] == table2.Columns[mx_x_adj])
-						{
-							
-							dc.Rectangle(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y);
-
-						}
-
-						if (mx_y_adj == oldy && mx_x_adj == oldx)
-						{
-							dc.SelectObject(&pen9);
-							dc.Rectangle(OFFSET_X + mx_x * STEP_X + 3, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 4, 1 + OFFSET_X + STEP_X + mx_x * STEP_X - 2, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 2);
-							dc.SelectObject(&pen3);
-						}
+						dc.Rectangle(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y);
 
 					}
 
+					if (mx_y_adj == oldy && mx_x_adj == oldx)
+					{
+						dc.SelectObject(&pen9);
+						dc.Rectangle(OFFSET_X + mx_x * STEP_X + 3, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 4, 1 + OFFSET_X + STEP_X + mx_x * STEP_X - 2, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 2);
+						dc.SelectObject(&pen3);
+					}
+
 				}
-				dc.SelectObject(&pen2);
+
+			}
+			dc.SelectObject(&pen2);
 
 		}
 		onlyPcnt = false;
 
 	}
-
 	dc.SelectObject(&pen4);
 	dc.MoveTo(0, OFFSET_Y + STEP_Y);
-	dc.LineTo(clnt.w, OFFSET_Y+STEP_Y);
-	dc.MoveTo(OFFSET_X+STEP_X, 0);
-	dc.LineTo(OFFSET_X+STEP_X, clnt.h);
+	dc.LineTo(clnt.w, OFFSET_Y + STEP_Y);
+	dc.MoveTo(OFFSET_X + STEP_X, 0);
+	dc.LineTo(OFFSET_X + STEP_X, clnt.h);
 
-	dc.SelectObject(&font4);
-	CString prcnt;
-	prcnt = L"";
-	if (cCell.x * cCell.y && matrixDone)
-	{
-		dc.SetBkMode(TRANSPARENT);
-		if (cCell.x <= bnd_X_max && cCell.y <= bnd_Y_max)
-		{
-			long sameness = mxGet(cCell.x, cCell.y);
-			//dc.SelectObject(&pen8);
-			if (table1.Columns[cCell.y] == table2.Columns[cCell.x] && sameness < effMax)
-				dc.SetTextColor(RGB(255, 0, 0));
-			else
-				dc.SetTextColor(RGB(0, 0, 0));
-
-			prcnt.Format(L"Δ:%i", effMax - sameness);
-			dc.TextOutW(5, 20, prcnt);
-			dc.SetTextColor(RGB(0, 255, 0));
-
-			prcnt.Format(L"=:%i", sameness);
-			dc.TextOutW(5, 50, prcnt);
-			if (emptyClms1[cCell.y] && emptyClms2[cCell.x])
-			{
-				dc.SetTextColor(RGB(0, 0, 0));
-				dc.TextOutW(5, 80, CMsg(IDS_EMPTY)); // CMsg(IDS_EMPTY)
-			}
-		}
-
-	}
 	onlyPcnt = false;
 
-	
+
 }
 
 
@@ -758,7 +1039,7 @@ void CChildView::OnPaint()
 void CChildView::OnPickFirstFile()
 {
 
-	g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // CMsg(IDS_WAIT_TILL_IN_EXCEL)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // CMsg(IDS_WAIT_TILL_IN_EXCEL)
 
 
 	CString fileName;
@@ -795,17 +1076,17 @@ void CChildView::OnPickFirstFile()
 	}
 
 
-		if (book1)
-		{
-			try {
-				book1.Close(covOptional, covOptional, covOptional);
-			}
-			catch (COleException* e)
-			{
-
-			}
-			
+	if (book1)
+	{
+		try {
+			book1.Close(covOptional, covOptional, covOptional);
 		}
+		catch (COleException* e)
+		{
+
+		}
+
+	}
 
 
 
@@ -841,8 +1122,11 @@ void CChildView::OnPickFirstFile()
 	{
 		mxClear(table2.NumberOfColumns + 1, table1.NumberOfColumns + 1);
 		matrixDone = 0;
+		oldCell.x = 0;
+		oldCell.y = 0;
 	}
-	g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED)); // CMsg(IDS_FILE_SUCCESFULLY_LOADED)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED)); // CMsg(IDS_FILE_SUCCESFULLY_LOADED)
+	deleteAllKeys();
 	this->Invalidate();
 }
 
@@ -850,7 +1134,7 @@ void CChildView::OnPickFirstFile()
 void CChildView::OnPickSecondFile()
 {
 
-	g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // // CMsg(IDS_WAIT_TILL_IN_EXCEL)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // // CMsg(IDS_WAIT_TILL_IN_EXCEL)
 
 
 	CString fileName;
@@ -930,9 +1214,10 @@ void CChildView::OnPickSecondFile()
 		mxClear(table2.NumberOfColumns + 1, table1.NumberOfColumns + 1);
 		matrixDone = 0;
 	}
-	g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED)); // CMsg(IDS_FILE_SUCCESFULLY_LOADED)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED)); // CMsg(IDS_FILE_SUCCESFULLY_LOADED)
+	deleteAllKeys();
 	this->Invalidate();
-	
+
 }
 
 
@@ -946,13 +1231,13 @@ void CChildView::OnCreateMatrix()
 
 	matrixDone = 0;
 	prereqDone = 0;
-	if ((table1.keys[0] + table1.keys[1] + table1.keys[2]) * (table2.keys[0] + table2.keys[1] + table2.keys[2]) == 0)
+	if (areThereAnyKeys() == false)
 	{
 		MessageBox(CMsg(IDS_ATLEAST_ONE_KEY)); // CMsg(IDS_ATLEAST_ONE_KEY)
 		return;
 	}
 
-	g_pMainFrame->updateStatusBar(CMsg(IDS_COMPARISON_IN_PROGRESS)); // CMsg(IDS_COMPARISON_IN_PROGRESS)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_COMPARISON_IN_PROGRESS)); // CMsg(IDS_COMPARISON_IN_PROGRESS)
 
 	waitingForKeys = true;
 	keys1done = false;
@@ -960,20 +1245,20 @@ void CChildView::OnCreateMatrix()
 
 
 	HWND hWnd0 = this->GetSafeHwnd();
-	threadCnt++; AfxBeginThread(CreateKeys1ThreadProc, hWnd0);
-	threadCnt++; AfxBeginThread(CreateKeys2ThreadProc, hWnd0);
+	AfxBeginThread(CreateKeys1ThreadProc, hWnd0);
+	AfxBeginThread(CreateKeys2ThreadProc, hWnd0);
 
 	this->Invalidate();
 	app.put_Visible(true);
 	app.put_UserControl(TRUE);
-	
+
 }
 
 
 void CChildView::OnUpdatePickFirstSheet(CCmdUI *pCmdUI)
 {
-	
-		if (!(filename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false); 
+
+	if (!(filename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pSheetCombo1 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_PICK_FIRST_SHEET));
 }
@@ -998,14 +1283,14 @@ void CChildView::OnUpdateCreateMatrix(CCmdUI *pCmdUI)
 			pRibbon->ForceRecalcLayout();
 			this->GetTopLevelFrame()->Invalidate();
 		}
-		if (nUiToBeRefreshed > 0 ) nUiToBeRefreshed  -= 1;
+		if (nUiToBeRefreshed > 0) nUiToBeRefreshed -= 1;
 	}
 }
 
 
 void CChildView::OnUpdateFilename1(CCmdUI *pCmdUI)
 {
-	
+
 	if (nUiToBeRefreshed)
 	{
 
@@ -1030,7 +1315,7 @@ void CChildView::OnUpdateFilename1(CCmdUI *pCmdUI)
 
 void CChildView::OnUpdateFilename2(CCmdUI *pCmdUI)
 {
-	
+
 	if (nUiToBeRefreshed)
 	{
 		if (!(filename2 == ""))
@@ -1081,13 +1366,23 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	onlyPcnt = false;
 	forceNotOnlyPcnt = true;
 
+	oldCell.x = cCell.x;
+	oldCell.y = cCell.y;
+
+	cCell.x = 0;
+	cCell.y = 0;
+
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(L"");
+	
+
+
 	return CWnd::OnMouseWheel(nFlags, zDelta, pt);
 }
 
 
 void CChildView::OnUpdatePickSecondSheet(CCmdUI *pCmdUI)
 {
-	
+
 	if (!(filename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pSheetCombo2 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_PICK_SECOND_SHEET));
@@ -1098,7 +1393,7 @@ void CChildView::OnUpdatePickSecondSheet(CCmdUI *pCmdUI)
 
 void CChildView::OnUpdateProgress1(CCmdUI *pCmdUI)
 {
-	
+
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pProgressBar1 = DYNAMIC_DOWNCAST(CMFCRibbonProgressBar, pRibbon->FindByID(ID_PROGRESS2));
 
@@ -1166,6 +1461,8 @@ void CChildView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		forceNotOnlyPcnt = true;
 		this->Invalidate();
 	}
+
+
 
 }
 
@@ -1277,7 +1574,7 @@ void CChildView::OnPickFirstSheet()
 {
 	int tmpWSN = pSheetCombo1->GetCurSel() + 1;
 	CString tmpWSS = pSheetCombo1->GetEditText();
-	g_pMainFrame->updateStatusBar(L"Počkejte dokud nebude dokončena předběžná kontrola dat"); // CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(L"Počkejte dokud nebude dokončena předběžná kontrola dat"); // CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)
 	if (tmpWSN > 0)
 	{
 		saRet1.Destroy();
@@ -1325,19 +1622,21 @@ void CChildView::OnPickFirstSheet()
 		this->Invalidate();
 		matrixDone = false;
 
-		table1.keys[0] = 0;
-		table1.keys[1] = 0;
-		table1.keys[2] = 0;
+		deleteAllKeys();
 
 		if (matrixDone > 0)
 		{
 			mxClear(table2.NumberOfColumns + 1, table1.NumberOfColumns + 1);
 			matrixDone = 0;
+			oldCell.x = 0;
+			oldCell.y = 0;
+			cCell.x = 0;
+			cCell.y = 0;
 		}
 
 		HWND hWnd0 = this->GetSafeHwnd();
-		g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
-		threadCnt++; AfxBeginThread(makePrereq1ThreadProc, hWnd0);
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
+		AfxBeginThread(makePrereq1ThreadProc, hWnd0);
 	}
 }
 
@@ -1356,13 +1655,13 @@ void CChildView::OnSpin1Names()
 	updateCombos1();
 	this->Invalidate();
 
-	
+
 }
 
 
 void CChildView::OnUpdateSpin1Names(CCmdUI *pCmdUI)
 {
-	
+
 	if (!(filename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pSpinner1_Names = DYNAMIC_DOWNCAST(CMFCRibbonEdit, pRibbon->FindByID(ID_SPIN1_NAMES));
@@ -1371,7 +1670,7 @@ void CChildView::OnUpdateSpin1Names(CCmdUI *pCmdUI)
 
 void CChildView::OnUpdateSpin1Fdata(CCmdUI *pCmdUI)
 {
-	
+
 	if (!(filename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pSpinner1_Fdata = DYNAMIC_DOWNCAST(CMFCRibbonEdit, pRibbon->FindByID(ID_SPIN1_FDATA));
@@ -1391,41 +1690,9 @@ void CChildView::OnSpin1Fdata()
 }
 
 
-void CChildView::OnUpdateKey11(CCmdUI *pCmdUI)
-{
-	
-	if (!(filename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
-	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	pKeyCombo11 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_KEY1_1));
-}
-
-
-void CChildView::OnUpdateKey12(CCmdUI *pCmdUI)
-{
-	
-	if (!(filename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
-	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	pKeyCombo12 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_KEY1_2));
-}
-
-
-void CChildView::OnUpdateKey13(CCmdUI *pCmdUI)
-{
-	
-	if (!(filename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
-	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	pKeyCombo13 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_KEY1_3));
-}
-
 
 void CChildView::updateCombos1()
 {
-	pKeyCombo11->RemoveAllItems();
-	pKeyCombo12->RemoveAllItems();
-	pKeyCombo13->RemoveAllItems();
-	pKeyCombo11->SetEditText(_T(""));
-	pKeyCombo12->SetEditText(_T(""));
-	pKeyCombo13->SetEditText(_T(""));
 	long index[2];
 	CString szdata;
 	COleVariant vData;
@@ -1453,29 +1720,8 @@ void CChildView::updateCombos1()
 				break;
 			}
 		}
-		pKeyCombo11->AddItem(szdata);
-		pKeyCombo12->AddItem(szdata);
-		pKeyCombo13->AddItem(szdata);
 		table1.Columns[i] = szdata;
 	}
-}
-
-
-void CChildView::OnKey11()
-{
-	table1.keys[0] = pKeyCombo11->GetCurSel() + 1;
-}
-
-
-void CChildView::OnKey12()
-{
-	table1.keys[1] = pKeyCombo12->GetCurSel() + 1;
-}
-
-
-void CChildView::OnKey13()
-{
-	table1.keys[2] = pKeyCombo13->GetCurSel() + 1;
 }
 
 
@@ -1483,7 +1729,7 @@ void CChildView::OnPickSecondSheet()
 {
 	int tmpWSN = pSheetCombo2->GetCurSel() + 1;
 	CString tmpWSS = pSheetCombo2->GetEditText();
-	g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)); // CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)); // CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)
 	if (tmpWSN > 0)
 	{
 		saRet2.Destroy();
@@ -1524,14 +1770,16 @@ void CChildView::OnPickSecondSheet()
 
 		SetScrollInfo(SB_HORZ, &si, TRUE);
 
-		table2.keys[0] = 0;
-		table2.keys[1] = 0;
-		table2.keys[2] = 0;
+		deleteAllKeys();
 
 		if (matrixDone > 0)
 		{
 			mxClear(table2.NumberOfColumns + 1, table1.NumberOfColumns + 1);
 			matrixDone = 0;
+			oldCell.x = 0;
+			oldCell.y = 0;
+			cCell.x = 0;
+			cCell.y = 0;
 		}
 
 		updateCombos2();
@@ -1539,20 +1787,14 @@ void CChildView::OnPickSecondSheet()
 		matrixDone = false;
 
 		HWND hWnd0 = this->GetSafeHwnd();
-		g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
-		threadCnt++; AfxBeginThread(makePrereq2ThreadProc, hWnd0);
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
+		AfxBeginThread(makePrereq2ThreadProc, hWnd0);
 	}
 }
 
 
 void CChildView::updateCombos2()
 {
-	pKeyCombo21->RemoveAllItems();
-	pKeyCombo22->RemoveAllItems();
-	pKeyCombo23->RemoveAllItems();
-	pKeyCombo21->SetEditText(_T(""));
-	pKeyCombo22->SetEditText(_T(""));
-	pKeyCombo23->SetEditText(_T(""));
 	long index[2];
 	CString szdata;
 	COleVariant vData;
@@ -1579,9 +1821,6 @@ void CChildView::updateCombos2()
 				break;
 			}
 		}
-		pKeyCombo21->AddItem(szdata);
-		pKeyCombo22->AddItem(szdata);
-		pKeyCombo23->AddItem(szdata);
 		table2.Columns[i] = szdata;
 	}
 }
@@ -1589,7 +1828,7 @@ void CChildView::updateCombos2()
 
 void CChildView::OnUpdateSpin2Fdata(CCmdUI *pCmdUI)
 {
-	
+
 	if (!(filename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pSpinner2_Fdata = DYNAMIC_DOWNCAST(CMFCRibbonEdit, pRibbon->FindByID(ID_SPIN2_FDATA));
@@ -1611,7 +1850,7 @@ void CChildView::OnSpin2Fdata()
 
 void CChildView::OnUpdateSpin2Names(CCmdUI *pCmdUI)
 {
-	
+
 	if (!(filename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pSpinner2_Names = DYNAMIC_DOWNCAST(CMFCRibbonEdit, pRibbon->FindByID(ID_SPIN2_NAMES));
@@ -1633,54 +1872,6 @@ void CChildView::OnSpin2Names()
 	this->Invalidate();
 
 }
-
-
-
-
-
-void CChildView::OnUpdateKey21(CCmdUI *pCmdUI)
-{
-	
-	if (!(filename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
-	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	pKeyCombo21 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_KEY2_1));
-}
-
-
-void CChildView::OnUpdateKey22(CCmdUI *pCmdUI)
-{
-	
-	if (!(filename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
-	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	pKeyCombo22 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_KEY2_2));
-}
-
-
-void CChildView::OnUpdateKey23(CCmdUI *pCmdUI)
-{
-	
-	if (!(filename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
-	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	pKeyCombo23 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_KEY2_3));
-}
-
-
-void CChildView::OnKey21()
-{
-	table2.keys[0] = pKeyCombo21->GetCurSel() + 1;
-}
-
-void CChildView::OnKey22()
-{
-	table2.keys[1] = pKeyCombo22->GetCurSel() + 1;
-}
-
-
-void CChildView::OnKey23()
-{
-	table2.keys[2] = pKeyCombo23->GetCurSel() + 1;
-}
-
 
 void CChildView::makeCharArr1()
 {
@@ -1798,18 +1989,17 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 	if (matrixDone && (cCell.y <= table1.NumberOfColumns && cCell.x <= table2.NumberOfColumns))
 	{
-		g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
 
 		lockPrg2 = true;
 		HWND hWnd0 = this->GetSafeHwnd();
 
-		
+
 		int mx_X_max = table2.NumberOfColumns;
 		markedMatrix[(cCell.y - 1) * mx_X_max + cCell.x] = true;
 		this->Invalidate();
-		int rslt;
 
-		threadCnt++; AfxBeginThread(MyThreadProc3, hWnd0);
+		AfxBeginThread(MyThreadProc3, hWnd0);
 	}
 
 	CWnd::OnLButtonDblClk(nFlags, point);
@@ -1983,7 +2173,7 @@ bool CChildView::checkKeysUniqueness2()
 			szTaken_B = keyArr21[i1];
 
 
-			if (szTaken_A == szTaken_B) 
+			if (szTaken_A == szTaken_B)
 			{
 
 				lockPrg2 = false;
@@ -2044,9 +2234,9 @@ void CChildView::firstPass()
 			//for (int i2 = table2.FirstRowWithData; i2 <= table2.NumberOfRows; i2++)
 			//{
 
-				//concatenatedKey2 = keyArr21[i2];
+			//concatenatedKey2 = keyArr21[i2];
 
-				//if (concatenatedKey1 == concatenatedKey2)
+			//if (concatenatedKey1 == concatenatedKey2)
 			if (map2.Lookup(concatenatedKey1, (long&)keyRow2))
 			{
 				effMax++;
@@ -2171,15 +2361,14 @@ void CChildView::firstPass()
 			//}
 		}
 	}
-	VARIANT val;
 
 	delete[] greenClms1;
 	greenClms1 = new bool[table1.NumberOfColumns + 2];
 	delete[] greenClms2;
 	greenClms2 = new bool[table2.NumberOfColumns + 2];
 
-	for (int i = 0; i <= table1.NumberOfColumns; i++) greenClms1[i] = false;
-	for (int i = 0; i <= table2.NumberOfColumns; i++) greenClms2[i] = false;
+	for (int i = 0; i <= table1.NumberOfColumns; i++) greenClms1[i] = false; // TODO: could have been moved to the cyclus below in the "else" branch - for better performance
+	for (int i = 0; i <= table2.NumberOfColumns; i++) greenClms2[i] = false; // dtto
 
 	for (int i_c = 1; i_c <= table2.NumberOfColumns; i_c++)
 	{
@@ -2205,11 +2394,10 @@ void CChildView::firstPass()
 
 int CChildView::createKeyArrays1()
 {
-	notUniqueKeys = { 0, 0, L"" };
+	notUniqueKeys1 = { 0, 0, L"" };
 
 	long mapIdx;
 	long index[2];
-	char chr;
 	COleVariant vData;
 	CString szdata;
 
@@ -2233,56 +2421,31 @@ int CChildView::createKeyArrays1()
 		}
 
 		szdata = "";
-		if (table1.keys[0])
+		int nthKey;
+		for (int k_i = 0; k_i < keyPairCounter; k_i++)
 		{
-
-			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = table1.keys[0];
-			try {
-				saRet1.GetElement(index, vData); vData = (CString)vData;
-			} 
-			catch (COleException* e)
+			nthKey = getNthKey(1, k_i);
+			if (nthKey)
 			{
-				vData = L"";
-			}
-			szdata+= vData;
-		}
-		if (table1.keys[1])
-		{
 
-			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = table1.keys[1];
-			try {
-				saRet1.GetElement(index, vData); vData = (CString)vData;
+				// Loop through the data and report the contents.
+				index[0] = i_i;
+				index[1] = nthKey;
+				try {
+					saRet1.GetElement(index, vData); vData = (CString)vData;
+				}
+				catch (COleException* e)
+				{
+					vData = L"";
+				}
+				szdata += vData;
 			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata+= vData;
-		}
-		if (table1.keys[2])
-		{
-
-			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = table1.keys[2];
-			try {
-				saRet1.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata+= vData;
 		}
 		keyArr11[i_i] = szdata;
 		keyMissing1[i_i] = false;
 		if (map1.Lookup(szdata, (long&)mapIdx))
 		{
-			notUniqueKeys = { i_i, mapIdx, szdata };
+			notUniqueKeys1 = { i_i, mapIdx, szdata };
 			map1.RemoveAll();
 			return 1;
 		}
@@ -2296,11 +2459,10 @@ int CChildView::createKeyArrays1()
 
 int CChildView::createKeyArrays2()
 {
-	notUniqueKeys = { 0, 0, L"" };
+	notUniqueKeys2 = { 0, 0, L"" };
 
 	long mapIdx;
 	long index[2];
-	char chr;
 	COleVariant vData;
 	CString szdata;
 
@@ -2327,55 +2489,31 @@ int CChildView::createKeyArrays2()
 		}
 
 		szdata = "";
-		if (table2.keys[0])
+		int nthKey;
+		for (int k_i = 0; k_i < keyPairCounter; k_i++)
 		{
+			nthKey = getNthKey(2, k_i);
+			if (nthKey)
+			{
 
-			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = table2.keys[0];
-			try {
-				saRet2.GetElement(index, vData); vData = (CString)vData;
+				// Loop through the data and report the contents.
+				index[0] = i_i;
+				index[1] = nthKey;
+				try {
+					saRet2.GetElement(index, vData); vData = (CString)vData;
+				}
+				catch (COleException* e)
+				{
+					vData = L"";
+				}
+				szdata += vData;
 			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata += vData;
-		}
-		if (table2.keys[1])
-		{
-			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = table2.keys[1];
-			try {
-				saRet2.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata += vData;
-		}
-		if (table2.keys[2])
-		{
-
-			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = table2.keys[2];
-			try {
-				saRet2.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata += vData;
 		}
 		keyArr21[i_i] = szdata;
 		keyMissing2[i_i] = false;
 		if (map2.Lookup(szdata, (long&)mapIdx))
 		{
-			notUniqueKeys = { i_i, mapIdx, szdata };
+			notUniqueKeys2 = { i_i, mapIdx, szdata };
 			map2.RemoveAll();
 			return 2;
 		}
@@ -2431,13 +2569,13 @@ CString CChildView::getCellValue2(int column, int row)
 
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	ChosenCell oldCell;
+
 	oldCell.x = cCell.x;
 	oldCell.y = cCell.y;
 
 	if (point.x > OFFSET_X + STEP_X)
 	{
-		cCell.x = (point.x - OFFSET_X) / STEP_X + visTopLeft.left; 
+		cCell.x = (point.x - OFFSET_X) / STEP_X + visTopLeft.left;
 	}
 	else
 	{
@@ -2451,16 +2589,17 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		cCell.y = 0;
 	}
+	if (cCell.x * cCell.y > 0)
+	{
+		CString s;
+		CString sx, sy;
+		sx.Format(L"%i", cCell.x);
+		sy.Format(L"%i", cCell.y);
+		sx = CMsg(IDS_COORDS);
+		s.Format(CMsg(IDS_COORDS), cCell.y, cCell.x); // CMsg(IDS_COORDS)
 
-	CString s;
-	CString sx, sy;
-	sx.Format(L"%i", cCell.x);
-	sy.Format(L"%i", cCell.y);
-	sx = CMsg(IDS_COORDS);
-	s.Format(CMsg(IDS_COORDS), cCell.y, cCell.x, threadCnt); // CMsg(IDS_COORDS)
-
-	g_pMainFrame->updateStatusBar(s);
-
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(s);
+	}
 	if (!(oldCell.x == cCell.x) || !(oldCell.y == cCell.y))
 	{
 		if (!forceNotOnlyPcnt)
@@ -2475,6 +2614,25 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 		RECT rct;
 		rct.left = 0; rct.top = 0; rct.right = OFFSET_X + STEP_X - 2; rct.bottom = OFFSET_Y + STEP_Y - 2;
 		this->InvalidateRect(&rct, 1);
+
+		if (oldCell.y > 0 && oldCell.y <= table1.NumberOfColumns && oldCell.x > 0 && oldCell.x <= table2.NumberOfColumns)
+		{
+			rct.left = OFFSET_X + (cCell.x  - visTopLeft.left) * STEP_X + 1; rct.top = 2; rct.right = 1 + OFFSET_X + STEP_X + (cCell.x  - visTopLeft.left) * STEP_X; rct.bottom = OFFSET_Y + STEP_Y;
+			this->InvalidateRect(&rct, 0);
+			rct.left = 2; rct.top = OFFSET_Y + (cCell.y  - visTopLeft.top)  * STEP_Y + 1; rct.right = OFFSET_X + STEP_X; rct.bottom = 1 + OFFSET_Y + (cCell.y  - visTopLeft.top) * STEP_Y + STEP_Y;
+			this->InvalidateRect(&rct, 0);
+			rct.left = OFFSET_X + (oldCell.x  - visTopLeft.left) * STEP_X + 1; rct.top = 2; rct.right = 1 + OFFSET_X + STEP_X + (oldCell.x  - visTopLeft.left) * STEP_X; rct.bottom = OFFSET_Y + STEP_Y;
+			this->InvalidateRect(&rct, 1);
+			rct.left = 2; rct.top = OFFSET_Y + (oldCell.y  - visTopLeft.top) * STEP_Y + 1; rct.right = OFFSET_X + STEP_X; rct.bottom = 1 + OFFSET_Y + (oldCell.y  - visTopLeft.top) * STEP_Y + STEP_Y;
+			this->InvalidateRect(&rct, 1);
+			onlyPcnt = false;
+			forceNotOnlyPcnt = true;
+		}
+		if (cCell.x * cCell.y == 0)
+		{
+			cCell.x = 0;
+			cCell.y = 0;
+		}
 	}
 	this->SetFocus();
 }
@@ -2491,13 +2649,13 @@ void CChildView::OnSlider2()
 	sx.Format(CMsg(IDS_MARK_SUSP_INTERS), pSlider->GetPos()); // CMsg(IDS_MARK_SUSP_INTERS)
 	s = sx + L" %";
 
-	g_pMainFrame->updateStatusBar(s);
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(s);
 }
 
 
 void CChildView::OnUpdateSlider2(CCmdUI *pCmdUI)
 {
-	
+
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pSlider = DYNAMIC_DOWNCAST(CMFCRibbonSlider, pRibbon->FindByID(ID_SLIDER2));
 	if (pSlider->GetPos() == 0)
@@ -2535,11 +2693,30 @@ void CChildView::OnUpdateCheck5(CCmdUI *pCmdUI)
 
 void CChildView::OnButton2()
 {
-	if (app)
-	{
-		app.put_Visible(TRUE);
-		app.put_UserControl(TRUE);
+	if (lockPrg1 || lockPrg2) {
+		MessageBox(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
+		return;
 	}
+/*	if (bestKeyComb.rating)
+	{
+		MessageBox(L"Vhodná kombinace klíčů již byla nalezena"); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
+		return;
+	}  */
+	if (table1.NumberOfColumns * table2.NumberOfColumns)
+	{
+		waitingForKeys = true;
+		keysGathering1done = false;
+		keysGathering2done = false;
+		clearPossibleKeys();
+		HWND hWnd0 = this->GetSafeHwnd();
+		AfxBeginThread(SuggestKeys1ThreadProc, hWnd0);
+		AfxBeginThread(SuggestKeys2ThreadProc, hWnd0);
+	}
+	else
+	{
+		MessageBox(L"Nelze provést.\nNejprve vyberte listy obsahující data, která chcete porovnat.");
+	}
+
 }
 
 
@@ -2590,7 +2767,7 @@ void CChildView::initScrollBars()
 	ScrollInfo.nMin = 0;                        // minimum scrolling position
 	ScrollInfo.nMax = 100;                      // maximum scrolling position
 	ScrollInfo.nPage = 20;                      // the page size of the scroll box
-	ScrollInfo.nPos = 50;  
+	ScrollInfo.nPos = 50;
 	// initial position of the scroll box
 	//ScrollInfo.nTrackPos = 0;                   // immediate position of a scroll box
 
@@ -2603,7 +2780,7 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
 
-	
+
 	//
 	// Set the horizontal scrolling parameters.
 	//
@@ -2674,11 +2851,11 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_nCellHeight = STEP_Y;
 	m_nRibbonWidth = 0;
 	m_nViewWidth = STEP_X + OFFSET_X + ((table2.NumberOfColumns + 1) * m_nCellWidth) + m_nRibbonWidth;
-	m_nViewHeight = STEP_Y + OFFSET_Y  + m_nCellHeight * (table1.NumberOfColumns + 1);
+	m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (table1.NumberOfColumns + 1);
 	sldr = 90;
 
+	return 0; 
 
-	return 0;
 }
 
 
@@ -2713,16 +2890,16 @@ void CChildView::OnCheck7()
 {
 	sameNames = !sameNames;
 
-		visTopLeft.top = m_nVScrollPos / STEP_Y;
-		SetScrollPos(SB_VERT, m_nVScrollPos, TRUE);
-		RECT rect;
-		GetClientRect(&rect);
+	visTopLeft.top = m_nVScrollPos / STEP_Y;
+	SetScrollPos(SB_VERT, m_nVScrollPos, TRUE);
+	RECT rect;
+	GetClientRect(&rect);
 
-		rect.top = OFFSET_Y + STEP_Y;
-		ScrollWindow(0, 0, &rect);
-		onlyPcnt = false;
-		forceNotOnlyPcnt = true;
-		this->Invalidate();
+	rect.top = OFFSET_Y + STEP_Y;
+	ScrollWindow(0, 0, &rect);
+	onlyPcnt = false;
+	forceNotOnlyPcnt = true;
+	this->Invalidate();
 }
 
 
@@ -2741,9 +2918,9 @@ UINT MyThreadProc(LPVOID pParam)
 	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
 
 	pWnd->firstPass();
-	
 
-	pWnd->decrementThreadCnt();
+
+	
 	AfxEndThread(0);
 	return 0;
 
@@ -2753,36 +2930,74 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 {
 	if ((UINT)lParam > 99)
 	{
-			pProgressBar1->SetPos(0);
-			lockPrg1 = false;
-			this->Invalidate();
-			if (doAutoMark)
+		pProgressBar1->SetPos(0);
+		lockPrg1 = false;
+		this->Invalidate();
+		if (doAutoMark)
+		{
+			if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
+			resolveAutoMark();
+			if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
+		}
+		if ((UINT)lParam == 1000)
+		{
+			if (waitingForKeys)
 			{
-				g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
-				resolveAutoMark();
-				g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
-			}
-			if ((UINT)lParam == 1000)
-			{
-				if (waitingForKeys)
+				keys1done = true;
+				if (keys2done)
 				{
-					keys1done = true;
-					if (keys2done)
-					{
-						HWND hWnd0 = this->GetSafeHwnd();
-						waitingForKeys = false;
-						keys1done = false;
-						keys2done = false;
-						threadCnt++; AfxBeginThread(MyThreadProc, hWnd0);
-						g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
-					}
+					HWND hWnd0 = this->GetSafeHwnd();
+					waitingForKeys = false;
+					keys1done = false;
+					keys2done = false;
+					AfxBeginThread(MyThreadProc, hWnd0);
+					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
 				}
-				else
+			}
+			else
+			{
+				if (effMax)
 				{
 					rsltTxt.Format(CMsg(IDS_FOUND_KEYS_FROM_TOTAL), effMax, (table1.NumberOfRows - table1.FirstRowWithData + 1), (table2.NumberOfRows - table2.FirstRowWithData + 1)); // CMsg(IDS_FOUND_KEYS_FROM_TOTAL)
-					g_pMainFrame->updateStatusBar(rsltTxt);
+					if (g_pMainFrame) g_pMainFrame->updateStatusBar(rsltTxt);
+				}
+
+			}
+		}
+		if ((UINT)lParam == 10000)
+		{
+			if (waitingForKeys)
+			{
+				keysGathering1done = true;
+				if (keysGathering2done)
+				{
+					HWND hWnd0 = this->GetSafeHwnd();
+					waitingForKeys = false;
+					keysGathering1done = false;
+					keysGathering2done = false;
+					AfxBeginThread(MutualCheckThreadProc, hWnd0);
+					BeginWaitCursor();
+					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));
 				}
 			}
+		}
+		if ((UINT)lParam == 100000)
+		{
+			waitingForKeys = false;
+
+			usePossibleKeys();	
+
+			CString tmpS;
+			tmpS.Format(L"Byla nalezena vhodná kombinace klíčových sloupců.\nTato kombinace umožňuje porovnat %i společných řádků", bestKeyComb.cnt);
+			MessageBox(tmpS);
+			EndWaitCursor();
+		}
+		if ((UINT)lParam == 200000)
+		{
+			waitingForKeys = false;
+			MessageBox(L"V obou tabulkách byly nalezeny klíče, které ale nejsou vzájemně slučitelné.\nSoubory nelze porovnat bez předchozí úpravy tabulek.");
+			EndWaitCursor();
+		}
 	}
 	else
 	{
@@ -2798,10 +3013,11 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 	{
 		pProgressBar2->SetPos(0);
 		lockPrg2 = false;
-		this->Invalidate();
+		
 
 		if ((UINT)lParam == 1000)
 		{
+			this->Invalidate();
 			if (waitingForKeys)
 			{
 				keys2done = true;
@@ -2811,8 +3027,24 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 					waitingForKeys = false;
 					keys1done = false;
 					keys2done = false;
-					threadCnt++; AfxBeginThread(MyThreadProc, hWnd0);
-					g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
+					AfxBeginThread(MyThreadProc, hWnd0);
+					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
+				}
+			}
+		}
+		if ((UINT)lParam == 20000)
+		{
+			if (waitingForKeys)
+			{
+				keysGathering2done = true;
+				if (keysGathering1done)
+				{
+					HWND hWnd0 = this->GetSafeHwnd();
+					waitingForKeys = false;
+					keysGathering1done = false;
+					keysGathering2done = false;
+					AfxBeginThread(MutualCheckThreadProc, hWnd0);
+					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
 				}
 			}
 		}
@@ -2844,7 +3076,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 	if ((UINT)lParam >100)
 	{
 		BeginWaitCursor();
-		g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));  // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));  // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
 		pProgressBar1->SetPos(0);
 		pFoundDifferences->RemoveAllItems();
 		pFoundDifferences->SetEditText(L"");
@@ -2878,7 +3110,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 
 						//fndDfrnc = fndDfrnc1 + fndDfrnc2 + selKey;
 
-						
+
 						pFoundDifferences->AddItem((LPCTSTR)fndDfrnc);
 					}
 				}
@@ -2886,7 +3118,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 				{
 					if (markIn1Arr[i1])
 					{
-	
+
 						if (starts == L"")
 						{
 							starts = convertR1C1(i1, oldy);
@@ -2964,7 +3196,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 
 		SendMessage(CM_UPDATE_PROGRESS2, 0, 100);
 		lockPrg2 = false;
-		g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
 		EndWaitCursor();
 		DrainMsgQueue();
 	}
@@ -2972,7 +3204,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 	{
 		pProgressBar1->SetPos((UINT)lParam);
 	}
-	
+
 	return 0;
 }
 
@@ -2997,7 +3229,7 @@ UINT MyThreadProc2(LPVOID pParam)
 		return 0;
 	}
 
-	pWnd->decrementThreadCnt();
+	
 	AfxEndThread(0);
 	return 0;
 
@@ -3015,7 +3247,7 @@ UINT CreateKeys1ThreadProc(LPVOID pParam)
 	{
 		CString s;
 		NotUniqueKeys* nu;
-		nu = &notUniqueKeys;
+		nu = &notUniqueKeys1;
 		s.Format(CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS), nu->keyString, nu->firstRow, nu->secondRow); // CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS)
 		pWnd->MessageBox(s);
 		lockPrg1 = false;
@@ -3024,7 +3256,7 @@ UINT CreateKeys1ThreadProc(LPVOID pParam)
 
 	uniqueKeys1 = true;
 
-	pWnd->decrementThreadCnt();
+	
 	AfxEndThread(0);
 	return 0;
 
@@ -3041,7 +3273,7 @@ UINT CreateKeys2ThreadProc(LPVOID pParam)
 	{
 		CString s;
 		NotUniqueKeys* nu;
-		nu = &notUniqueKeys;
+		nu = &notUniqueKeys2;
 		s.Format(CMsg(IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS), nu->keyString, nu->firstRow, nu->secondRow); // CMsg(IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS)
 		pWnd->MessageBox(s);
 		lockPrg2 = false;
@@ -3051,7 +3283,7 @@ UINT CreateKeys2ThreadProc(LPVOID pParam)
 
 	uniqueKeys2 = true;
 
-	pWnd->decrementThreadCnt();
+	
 	AfxEndThread(0);
 	return 0;
 
@@ -3063,7 +3295,7 @@ UINT makePrereq1ThreadProc(LPVOID pParam)
 	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
 	pWnd->makePrereq1();
 
-	pWnd->decrementThreadCnt();
+	
 	AfxEndThread(0);
 	return 0;
 
@@ -3075,7 +3307,7 @@ UINT makePrereq2ThreadProc(LPVOID pParam)
 	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
 	pWnd->makePrereq2();
 
-	pWnd->decrementThreadCnt();
+	
 	AfxEndThread(0);
 	return 0;
 
@@ -3086,11 +3318,10 @@ UINT MyThreadProc3(LPVOID pParam)
 	HWND hWnd1 = (HWND)pParam;
 
 	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
-	int rslt;
 
 	pWnd->markInFiles();
 
-	pWnd->decrementThreadCnt();
+	
 	AfxEndThread(0);
 	return 0;
 
@@ -3100,72 +3331,71 @@ UINT MyThreadProc3(LPVOID pParam)
 
 void CChildView::markInFiles()
 {
-		
-		lockPrg2 = true;
 
-		CString concatenatedKey1, concatenatedKey2;
-		int prgHlpr = 0, prgHlpr0 = 0;
-		char firstChar1, firstChar2;
+	lockPrg2 = true;
 
-		int cx, cy;
-		cx = cCell.x;
-		cy = cCell.y;
-		oldy = cy;
-		oldx = cx;
+	CString concatenatedKey1, concatenatedKey2;
+	int prgHlpr = 0, prgHlpr0 = 0;
 
-		delete[] markIn1Arr;
-		markIn1Arr = new bool[table1.NumberOfRows + 2];
-		delete[] markIn2Arr;
-		markIn2Arr = new bool[table2.NumberOfRows + 2];
-		delete[] foundDifferences;
-		foundDifferences = new long[table1.NumberOfRows + 2];
+	int cx, cy;
+	cx = cCell.x;
+	cy = cCell.y;
+	oldy = cy;
+	oldx = cx;
 
-		for (int i1 = 0; i1 <= table1.NumberOfRows + 1; i1++)
+	delete[] markIn1Arr;
+	markIn1Arr = new bool[table1.NumberOfRows + 2];
+	delete[] markIn2Arr;
+	markIn2Arr = new bool[table2.NumberOfRows + 2];
+	delete[] foundDifferences;
+	foundDifferences = new long[table1.NumberOfRows + 2];
+
+	for (int i1 = 0; i1 <= table1.NumberOfRows + 1; i1++)
+	{
+		markIn1Arr[i1] = false;
+		foundDifferences[i1] = 0;
+	}
+
+	for (int i2 = 0; i2 <= table2.NumberOfRows + 1; i2++)
+	{
+		markIn2Arr[i2] = false;
+	}
+
+	long keyRow1, keyRow2;
+
+	POSITION mapPos1;
+	mapPos1 = map1.GetStartPosition();
+
+	int i1; // iterator for progress visualisation;
+	i1 = table1.FirstRowWithData - 1;
+
+	while (mapPos1 != NULL)
+	{
+		i1++;
+		prgHlpr0 = 100 * i1 / table1.NumberOfRows;
+		if (prgHlpr0 > prgHlpr)
 		{
-			markIn1Arr[i1] = false;
-			foundDifferences[i1] = 0;
+			prgHlpr = prgHlpr0;
+
+			PostMessage(CM_UPDATE_PROGRESS3, 0, prgHlpr);
+
 		}
+		map1.GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
 
-		for (int i2 = 0; i2 <= table2.NumberOfRows + 1; i2++)
+		if (map2.Lookup(concatenatedKey1, (long&)keyRow2))
 		{
-			markIn2Arr[i2] = false;
-		}
 
-		long keyRow1, keyRow2;
-
-		POSITION mapPos1;
-		mapPos1 = map1.GetStartPosition();
-
-		int i1; // iterator for progress visualisation;
-		i1 = table1.FirstRowWithData - 1;
-		
-		while (mapPos1 != NULL)
-		{
-			i1++;
-			prgHlpr0 = 100 * i1 / table1.NumberOfRows;
-			if (prgHlpr0 > prgHlpr) 
+			if (!(getCellValue1(cy, keyRow1) == getCellValue2(cx, keyRow2)))
 			{
-				prgHlpr = prgHlpr0;
-
-				PostMessage(CM_UPDATE_PROGRESS3, 0, prgHlpr);
+				foundDifferences[keyRow1] = keyRow2;
+				if (in1file) markIn1Arr[keyRow1] = true; //markIn1(i1, cy);
+				if (in2file) markIn2Arr[keyRow2] = true; //markIn2(i2, cx);
 
 			}
-			map1.GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
-
-				if (map2.Lookup(concatenatedKey1, (long&)keyRow2))
-				{
-
-					if (!(getCellValue1(cy, keyRow1) == getCellValue2(cx, keyRow2)))
-					{
-						foundDifferences[keyRow1] = keyRow2;
-						if (in1file) markIn1Arr[keyRow1] = true; //markIn1(i1, cy);
-						if (in2file) markIn2Arr[keyRow2] = true; //markIn2(i2, cx);
-
-					}
-				}
 		}
-		PostMessage(CM_UPDATE_PROGRESS3, 0, 1000);
-		lockPrg2 = false;
+	}
+	PostMessage(CM_UPDATE_PROGRESS3, 0, 1000);
+	lockPrg2 = false;
 
 }
 
@@ -3243,10 +3473,9 @@ void CChildView::makePrereq2()
 void CChildView::resolveAutoMark()
 {
 	doAutoMark = false;
-	g_pMainFrame->updateStatusBar(CMsg(IDS_DURING_MARKING_THREAD_BLOCKED));  // CMsg(IDS_DURING_MARKING_THREAD_BLOCKED)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DURING_MARKING_THREAD_BLOCKED));  // CMsg(IDS_DURING_MARKING_THREAD_BLOCKED)
 	lockPrg2 = true;
 	HWND hWnd = this->GetSafeHwnd();
-	long nor, noc;
 	int prgHlpr_x, prgHlpr0_x, prgHlpr_y, prgHlpr0_y;
 	prgHlpr_x = 0;
 	prgHlpr0_x = 0;
@@ -3255,142 +3484,142 @@ void CChildView::resolveAutoMark()
 	CString starts = L"";
 	CString ends = L"";
 
-		pProgressBar1->SetPos(0);
+	pProgressBar1->SetPos(0);
 
-		BeginWaitCursor();
-		for (int c1 = 1; c1 <= table1.NumberOfColumns; c1++)
+	BeginWaitCursor();
+	for (int c1 = 1; c1 <= table1.NumberOfColumns; c1++)
+	{
+		prgHlpr0_x = 90 * c1 / table1.NumberOfColumns;
+		if (prgHlpr0_x > prgHlpr_x)
 		{
-			prgHlpr0_x = 90 * c1 / table1.NumberOfColumns;
-			if (prgHlpr0_x > prgHlpr_x)
+			prgHlpr_x = prgHlpr0_x;
+			PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr_x);
+		}
+		for (int c2 = 1; c2 <= table2.NumberOfColumns; c2++)
+		{
+			if (table1.Columns[c1] == table2.Columns[c2])
 			{
-				prgHlpr_x = prgHlpr0_x;
-				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr_x);
-			}
-			for (int c2 = 1; c2 <= table2.NumberOfColumns; c2++) 
-			{
-				if (table1.Columns[c1] == table2.Columns[c2])
+				if (in1file)
 				{
-					if (in1file)
+					prgHlpr_y = 0;
+					prgHlpr0_y = 0;
+					for (long r1 = table1.FirstRowWithData; r1 <= table1.NumberOfRows; r1++)
 					{
-						prgHlpr_y = 0;
-						prgHlpr0_y = 0;
-						for (long r1 = table1.FirstRowWithData; r1 <= table1.NumberOfRows; r1++)
+						prgHlpr0_y = 100 * r1 / table1.NumberOfRows;
+						if (prgHlpr0_y > prgHlpr_y + 10)
 						{
-							prgHlpr0_y = 100 * r1 / table1.NumberOfRows;
-							if (prgHlpr0_y > prgHlpr_y+10)
+							prgHlpr_y = prgHlpr0_y;
+							PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
+						}
+						if (mainArr1[(r1 - 1) * table1.NumberOfColumns + c1] == 1)
+						{
+							if (starts == L"")
 							{
-								prgHlpr_y = prgHlpr0_y;
-								PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
+								starts = convertR1C1(r1, c1);
 							}
-							if (mainArr1[(r1 - 1) * table1.NumberOfColumns + c1] == 1)
-							{
-								if (starts == L"")
-								{
-									starts = convertR1C1(r1, c1);
-								}
-								ends = convertR1C1(r1, c1);
-
-							}
-							else
-							{
-								if (!(starts == L"") && !(ends == L""))
-								{
-									CRange range = sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-									interior = range.get_Interior();
-									interior.put_Color(COleVariant(long(RGB(palette[chosenColor1].red, palette[chosenColor1].green, palette[chosenColor1].blue))));
-									starts = L"";
-									ends = L"";
-								}
-							}
+							ends = convertR1C1(r1, c1);
 
 						}
-						if (!(starts == L"") && !(ends == L""))
+						else
 						{
-							CRange range = sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-							interior = range.get_Interior();
-							interior.put_Color(COleVariant(long(RGB(palette[chosenColor1].red, palette[chosenColor1].green, palette[chosenColor1].blue))));
-							starts = L"";
-							ends = L"";
+							if (!(starts == L"") && !(ends == L""))
+							{
+								CRange range = sheet1.get_Range(COleVariant(starts), COleVariant(ends));
+								interior = range.get_Interior();
+								interior.put_Color(COleVariant(long(RGB(palette[chosenColor1].red, palette[chosenColor1].green, palette[chosenColor1].blue))));
+								starts = L"";
+								ends = L"";
+							}
+						}
+
+					}
+					if (!(starts == L"") && !(ends == L""))
+					{
+						CRange range = sheet1.get_Range(COleVariant(starts), COleVariant(ends));
+						interior = range.get_Interior();
+						interior.put_Color(COleVariant(long(RGB(palette[chosenColor1].red, palette[chosenColor1].green, palette[chosenColor1].blue))));
+						starts = L"";
+						ends = L"";
+					}
+				}
+				starts = L"";
+				ends = L"";
+				if (in2file)
+				{
+					prgHlpr_y = 0;
+					prgHlpr0_y = 0;
+					for (long r2 = table2.FirstRowWithData; r2 <= table2.NumberOfRows; r2++)
+					{
+						prgHlpr0_y = 100 * r2 / table2.NumberOfRows;
+						if (prgHlpr0_y > prgHlpr_y + 10)
+						{
+							prgHlpr_y = prgHlpr0_y;
+							PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
+						}
+						if (mainArr2[(r2 - 1) * table2.NumberOfColumns + c2] == 1)
+						{
+							if (starts == L"")
+							{
+								starts = convertR1C1(r2, c2);
+							}
+							ends = convertR1C1(r2, c2);
+
+						}
+						else
+						{
+							if (!(starts == L"") && !(ends == L""))
+							{
+								CRange range = sheet2.get_Range(COleVariant(starts), COleVariant(ends));
+								interior = range.get_Interior();
+								interior.put_Color(COleVariant(long(RGB(palette[chosenColor2].red, palette[chosenColor2].green, palette[chosenColor2].blue))));
+								starts = L"";
+								ends = L"";
+							}
 						}
 					}
-					starts = L"";
-					ends = L"";
-					if (in2file)
+					if (!(starts == L"") && !(ends == L""))
 					{
-						prgHlpr_y = 0;
-						prgHlpr0_y = 0;
-						for (long r2 = table2.FirstRowWithData; r2 <= table2.NumberOfRows; r2++)
-						{
-							prgHlpr0_y = 100 * r2 / table2.NumberOfRows;
-							if (prgHlpr0_y > prgHlpr_y+10)
-							{
-								prgHlpr_y = prgHlpr0_y;
-								PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
-							}
-							if (mainArr2[(r2 - 1) * table2.NumberOfColumns + c2] == 1)
-							{
-								if (starts == L"")
-								{
-									starts = convertR1C1(r2, c2);
-								}
-								ends = convertR1C1(r2, c2);
-
-							}
-							else
-							{
-								if (!(starts == L"") && !(ends == L""))
-								{
-									CRange range = sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-									interior = range.get_Interior();
-									interior.put_Color(COleVariant(long(RGB(palette[chosenColor2].red, palette[chosenColor2].green, palette[chosenColor2].blue))));
-									starts = L"";
-									ends = L"";
-								}
-							}
-						}
-						if (!(starts == L"") && !(ends == L""))
-						{
-							CRange range = sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-							interior = range.get_Interior();
-							interior.put_Color(COleVariant(long(RGB(palette[chosenColor2].red, palette[chosenColor2].green, palette[chosenColor2].blue))));
-							starts = L"";
-							ends = L"";
-						}
+						CRange range = sheet2.get_Range(COleVariant(starts), COleVariant(ends));
+						interior = range.get_Interior();
+						interior.put_Color(COleVariant(long(RGB(palette[chosenColor2].red, palette[chosenColor2].green, palette[chosenColor2].blue))));
+						starts = L"";
+						ends = L"";
 					}
 				}
 			}
 		}
+	}
 
 
-		for (long r1 = table1.FirstRowWithData; r1 <= table1.NumberOfRows; r1++)
+	for (long r1 = table1.FirstRowWithData; r1 <= table1.NumberOfRows; r1++)
+	{
+		if (keyMissing1[r1])
 		{
-			if (keyMissing1[r1])
-			{
-				starts = convertR1C1(r1, 1);
-				ends = convertR1C1(r1, table1.NumberOfColumns);
-				CRange range = sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-				interior = range.get_Interior();
-				interior.put_Color(COleVariant(long(RGB(palette[chosenColor1].red, palette[chosenColor1].green, palette[chosenColor1].blue))));
-			}
+			starts = convertR1C1(r1, 1);
+			ends = convertR1C1(r1, table1.NumberOfColumns);
+			CRange range = sheet1.get_Range(COleVariant(starts), COleVariant(ends));
+			interior = range.get_Interior();
+			interior.put_Color(COleVariant(long(RGB(palette[chosenColor1].red, palette[chosenColor1].green, palette[chosenColor1].blue))));
 		}
-		for (long r2 = table2.FirstRowWithData; r2 <= table2.NumberOfRows; r2++)
+	}
+	for (long r2 = table2.FirstRowWithData; r2 <= table2.NumberOfRows; r2++)
+	{
+		if (keyMissing2[r2]) // c1 - because we need it to run just once
 		{
-			if (keyMissing2[r2]) // c1 - because we need it to run just once
-			{
-				starts = convertR1C1(r2, 1);
-				ends = convertR1C1(r2, table2.NumberOfColumns);
-				CRange range = sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-				interior = range.get_Interior();
-				interior.put_Color(COleVariant(long(RGB(palette[chosenColor2].red, palette[chosenColor2].green, palette[chosenColor2].blue))));
-			}
+			starts = convertR1C1(r2, 1);
+			ends = convertR1C1(r2, table2.NumberOfColumns);
+			CRange range = sheet2.get_Range(COleVariant(starts), COleVariant(ends));
+			interior = range.get_Interior();
+			interior.put_Color(COleVariant(long(RGB(palette[chosenColor2].red, palette[chosenColor2].green, palette[chosenColor2].blue))));
 		}
+	}
 
-		PostMessage(CM_UPDATE_PROGRESS, 0, 100);
-		PostMessage(CM_UPDATE_PROGRESS2, 0, 100);
-		lockPrg2 = false;
-		EndWaitCursor();
-		g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
-		DrainMsgQueue();
+	PostMessage(CM_UPDATE_PROGRESS, 0, 100);
+	PostMessage(CM_UPDATE_PROGRESS2, 0, 100);
+	lockPrg2 = false;
+	EndWaitCursor();
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
+	DrainMsgQueue();
 }
 
 void CChildView::DrainMsgQueue(void)
@@ -3458,26 +3687,26 @@ int CChildView::rowFromCombo()
 void CChildView::OnButton6()
 {
 
-		long row;
-		long column;
-		row = rowFromCombo();
-		if (row > 0)
+	long row;
+	long column;
+	row = rowFromCombo();
+	if (row > 0)
+	{
+		row = foundDifferences[row];
+
+		column = oldx;
+		CString cnv = convertR1C1(row, column);
+		CRange range = sheet2.get_Range(COleVariant(cnv), COleVariant(cnv));
+		sheet2.Activate();
+		range.Select();
+		if (toFront)
 		{
-			row = foundDifferences[row];
-	
-			column = oldx;
-			CString cnv = convertR1C1(row, column);
-			CRange range = sheet2.get_Range(COleVariant(cnv), COleVariant(cnv));
-			sheet2.Activate();
-			range.Select();
-			if (toFront)
-			{
-				app.put_Interactive(true);
-				HWND ehWnd = (HWND)app.get_Hwnd();
-				::PostMessage(ehWnd, WM_SHOWWINDOW, SW_RESTORE, 0);
-				::SetForegroundWindow(ehWnd);
-			}
+			app.put_Interactive(true);
+			HWND ehWnd = (HWND)app.get_Hwnd();
+			::PostMessage(ehWnd, WM_SHOWWINDOW, SW_RESTORE, 0);
+			::SetForegroundWindow(ehWnd);
 		}
+	}
 }
 
 void CChildView::OnPut2front()
@@ -3491,7 +3720,1182 @@ void CChildView::OnUpdatePut2front(CCmdUI *pCmdUI)
 }
 
 
-void CChildView::decrementThreadCnt()
+
+
+
+void CChildView::suggestKeys1()
 {
-	threadCnt--;
+	int nPhase = 0;
+
+	int attempts = 0;
+
+	bool alreadyChecked = false;
+
+	checkedKeysCounter1 = 0;
+	for (int i = 0; i < SUGKEYS; i++)
+	{
+		checkedKeys1[i] = 0;
+	}
+
+	lockPrg1 = true;
+	int prgHlpr = 0, prgHlpr0 = 0;
+	possibleKeyCounter1 = 0;
+
+	for (int i = 0; i < 255; i++)
+	{
+		invEntropy1[i] = 0;
+	}
+
+
+	for (int i = 0; i <= SUGKEYS + 1; i++)
+	{
+		examinedKeys1[i] = 0;
+	}
+	int	e_i;
+	//////*********************
+
+
+
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+
+	for (int i_h = 1; i_h <= table1.NumberOfColumns; i_h++)
+	{
+		tmpMap1.clear();
+		for (int i_i = table1.FirstRowWithData; i_i <= table1.NumberOfRows; i_i++)
+		{
+			szdata = "";
+
+
+			// Loop through the data and report the contents.
+			index[0] = i_i;
+			index[1] = i_h;
+			try {
+				saRet1.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
+			szdata += vData;
+
+			if ((tmpMap1.find(szdata) == tmpMap1.end()))
+			{
+				tmpMap1[szdata] = i_i;
+				invEntropy1[i_h]++;
+			}
+
+		}
+	}
+
+
+	CalculateEntropyRank(1);
+
+
+///////////********************
+
+
+	if (table1.NumberOfRows > 0)
+	{
+		int foundKeysSet1 = 10;
+		while (true)
+		{
+			prgHlpr0 = 100 * (attempts + 1) / (complexity + 1); // only 3 keys
+			if (prgHlpr0 > prgHlpr)
+			{
+				prgHlpr = prgHlpr0;
+				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
+			}
+
+
+			if (is2BExaminedOnce(1, SUGKEYS - 1))  // TODO: allow some zeros
+			{
+
+				alreadyChecked = getSimilarKeyProbability(1, SUGKEYS);
+				if (!alreadyChecked)
+				{
+					foundKeysSet1 = createTempKeyArrays1();
+					//CString tracestring = L"";
+					//tracestring.Format(L"\n%i, %i, %i, %i, %i, %i, %i, %i, %i, %i : %i\n", examinedKeys1[0], examinedKeys1[1], examinedKeys1[2], examinedKeys1[3], examinedKeys1[4], examinedKeys1[5], examinedKeys1[6], examinedKeys1[7], examinedKeys1[8], examinedKeys1[9], foundKeysSet1);
+					//TRACE(tracestring);
+				}
+			}
+			else
+			{
+				foundKeysSet1 = 4; // Low entropy of key indexes
+			}
+
+
+
+			if (foundKeysSet1 == 0)
+			{
+
+				for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
+				{
+					possibleKeys1[possibleKeyCounter1].k[tmp_i] = getNthEntropy(1, examinedKeys1[tmp_i]);
+				}
+				sortExaminedKeys(1);
+
+				possibleKeyCounter1++;
+			}
+			if (attempts++ > complexity || possibleKeyCounter1 > table1.NumberOfColumns /*  ( .....3 - sgn(table1.keys[0]) - sgn(table1.keys[1]) - sgn(table1.keys[2]))  */)
+			{
+				break; // quit in any case
+			}
+			e_i = SUGKEYS - 1;
+			while (e_i >= 0)
+			{
+				/*if (table1.keys[e_i])
+				{
+					--e_i;
+				}
+				else */
+				{
+					if (examinedKeys1[e_i] >= table1.NumberOfColumns)
+					{
+						examinedKeys1[e_i] = 0;
+						--e_i; // decrement to the previous slot for key-column
+					}
+					else
+					{
+						++examinedKeys1[e_i];
+						break;
+					}
+				}
+			}
+
+		}
+	}
+	else
+	{
+		MessageBox(L"V prvním souboru není vybrán list obsahující data"); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)
+	}
+	PostMessage(CM_UPDATE_PROGRESS, 0, 10000);
+	return;
+
+}
+
+
+int CChildView::createTempKeyArrays1()
+{
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+
+	tmpMap1.clear();
+
+	if (sumExaminedKeys(1, SUGKEYS - 1) > 0)
+	{
+		for (int i_i = table1.FirstRowWithData; i_i <= table1.NumberOfRows; i_i++)
+		{
+			szdata = "";
+
+			for (int k_i = 0; k_i < SUGKEYS; k_i++)
+			{
+				if (examinedKeys1[k_i])
+				{
+					// Loop through the data and report the contents.
+					index[0] = i_i;
+					index[1] = getNthEntropy(1, examinedKeys1[k_i]);
+					try {
+						saRet1.GetElement(index, vData); vData = (CString)vData;
+					}
+					catch (COleException* e)
+					{
+						vData = L"";
+					}
+					szdata += vData;
+				}
+			}
+			if (!(tmpMap1.find(szdata) == tmpMap1.end()))
+			{
+				tmpMap1.clear();
+				return 2;
+			}
+			else
+			{
+				tmpMap1[szdata] = i_i;
+			}
+		}
+	}
+	else
+	{
+		return 1;
+	}
+
+	return 0;
+
+	//search for the next available set of not-examined-yet columns
+}
+
+
+void CChildView::suggestKeys2()
+{
+	int nPhase = 0;
+
+	int attempts = 0;
+
+	bool alreadyChecked = false;
+
+	checkedKeysCounter2 = 0;
+	for (int i = 0; i < SUGKEYS; i++)
+	{
+		checkedKeys2[i] = 0;
+	}
+
+
+	lockPrg2 = true;
+	int prgHlpr = 0, prgHlpr0 = 0;
+	possibleKeyCounter2 = 0;
+
+	for (int i = 0; i < 255; i++)
+	{
+		invEntropy2[i] = 0;
+	}
+
+	for (int i = 0; i <= SUGKEYS + 1; i++)
+	{
+		examinedKeys2[i] = 0;
+	} 
+	int	e_i;
+	//////*********************
+
+
+
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+
+	for (int i_h = 1; i_h <= table2.NumberOfColumns; i_h++)
+	{
+		tmpMap2.clear();
+		for (int i_i = table2.FirstRowWithData; i_i <= table2.NumberOfRows; i_i++)
+		{
+			szdata = "";
+
+
+			// Loop through the data and report the contents.
+			index[0] = i_i;
+			index[1] = i_h;
+			try {
+				saRet2.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
+			szdata += vData;
+
+			if ((tmpMap2.find(szdata) == tmpMap2.end()))
+			{
+				tmpMap2[szdata] = i_i;
+				invEntropy2[i_h]++;
+			}
+		}
+	}
+
+
+
+	CalculateEntropyRank(2);
+
+	///////////********************
+	if (table2.NumberOfRows > 0)
+	{
+		int foundKeysSet2 = 10;
+		while (true)
+		{
+			prgHlpr0 = 100 * (attempts + 1) / (complexity + 1);
+			if (prgHlpr0 > prgHlpr)
+			{
+				prgHlpr = prgHlpr0;
+				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
+			}
+
+			if (is2BExaminedOnce(2, SUGKEYS - 1))  // TODO: allow some zeros
+			{
+
+				alreadyChecked = getSimilarKeyProbability(2, SUGKEYS);
+
+				if (!alreadyChecked) foundKeysSet2 = createTempKeyArrays2();
+			}
+			else
+			{
+				foundKeysSet2 = 4; // Low entropy of key indexes
+			}
+
+
+			if (foundKeysSet2 == 0)
+			{
+
+				for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
+				{
+					possibleKeys2[possibleKeyCounter2].k[tmp_i] = getNthEntropy(2, examinedKeys2[tmp_i]);
+				}
+				sortExaminedKeys(2);
+
+				possibleKeyCounter2++;
+			}
+			if (attempts++ > complexity || possibleKeyCounter2 > table2.NumberOfColumns /*( ... 3 - sgn(table2.keys[0]) - sgn(table2.keys[1]) - sgn(table2.keys[2])) */)
+			{
+				break; // quit in any case
+			}
+			e_i = SUGKEYS - 1;
+			while (e_i >= 0)
+			{
+				/* if (table2.keys[e_i])
+				{
+					--e_i;
+				}
+				else */
+				{
+					if (examinedKeys2[e_i] >= table2.NumberOfColumns)
+					{
+						examinedKeys2[e_i] = 0;
+						--e_i; // decrement to the previous slot for key-column
+					}
+					else
+					{
+						++examinedKeys2[e_i];
+						break;
+					}
+				}
+			}
+
+		}
+
+	}
+	else
+	{
+		MessageBox(L"V prvním souboru není vybrán list obsahující data"); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)
+	}
+	PostMessage(CM_UPDATE_PROGRESS2, 0, 20000);
+	return;
+
+}
+
+
+int CChildView::createTempKeyArrays2()
+{
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+
+	tmpMap2.clear();
+
+	if (sumExaminedKeys(2, SUGKEYS - 1) > 0)
+	{
+		for (int i_i = table2.FirstRowWithData; i_i <= table2.NumberOfRows; i_i++)
+		{
+
+			szdata = "";
+
+			for (int k_i = 0; k_i < SUGKEYS; k_i++)
+			{
+
+				if (examinedKeys2[k_i])
+				{
+					// Loop through the data and report the contents.
+					index[0] = i_i;
+					index[1] = getNthEntropy(2, examinedKeys2[k_i]);;
+					try {
+						saRet2.GetElement(index, vData); vData = (CString)vData;
+					}
+					catch (COleException* e)
+					{
+						vData = L"";
+					}
+					szdata += vData;
+				}
+			}
+			if (!(tmpMap2.find(szdata) == tmpMap2.end()))
+			{
+				tmpMap2.clear();
+				return 2;
+			}
+			else
+			{
+				tmpMap2[szdata] = i_i;
+			}
+		}
+	}
+	else
+	{
+		return 1;
+	}
+	return 0;
+
+	//search for the next available set of not-examined-yet columns
+}
+
+
+void CChildView::clearPossibleKeys()
+{
+	for (int i = 0; i < 255; i++)
+	{
+		for (int ii = 0; ii < SUGKEYS; ii++)
+		{
+			possibleKeys1[i].k[ii] = 0;
+			possibleKeys2[i].k[ii] = 0;
+		}
+	}
+	possibleKeyCounter1 = 0;
+	possibleKeyCounter2 = 0;
+}
+
+
+inline void CChildView::sort3(int& a, int& b, int& c)
+{
+	if (c < b) swap(c, b);
+	if (b < a) swap(b, a);
+	if (c < b) swap(c, b);
+}
+
+UINT SuggestKeys1ThreadProc(LPVOID pParam)
+{
+	HWND hWnd1 = (HWND)pParam;
+
+	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+
+	pWnd->suggestKeys1();
+
+
+	AfxEndThread(0);
+	return 0;
+
+}
+
+UINT SuggestKeys2ThreadProc(LPVOID pParam)
+{
+	HWND hWnd1 = (HWND)pParam;
+
+	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+
+	pWnd->suggestKeys2();
+
+
+	AfxEndThread(0);
+	return 0;
+
+}
+
+UINT MutualCheckThreadProc(LPVOID pParam)
+{
+	HWND hWnd1 = (HWND)pParam;
+
+	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+
+	pWnd->mutualCheck();
+
+	AfxEndThread(0);
+	return 0;
+
+}
+
+
+bool CChildView::mutualCheck()
+{
+	bestKeyComb.pk1 = 0;
+	bestKeyComb.pk2 = 0;
+	bestKeyComb.rating = 0;
+	int tmpRslt = 0;
+	// Cascade check
+	if (getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0  && getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
+	{
+		MessageBox(L"V prvním ani ve druhém souboru nebyly nalezeny žádné použitelné klíče");
+		return false;
+	}
+	if (getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0)
+	{
+		MessageBox(L"V prvním souboru nebyly nalezeny žádné použitelné klíče");
+		return false;
+	}
+	if (getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
+	{
+		MessageBox(L"Ve druhém souboru nebyly nalezeny žádné použitelné klíče");
+		return false;
+	}
+	int m_i = 0;
+
+	lockPrg1 = true;
+	int prgHlpr = 0, prgHlpr0 = 0;
+	int order = 1;
+	while (m_i <= possibleKeyCounter1 && tmpRslt < 100)
+	{
+		prgHlpr0 = 100 * m_i / possibleKeyCounter1;
+		if (prgHlpr0 > prgHlpr)
+		{
+			prgHlpr = prgHlpr0;
+			PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
+		}
+		if (getNumberOfPossibleKeys(1, SUGKEYS, m_i) == order)
+		{
+			tmpRslt = checkKeys(m_i);
+		}
+		else
+		{
+			break;
+		}
+		m_i++;
+	}
+	order++;
+	int maxOrder = getNumberOfPossibleKeys(1, SUGKEYS, (possibleKeyCounter1 - 1 >= 0 ? possibleKeyCounter1 - 1 : 0));
+	while (tmpRslt < 90 && order <= maxOrder)
+	{
+		while (m_i <= possibleKeyCounter1 && tmpRslt < 90)
+		{
+			prgHlpr0 = 100 * m_i / possibleKeyCounter1;
+			if (prgHlpr0 > prgHlpr)
+			{
+				prgHlpr = prgHlpr0;
+				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
+			}
+			if (getNumberOfPossibleKeys(1, order, m_i) == order)
+			{
+				tmpRslt = checkKeys(m_i);
+			}
+			else
+			{
+				break;
+			}
+			m_i++;
+		}
+		order++;
+	}
+
+	if (tmpRslt)
+	{
+		PostMessage(CM_UPDATE_PROGRESS, 0, 100000);
+		return true;
+
+	}
+	PostMessage(CM_UPDATE_PROGRESS, 0, 200000);
+	return false;
+
+}
+
+
+
+
+
+int CChildView::checkKeys(int tab1)
+{
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+
+	lockPrg1 = true;
+	int prgHlpr = 0, prgHlpr0 = 0;
+
+	tmpMap1.clear();
+
+	int order1 = getNumberOfPossibleKeys(1, SUGKEYS, tab1);
+
+	if (order1 > 0)
+	{
+		for (int i_i = table1.FirstRowWithData; i_i <= table1.NumberOfRows; i_i++)
+		{
+			prgHlpr0 = 100 * i_i / table1.NumberOfRows;
+			if (prgHlpr0 > prgHlpr)
+			{
+				prgHlpr = prgHlpr0;
+				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr );
+			}
+			szdata = "";
+
+
+			for (int i_j = 0; i_j <= order1; i_j++)
+			{
+				if (possibleKeys1[tab1].k[i_j])
+				{
+
+					// Loop through the data and report the contents.
+					index[0] = i_i;
+					index[1] = possibleKeys1[tab1].k[i_j];
+					try {
+						saRet1.GetElement(index, vData); vData = (CString)vData;
+					}
+					catch (COleException* e)
+					{
+						vData = L"";
+					}
+					szdata += vData;
+				}
+			}
+
+			tmpMap1[szdata] = i_i;
+
+		}
+	}
+	else
+	{ 
+		return -1;  
+	}
+
+	int tab2 = 0;
+	while (getNumberOfPossibleKeys(2, SUGKEYS, tab2) < order1)
+	{
+		tab2++;
+	}
+	
+	long rslt = 0;
+
+	while (getNumberOfPossibleKeys(2, SUGKEYS, tab2) == order1)
+	{
+		long found = 0;
+		for (int i_i = table2.FirstRowWithData; i_i <= table2.NumberOfRows; i_i++)
+		{
+			prgHlpr0 = 100 * i_i / table2.NumberOfRows;
+			if (prgHlpr0 > prgHlpr)
+			{
+				prgHlpr = prgHlpr0;
+				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr );
+			}
+			szdata = "";
+
+			for (int i_k = 0; i_k <= order1; i_k++)
+			{
+				if (possibleKeys2[tab2].k[i_k])
+				{
+
+					// Loop through the data and report the contents.
+					index[0] = i_i;
+					index[1] = possibleKeys2[tab2].k[i_k];
+					try {
+						saRet2.GetElement(index, vData); vData = (CString)vData;
+					}
+					catch (COleException* e)
+					{
+						vData = L"";
+					}
+					szdata += vData;
+				}
+			}
+
+			if (tmpMap1.count(szdata))
+			{
+				found++;
+			}
+		}
+
+		rslt = 100 * found / min(table2.NumberOfRows - table2.FirstRowWithData, table1.NumberOfRows - table1.FirstRowWithData);
+
+		if (rslt > bestKeyComb.rating)
+		{
+			bestKeyComb.pk1 = tab1;
+			bestKeyComb.pk2 = tab2;
+			bestKeyComb.rating = rslt;
+			bestKeyComb.cnt = found;
+		}
+		tab2++;
+	}
+
+	return bestKeyComb.rating;
+
+}
+
+
+
+
+int CChildView::deleteKey(int table, int column)
+{
+	int rslt = 0;
+	int tmp_i = 0;
+	if (table == 1)
+	{
+		for (tmp_i = 0; tmp_i < keyPairCounter; tmp_i++)
+		{
+			if (keyPair[tmp_i].tab1 == column)
+			{
+				deleteKeyAt(tmp_i);
+				rslt++;
+			}
+		}
+	}
+	if (table == 2)
+	{
+		for (tmp_i = 0; tmp_i < keyPairCounter; tmp_i++)
+		{
+			if (keyPair[tmp_i].tab2 == column)
+			{
+				deleteKeyAt(tmp_i);
+				rslt++;
+			}
+		}
+	}
+	return rslt;
+}
+
+
+void CChildView::setKey(int table, int column)
+{
+	if (table == 1)
+	{
+		keyPair[keyPairCounter].tab1 = column;
+	}
+	if (table == 2)
+	{
+		keyPair[keyPairCounter].tab2 = column;
+	}
+}
+
+
+void CChildView::deleteAllKeys()
+{
+	for (int i_i = 1; i_i < keyPairCounter; i_i++)
+	{
+		keyPair[i_i].tab1 = 0;
+		keyPair[i_i].tab2 = 0;
+	}
+	keyPairCounter = 0;
+}
+
+
+bool CChildView::areThereAnyKeys()
+{
+	return keyPairCounter == 0 ? false : true;
+}
+
+
+bool CChildView::isThisAKey(int table, int column)
+{
+	if (table == 1)
+	{
+		for (int tmp_i = 0; tmp_i < keyPairCounter; tmp_i++)
+		{
+			if (keyPair[tmp_i].tab1 == column)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	if (table == 2)
+	{
+		for (int tmp_i = 0; tmp_i < keyPairCounter; tmp_i++)
+		{
+			if (keyPair[tmp_i].tab2 == column)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
+
+
+
+int CChildView::getNthKey(int table, int key)
+{
+	if (table == 1)
+	{
+		return keyPair[key].tab1;
+	}
+	else
+	{
+		return keyPair[key].tab2;
+	}
+}
+
+
+
+void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	if (cCell.x * cCell.y)
+	{
+		if (table1.NumberOfColumns * table2.NumberOfColumns)
+		{
+			if (deleteKey(1, cCell.y) + deleteKey(2, cCell.x) == 0)
+			{
+				pushKey(cCell.y, cCell.x);
+			}
+			this->Invalidate();
+		}
+	}
+
+	CWnd::OnRButtonUp(nFlags, point);
+}
+
+
+void CChildView::setNthKey(int n, int col1, int col2)
+{
+	keyPair[n].tab1 = col1;
+	keyPair[n].tab2 = col2;
+}
+
+
+void CChildView::insertKeyAt(int n, int col1, int col2)
+{
+	for (int tmp_i = keyPairCounter; tmp_i > n; tmp_i--)
+	{
+		keyPair[tmp_i].tab1 = keyPair[tmp_i - 1].tab1;
+		keyPair[tmp_i].tab2 = keyPair[tmp_i - 1].tab2;
+	}
+	keyPairCounter++;
+}
+
+
+void CChildView::deleteKeyAt(int n)
+{
+	for (int tmp_i = n; tmp_i < keyPairCounter; tmp_i++)
+	{
+		keyPair[tmp_i].tab1 = keyPair[tmp_i + 1].tab1;
+		keyPair[tmp_i].tab2 = keyPair[tmp_i + 1].tab2;
+	}
+	keyPairCounter--;
+}
+
+
+void CChildView::pushKey(int col1, int col2)
+{
+	keyPair[keyPairCounter].tab1 = col1;
+	keyPair[keyPairCounter].tab2 = col2;
+	keyPairCounter++;
+}
+
+
+bool CChildView::usePossibleKeys()
+{
+	deleteAllKeys();
+	int numberOfPossibleKeys = getNumberOfPossibleKeys();
+	for (int tmp_i = 0; tmp_i <= numberOfPossibleKeys; tmp_i++)
+	{
+		if (possibleKeys1[bestKeyComb.pk1].k[tmp_i] + possibleKeys2[bestKeyComb.pk2].k[tmp_i])
+		{
+			pushKey(possibleKeys1[bestKeyComb.pk1].k[tmp_i], possibleKeys2[bestKeyComb.pk2].k[tmp_i]);
+		}
+	}
+	return false;
+}
+
+
+int CChildView::getNumberOfPossibleKeys()
+{
+	for (int tmp_i = 1; tmp_i < 255; tmp_i++)
+	{
+		if (possibleKeys1[bestKeyComb.pk1].k[tmp_i] == 0 && possibleKeys2[bestKeyComb.pk2].k[tmp_i] == 0)
+		{
+			return tmp_i;
+		}
+	}
+	return 0;
+}
+
+
+void CChildView::sortExaminedKeys(int table)
+{
+	int nonzerosNr = 0;
+	if (table == 1)
+	{
+		for (int i_i = 0; i_i < SUGKEYS; i_i++)
+		{
+			if (possibleKeys1[possibleKeyCounter1].k[i_i] > 0 && nonzerosNr < i_i)
+			{
+				possibleKeys1[possibleKeyCounter1].k[nonzerosNr] = possibleKeys1[possibleKeyCounter1].k[i_i];
+				possibleKeys1[possibleKeyCounter1].k[i_i] = 0;
+				nonzerosNr++;
+			}
+		}
+	}
+	else
+	{
+		for (int i_i = 0; i_i < SUGKEYS; i_i++)
+		{
+			if (possibleKeys2[possibleKeyCounter2].k[i_i] > 0 && nonzerosNr < i_i)
+			{
+				possibleKeys2[possibleKeyCounter2].k[nonzerosNr] = possibleKeys2[possibleKeyCounter2].k[i_i];
+				possibleKeys2[possibleKeyCounter2].k[i_i] = 0;
+				nonzerosNr++;
+			}
+		}
+	}
+
+// return nonzerosNr;
+}
+
+
+int CChildView::sumExaminedKeys(int table, int nmax)
+{
+	int rslt = 0;
+	if (table == 1)
+	{
+		for (int tmp_i = 0; tmp_i <= nmax; tmp_i++)
+		{
+			rslt += examinedKeys1[tmp_i];
+		}
+	}
+	else
+	{
+		for (int tmp_i = 0; tmp_i <= nmax; tmp_i++)
+		{
+			rslt += examinedKeys2[tmp_i];
+		}
+	}
+	return rslt;
+}
+
+
+bool CChildView::is2BExaminedOnce(int table, int max)
+{
+	if (table == 1)
+	{
+		for (int tmp_i0 = 0; tmp_i0 <= max; tmp_i0++)
+		{
+			if (examinedKeys1[tmp_i0] > 0)
+			{
+				for (int tmp_i1 = tmp_i0 + 1; tmp_i1 <= max; tmp_i1++)
+				{
+					if (examinedKeys1[tmp_i0] == examinedKeys1[tmp_i1])
+					{
+						return false;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		for (int tmp_i0 = 0; tmp_i0 <= max; tmp_i0++)
+		{
+			if (examinedKeys2[tmp_i0] > 0)
+			{
+				for (int tmp_i1 = tmp_i0 + 1; tmp_i1 <= max; tmp_i1++)
+				{
+					if (examinedKeys2[tmp_i0] == examinedKeys2[tmp_i1])
+					{
+						return false;
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+
+bool CChildView::getSimilarKeyProbability(int table, int max)
+{
+	int similarKeyProbab = 0;
+	int tmpa[SUGKEYS];
+	unsigned long long ullTest = 0;
+
+	if (table == 1)
+	{
+		for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
+		{
+			if (examinedKeys1[tmp_i])
+			{
+				ullTest += pow(2, examinedKeys1[tmp_i]);
+			}
+		}
+		for (int tmp_i0 = 0; tmp_i0 <= checkedKeysCounter1; tmp_i0++)
+		{
+			if (checkedKeys1[tmp_i0] == ullTest)
+			{
+				return true;
+			}
+		}
+		if (checkedKeysCounter1 < complexity)
+		{
+			checkedKeys1[checkedKeysCounter1] = ullTest;
+			checkedKeysCounter1++;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else
+	{
+		for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
+		{
+			if (examinedKeys2[tmp_i])
+			{
+				ullTest += pow(2, examinedKeys2[tmp_i]);
+			}
+		}
+		for (int tmp_i0 = 0; tmp_i0 <= checkedKeysCounter2; tmp_i0++)
+		{
+			if (checkedKeys2[tmp_i0] == ullTest)
+			{
+				return true;
+			}
+		}
+		if (checkedKeysCounter2 < complexity)
+		{
+			checkedKeys2[checkedKeysCounter2] = ullTest;
+			checkedKeysCounter2++;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+int CChildView::getNthEntropy(int table, int n)
+{
+	if (table == 1)
+	{
+		return sortedEntropy1[n];
+	}
+	else
+	{
+		return sortedEntropy2[n];
+	}
+	return 0;
+}
+
+
+int CChildView::CalculateEntropyRank(int table)
+{
+	int hlpr_index;
+	int hlpr_value;
+	int lasthlpr_value = 0;
+	int stored = 0;
+	int i2 = 0;
+
+
+	i2 = 1;
+	if (table == 1)
+	{
+		for (int i0 = 0; i0 < 255; i0++)
+		{
+			sortedEntropy1[i0] = 0;
+		}
+		while (stored < table1.NumberOfColumns)
+		{
+			hlpr_index = 0;
+			hlpr_value = 0;
+			for (int i1 = 1; i1 <= table1.NumberOfColumns; i1++)
+			{
+				if (invEntropy1[i1] >= hlpr_value && !isEntropyStored(1, i1, stored))
+				{
+					hlpr_value = invEntropy1[i1];
+					hlpr_index = i1;
+				}
+			}
+			if (hlpr_index > 0)
+			{
+				stored++;
+				sortedEntropy1[stored] = hlpr_index;
+			}
+		}
+	}
+	else
+	{
+		for (int i0 = 0; i0 < 255; i0++)
+		{
+			sortedEntropy2[i0] = 0;
+		}
+		while (stored < table2.NumberOfColumns)
+		{
+			hlpr_index = 0;
+			hlpr_value = 0;
+			for (int i2 = 1; i2 <= table2.NumberOfColumns; i2++)
+			{
+				if (invEntropy2[i2] >= hlpr_value && !isEntropyStored(2, i2, stored))
+				{
+					hlpr_value = invEntropy2[i2];
+					hlpr_index = i2;
+				}
+			}
+			if (hlpr_index > 0)
+			{
+				stored++;
+				sortedEntropy2[stored] = hlpr_index;
+			}
+		}
+	}
+
+
+
+	return 0;
+}
+
+
+bool CChildView::isEntropyStored(int table, int clm, int max)
+{
+	if (table == 1)
+	{
+		for (int i = 1; i <= max; i++)
+		{
+			if (sortedEntropy1[i] == clm)
+			{
+				return true;
+			}
+		}
+	}
+	else
+	{
+		for (int i = 1; i <= max; i++)
+		{
+			if (sortedEntropy2[i] == clm)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
+void CChildView::OnUpdateCombo2(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(true);
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	if (!pCombo2)
+	{
+		pCombo2 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, pRibbon->FindByID(ID_COMBO2));
+		if (pCombo2)
+		{
+			pCombo2->SelectItem(1);
+
+		}
+	}
+
+}
+
+
+void CChildView::OnCombo2()
+{
+	// TODO: Add your command handler code here
+	if (pCombo2->GetCurSel() == 0) complexity = 10000;
+	if (pCombo2->GetCurSel() == 1) complexity = 100000;
+	if (pCombo2->GetCurSel() == 2) complexity = 1000000;
+}
+
+
+//int CChildView::getPossibleKeyReadiness(int table, int order)
+//{
+//
+//	return 0;
+//}
+
+
+int CChildView::getNumberOfPossibleKeys(int table, int order, int item)
+{
+	int cnt = 0;
+	if (table == 1)
+	{
+		for (int i = 0; i < order; i++)
+		{
+			cnt += sgn(possibleKeys1[item].k[i]);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < order; i++)
+		{
+			cnt += sgn(possibleKeys2[item].k[i]);
+		}
+	}
+	return cnt;
 }
