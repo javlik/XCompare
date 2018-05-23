@@ -127,21 +127,21 @@ NotUniqueKeys notUniqueKeys1, notUniqueKeys2;
 
 Palette palette[20]; // user can choose one of the 20 colors that will be used for background of found difference 
 
-PossibleKeys possibleKeys1[256];
+PossibleKeys possibleKeys1[256]; // Contains combinations of found unique keys sorted by invEntropy
 PossibleKeys possibleKeys2[256];
 
-KeyPair keyPair[256];
-int		keyPairCounter;
+KeyPair keyPair[256]; // Unsorted pairs of keys
+int		keyPairCounter; // The counter of key pairts - obviously
 
-BestKeyComb bestKeyComb;
+BestKeyComb bestKeyComb; // Found the most appropriate combination of keys
 
-int possibleKeyCounter1 = 0;
-int possibleKeyCounter2 = 0;
+int possibleKeyCounter1 = 0; // Counter of possible keys - without respect to the other table
+int possibleKeyCounter2 = 0; // 
 
-long invEntropy1[256];
+long invEntropy1[256]; // Rating of "entropy" for found possible combinations - without respect to other table
 long invEntropy2[256];
 
-int sortedEntropy1[256];
+int sortedEntropy1[256]; // Sorted rating of entropy - without respect to other table
 int sortedEntropy2[256];
 
 bool prereq1valid, prereq2valid; // are prerequisities for execution of main process fulfilled
@@ -178,19 +178,19 @@ CString *keyArr21; // ... the first key ... the second file
 				   //CString *keyArr22; // ... the second key ... the second file
 				   //CString *keyArr23; // ... the third key ... the second file
 
-CString *tmpKeyArr11;
+CString *tmpKeyArr11; // General temporary dynamic array of concatenated keys
 CString *tmpKeyArr21;
 
-bool *keyMissing1;
-bool *keyMissing2;
+bool *keyMissing1; // General dynamic array of empty keys
+bool *keyMissing2; 
 
-bool *tmpKeyMissing1;
+bool *tmpKeyMissing1; // General temporary dynamic array of empty keys
 bool *tmpKeyMissing2;
 
-int examinedKeys1[SUGKEYS + 4];
+int examinedKeys1[SUGKEYS + 4]; // Array of keys that were (or were not yet) checked for their inv entropy
 int examinedKeys2[SUGKEYS + 4];
 
-int tmpKeys1[SUGKEYS + 4];
+int tmpKeys1[SUGKEYS + 4]; // Temporary array of keys that were checked for entropy - this workaround protects against possible collision of threads (in cpu cache)
 int tmpKeys2[SUGKEYS + 4];
 
 int *mainMatrix; // 2D array representing the result matrix
@@ -206,13 +206,13 @@ long selectedDifference; // difference picked by user in the drop down box in th
 CMFCRibbonBar* pRibbon; // pointer to ribbon object
 						//CMFCRibbonStatusBarPane *statusBarPane;
 
-Table table1;
+Table table1; // Important information of tables (number of columns, rows, first row under header, etc.)
 Table table2;
 
 COleSafeArray saRet1; // OLE object for connection to first Excel file
 COleSafeArray saRet2; // ... second Excel file
 
-COleSafeArray saTmpRet1;
+COleSafeArray saTmpRet1; // temporary OLE object - this workaround hopefully protects against cache collisions
 COleSafeArray saTmpRet2;
 
 CString filename1; // name of the first file that is to be compared
@@ -255,7 +255,7 @@ int prgval1; // not used
 CMFCRibbonProgressBar* pProgressBar1; // CMFCRibbon UI objects
 CMFCRibbonProgressBar* pProgressBar2;
 
-CMFCRibbonComboBox* pCombo2;
+CMFCRibbonComboBox* pCombo2;  // Pointers to GUI elements
 CMFCRibbonComboBox* pSheetCombo1;
 CMFCRibbonComboBox* pSheetCombo2;
 CMFCRibbonEdit* pSpinner1_Fdata;
