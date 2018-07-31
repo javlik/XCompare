@@ -75,6 +75,16 @@ IDB_BITMAP1             BITMAP                  "D:\\pix\\New folder (2)\\legend
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// PNG
+//
+
+IDB_PNG4                PNG                     "res\\buttons_2.png"
+
+IDB_PNG1                PNG                     "res\\x.png"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
@@ -211,7 +221,6 @@ BEGIN
     ID_KEY2_2               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
     ID_KEY1_3               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
     ID_KEY2_3               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
-    ID_PUT_TO_FRONT         "Pokud zaškrtnuto, Excel je pøesunut do popøedí po kliknutí na jedno z tlaèítek\nExcel do popøedí  "
     ID_CHECK4               "Oznaèovat po dvojkliknutí na buòku nebo automaticky\nOznaèovat odlišnosti prímo v porovnávaném souboru"
     ID_CHECK5               "Oznaèovat po dvojkliknutí na buòku nebo automaticky\nOznaèovat odlišnosti prímo v porovnávaném souboru"
 END
@@ -343,10 +352,10 @@ BEGIN
             MENUITEM "Visual Studio 200&8",         ID_VIEW_APPLOOK_VS_2008
             POPUP "Office 200&7"
             BEGIN
-                MENUITEM "&Blue Style",                 ID_VIEW_APPLOOK_OFF_2007_BLUE
-                MENUITEM "B&lack Style",                ID_VIEW_APPLOOK_OFF_2007_BLACK
-                MENUITEM "&Silver Style",               ID_VIEW_APPLOOK_OFF_2007_SILVER
-                MENUITEM "&Aqua Style",                 ID_VIEW_APPLOOK_OFF_2007_AQUA
+                MENUITEM "&Modrý styl",                 ID_VIEW_APPLOOK_OFF_2007_BLUE
+                MENUITEM "È&erný styl",                 ID_VIEW_APPLOOK_OFF_2007_BLACK
+                MENUITEM "&Støíbrný styl",              ID_VIEW_APPLOOK_OFF_2007_SILVER
+                MENUITEM "&Aqua",                       ID_VIEW_APPLOOK_OFF_2007_AQUA
             END
         END
     END
@@ -378,10 +387,10 @@ END
 
 IDR_THEME_MENU MENU
 BEGIN
-    MENUITEM "Office 2007 (&Blue Style)",   ID_VIEW_APPLOOK_OFF_2007_BLUE
-    MENUITEM "Office 2007 (B&lack Style)",  ID_VIEW_APPLOOK_OFF_2007_BLACK
-    MENUITEM "Office 2007 (&Silver Style)", ID_VIEW_APPLOOK_OFF_2007_SILVER
-    MENUITEM "Office 2007 (&Aqua Style)",   ID_VIEW_APPLOOK_OFF_2007_AQUA
+    MENUITEM "Office 2007 (&Modrý Styl)",   ID_VIEW_APPLOOK_OFF_2007_BLUE
+    MENUITEM "Office 2007 (C&erný styl)",   ID_VIEW_APPLOOK_OFF_2007_BLACK
+    MENUITEM "Office 2007 (&Stríbrný styl)", ID_VIEW_APPLOOK_OFF_2007_SILVER
+    MENUITEM "Office 2007 (&Aqua)",         ID_VIEW_APPLOOK_OFF_2007_AQUA
     MENUITEM "Win&dows 7",                  ID_VIEW_APPLOOK_WINDOWS_7
 END
 
@@ -412,8 +421,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,5,0,1
- PRODUCTVERSION 1,5,0,1
+ FILEVERSION 2,0,0,1
+ PRODUCTVERSION 2,0,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -430,12 +439,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "TODO: <Company name>"
             VALUE "FileDescription", "XCompare"
-            VALUE "FileVersion", "1.5.0.1"
+            VALUE "FileVersion", "2.0.0.1"
             VALUE "InternalName", "XCompare.exe"
             VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
             VALUE "OriginalFilename", "XCompare.exe"
             VALUE "ProductName", "XCompare (Cross comparison tool)"
-            VALUE "ProductVersion", "1.5.0.1"
+            VALUE "ProductVersion", "2.0.0.1"
         END
     END
     BLOCK "VarFileInfo"
@@ -464,7 +473,7 @@ CAPTION "About XCompare"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,14,14,20,20
-    LTEXT           "XCompare, Version 1.5.0.1, CZ (HR) (64b)",IDC_STATIC,42,14,163,8,SS_NOPREFIX
+    LTEXT           "XCompare, Version 2.0.0.1, CZ (HR) (64b)",IDC_STATIC,42,14,163,8,SS_NOPREFIX
     LTEXT           "RBCB/ICO3, Copyright (C) 2017",IDC_STATIC,42,26,114,8
     DEFPUSHBUTTON   "OK",IDOK,120,256,128,19,WS_GROUP
     CONTROL         IDB_BITMAP1,IDC_STATIC,"Static",SS_BITMAP,17,42,328,204

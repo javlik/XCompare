@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include <cstring>
 #include <map>
+#include <vector>
 #include "XCompare.h"
 #include "ChildView.h"
 #include "MainFrm.h"
@@ -30,6 +31,8 @@ extern CMainFrame* g_pMainFrame; // pointer to FrameWindow
 #define CM_UPDATE_PROGRESS WM_APP + 1
 #define CM_UPDATE_PROGRESS2 WM_APP + 2
 #define CM_UPDATE_PROGRESS3 WM_APP + 3
+#define CM_UPDATE_KEYPROGRESS1 WM_APP + 4
+#define CM_UPDATE_KEYPROGRESS2 WM_APP + 5
 
 #define OFFSET_Y 100 // height of a column (within the visual representation of the result matrix) that contains the names of column taken from the second table
 #define OFFSET_X 100 // width of a row ... first table
@@ -94,6 +97,13 @@ struct VisTopLeft {
 struct  KeyPair {
 	int tab1;
 	int tab2;
+};
+
+struct SimilaritiesAcrossTables {
+	int clm1;
+	int clm2;
+	long similarity;
+	int similarityOrder;
 };
 
 
@@ -201,6 +211,12 @@ bool *greenClms1; // 1D array indicating whether a column has its "lookalike" in
 bool *greenClms2; // 1D array indicating whether a column has its "lookalike" in the first file
 
 long *foundDifferences; // number of differences found between intersected columns (for the doubleclicked cell)
+
+//SimilaritiesAcrossTables *similaritiesAcrossTables; // the best similarity for each column across tables
+std::vector<SimilaritiesAcrossTables> similaritiesAcrossTables;
+std::vector<SimilaritiesAcrossTables> similaritiesAcrossTablesSorted;
+
+
 long selectedDifference; // difference picked by user in the drop down box in the "analysis" tab
 
 CMFCRibbonBar* pRibbon; // pointer to ribbon object
@@ -211,6 +227,9 @@ Table table2;
 
 COleSafeArray saRet1; // OLE object for connection to first Excel file
 COleSafeArray saRet2; // ... second Excel file
+
+
+
 
 COleSafeArray saTmpRet1; // temporary OLE object - this workaround hopefully protects against cache collisions
 COleSafeArray saTmpRet2;
@@ -254,6 +273,8 @@ float fZoom; // not used at the moment
 int prgval1; // not used 
 CMFCRibbonProgressBar* pProgressBar1; // CMFCRibbon UI objects
 CMFCRibbonProgressBar* pProgressBar2;
+CMFCRibbonProgressBar* pKeyProgressBar1;
+CMFCRibbonProgressBar* pKeyProgressBar2;
 
 CMFCRibbonComboBox* pCombo2;  // Pointers to GUI elements
 CMFCRibbonComboBox* pSheetCombo1;
@@ -277,6 +298,10 @@ CMFCRibbonLabel* pLabel0;
 CMFCRibbonLabel* pLabel1;
 CMFCRibbonLabel* pLabel2;
 CMFCRibbonCheckBox* pToFront;
+CMFCRibbonCheckBox* pShowSims;
+CMFCRibbonButton* pCreateNewKeys;
+CMFCRibbonButton* pButton2;
+CMFCRibbonCheckBox* pUseIndices;
 
 
 bool toFront; // should Excel be moved to front when the difference is requested to be shown?
@@ -292,6 +317,9 @@ VisTopLeft visTopLeft; // the coordinates of the topmost and leftmost visible ce
 
 bool in1file; // whether are differences to be marked in the first file
 bool in2file; // ... second file
+
+bool toDisplaySimilarClms; // whether similar columns across the tables are to be displayed
+bool xSimilarityComputed; // whether we have results of similarity across tables
 
 bool autoMark; // do we request automatic marking of differences?
 
@@ -314,6 +342,13 @@ bool forceNotOnlyPcnt; // inverse of the above (just a helper)
 
 int sldr; // value set on the slider in the "analysis" tab
 
+CPen simsPens[256];
+CPen keyCurvePen;
+
+bool m_bUseIndexes;
+bool m_newFile1, m_newFile2;
+
+
 		  // CChildView
 
 // <Declaration of threads>
@@ -329,7 +364,9 @@ UINT makePrereq2ThreadProc(LPVOID pParam);
 UINT SuggestKeys1ThreadProc(LPVOID pParam);
 UINT SuggestKeys2ThreadProc(LPVOID pParam);
 UINT MutualCheckThreadProc(LPVOID pParam);
-
+UINT FindSimsThreadProc(LPVOID pParam);
+UINT FindSimsThreadProc1(LPVOID pParam);
+UINT FindSimsThreadProc2(LPVOID pParam);
 CString mszRsrcs;
 
 // </Declaration of threads>
@@ -366,6 +403,8 @@ CChildView::CChildView()
 	palette[18] = { 0, 255, 255 };
 	palette[19] = { 255, 255, 255 };
 
+	toDisplaySimilarClms = false;
+	xSimilarityComputed = false;
 	autoMark = false;
 	doAutoMark = false;
 	rsltTxt = "";
@@ -413,6 +452,8 @@ CChildView::CChildView()
 
 	foundDifferences = new long[1]; // number of differences found between intersected columns (for the doubleclicked cell) 
 
+	//similaritiesAcrossTables = new SimilaritiesAcrossTables[1];
+
 
 
 	in1file = false;
@@ -442,6 +483,16 @@ CChildView::CChildView()
 	oldCell.x = 0; oldCell.y = 0;
 	table1.NumberOfColumns = 0;
 	table2.NumberOfColumns = 0;
+
+	for (int i = 0; i < 256; i++)
+	{
+		simsPens[i].CreatePen(PS_ENDCAP_FLAT, (i) / 32 + 0.5,  RGB((255 - i) / 1.1, (255 - i) / 1.1, (255 - i) / 1.1));
+	}
+	keyCurvePen.CreatePen(PS_ENDCAP_FLAT, 2, RGB(100, 150, 250));
+
+	m_bUseIndexes = false;
+	m_newFile1 = false;
+	m_newFile2 = false;
 
 	complexity = 100000;
 }
@@ -528,6 +579,8 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_MESSAGE(CM_UPDATE_PROGRESS, &CChildView::OnCmUpdateProgress)
 	ON_MESSAGE(CM_UPDATE_PROGRESS2, &CChildView::OnCmUpdateProgress2)
 	ON_MESSAGE(CM_UPDATE_PROGRESS3, &CChildView::OnCmUpdateProgress3)
+	ON_MESSAGE(CM_UPDATE_KEYPROGRESS1, &CChildView::OnCmUpdateKeyProgress1)
+	ON_MESSAGE(CM_UPDATE_KEYPROGRESS2, &CChildView::OnCmUpdateKeyProgress2)
 	//ON_COMMAND(ID_PROGRESS2, &CChildView::OnProgress2)
 	ON_COMMAND(ID_BUTTON5, &CChildView::OnButton5)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON5, &CChildView::OnUpdateButton5)
@@ -547,6 +600,14 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_RBUTTONUP()
 	ON_UPDATE_COMMAND_UI(ID_COMBO2, &CChildView::OnUpdateCombo2)
 	ON_COMMAND(ID_COMBO2, &CChildView::OnCombo2)
+	ON_COMMAND(ID_SIMILARPAIRCHECKBOX, &CChildView::OnSimilarpaircheckbox)
+	ON_UPDATE_COMMAND_UI(ID_SIMILARPAIRCHECKBOX, &CChildView::OnUpdateSimilarpaircheckbox)
+	ON_COMMAND(ID_FINDREL_BTN, &CChildView::OnFindrelBtn)
+	ON_COMMAND(ID_IDXCRT_BTN, &CChildView::OnIdxcrtBtn)
+	ON_UPDATE_COMMAND_UI(ID_KEY_PROGRESS1, &CChildView::OnUpdateKeyProgress1)
+	ON_UPDATE_COMMAND_UI(ID_KEY_PROGRESS2, &CChildView::OnUpdateKeyProgress2)
+	ON_COMMAND(ID_USIDX_CHECK, &CChildView::OnUsidxCheck)
+	ON_UPDATE_COMMAND_UI(ID_USIDX_CHECK, &CChildView::OnUpdateUsidxCheck)
 END_MESSAGE_MAP()
 
 
@@ -588,8 +649,8 @@ void CChildView::OnPaint()
 	clnt.h = (rect.Height());
 
 
-	CPen pen1, pen2, pen3, pen4, pen5, pen6, pen7, pen8, pen9, pen10;
-	CBrush brush0, brush1, brush2, brush3, brush4, brush5, brush6;
+	CPen pen1, pen2, pen3, pen4, pen5, pen6, pen7, pen8, pen9, pen10, pen11, pen12;
+	CBrush brush0, brush1, brush2, brush3, brush4, brush5, brush6, brush7;
 
 	pen1.CreatePen(PS_SOLID, 1, RGB(220, 220, 220));
 	pen2.CreatePen(PS_SOLID, 1, RGB(200, 200, 200));
@@ -601,6 +662,10 @@ void CChildView::OnPaint()
 	pen8.CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
 	pen9.CreatePen(PS_SOLID, 2, RGB(155, 155, 255));
 	pen10.CreatePen(PS_SOLID, 1, RGB(235, 235, 245));
+	pen11.CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	pen12.CreatePen(PS_SOLID, 1, RGB(175, 0, 175));
+
+
 
 	brush0.CreateSolidBrush(RGB(255, 255, 255));
 	brush1.CreateSolidBrush(RGB(100, 255, 100));
@@ -609,6 +674,8 @@ void CChildView::OnPaint()
 	brush4.CreateSolidBrush(RGB(255, 80, 80));
 	brush5.CreateSolidBrush(RGB(180, 180, 230));
 	brush6.CreateSolidBrush(RGB(240, 240, 240));
+	brush7.CreateSolidBrush(RGB(150, 200, 255));
+
 
 
 
@@ -616,7 +683,7 @@ void CChildView::OnPaint()
 	dc.SelectObject(&brush1);
 
 
-	CFont font1, font2, font3, font4, font1B, font2B;
+	CFont font1, font2, font3, font4, font1B, font2B, font1C, font2C;
 
 	font1.CreateFontW(16, 0, 0, 0, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 	font2.CreateFontW(16, 0, 900, 900, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
@@ -625,7 +692,8 @@ void CChildView::OnPaint()
 
 	font1B.CreateFontW(16, 0, 0, 0, FW_EXTRABOLD, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 	font2B.CreateFontW(16, 0, 900, 900, FW_EXTRABOLD, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
-
+	font1C.CreateFontW(12, 0, 0, 0, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
+	font2C.CreateFontW(12, 0, 900, 900, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 
 	int bnd_X_min = 1;
 	int bnd_X_max = table2.NumberOfColumns;
@@ -639,7 +707,7 @@ void CChildView::OnPaint()
 	dc.SelectObject(&font4);
 	CString prcnt;
 	prcnt = L"";
-	if (cCell.x * cCell.y && matrixDone)
+	if (!toDisplaySimilarClms && cCell.x * cCell.y && matrixDone)
 	{
 		dc.SetBkMode(TRANSPARENT);
 		if (cCell.x <= bnd_X_max && cCell.y <= bnd_Y_max)
@@ -665,6 +733,41 @@ void CChildView::OnPaint()
 		}
 
 	}
+	if (!onlyPcnt)
+	{
+		if (m_newFile1 && filename1)
+		{
+			dc.SetTextColor(RGB(120, 0, 130));
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(&font1C);
+			int index = ReverseFind(filename1, L"\\", -1) + 1;
+			dc.TextOutW(2, 114, filename1.Mid(index, 22));
+
+		}
+		if (m_newFile2 && filename2)
+		{
+			dc.SetTextColor(RGB(120, 0, 130));
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(&font2C);
+			int index = ReverseFind(filename2, L"\\", -1) + 1;
+			dc.TextOutW(112, 118, filename2.Mid(index, 22));
+
+		}
+	}
+	if (cCell.x * cCell.y && toDisplaySimilarClms)
+	{
+		if (cCell.x <= bnd_X_max && cCell.y <= bnd_Y_max)
+		{
+			
+			dc.SetTextColor(RGB(50, 100, 250));
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(&font1C);
+			dc.TextOutW(5, 30, L"Vhodnost samost. klíče:");
+			dc.SelectObject(&font4);
+			prcnt.Format(L"~ %i%%", 100 * similaritiesAcrossTables[cCell.y].similarity / min(table1.NumberOfRows - table1.FirstRowWithData + 1, table2.NumberOfRows - table2.FirstRowWithData + 1));
+			dc.TextOutW(15, 60, prcnt);
+		}
+	}
 	// /Info area redrawing
 											//dc.TextOutW(100, 100, L"+ěščřžýá"); // test of the ability to make an output in czech lang.
 	dc.SelectObject(&brush0);
@@ -673,19 +776,20 @@ void CChildView::OnPaint()
 
 	dc.SelectObject(&pen2);
 	dc.SelectObject(&brush1);
-
-	for (int i_0 = OFFSET_X + STEP_X; i_0 < clnt.w; i_0 += STEP_X)
+	if (!toDisplaySimilarClms)
 	{
-		dc.MoveTo(i_0, 0);
-		dc.LineTo(i_0, clnt.h);
+		for (int i_0 = OFFSET_X + STEP_X; i_0 < clnt.w; i_0 += STEP_X)
+		{
+			dc.MoveTo(i_0, 0);
+			dc.LineTo(i_0, clnt.h);
 
+		}
+		for (int i_0 = OFFSET_Y + STEP_Y; i_0 < clnt.h; i_0 += STEP_X)
+		{
+			dc.MoveTo(0, i_0);
+			dc.LineTo(clnt.w, i_0);
+		}
 	}
-	for (int i_0 = OFFSET_Y + STEP_Y; i_0 < clnt.h; i_0 += STEP_X)
-	{
-		dc.MoveTo(0, i_0);
-		dc.LineTo(clnt.w, i_0);
-	}
-
 
 
 	dc.SelectObject(&pen2);
@@ -710,7 +814,7 @@ void CChildView::OnPaint()
 			{
 				if (mx_y_adj == cCell.y)
 				{
-					if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+					if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && (cCell.x > 0 || toDisplaySimilarClms) && cCell.x <= table2.NumberOfColumns)
 					{
 						cursor = true;
 					}
@@ -731,7 +835,7 @@ void CChildView::OnPaint()
 		}
 		if (mx_y_adj == cCell.y)
 		{
-			if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+			if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && (cCell.x > 0 || toDisplaySimilarClms) && cCell.x <= table2.NumberOfColumns)
 			{
 				 cursor = true;
 			}
@@ -753,7 +857,16 @@ void CChildView::OnPaint()
 		//else
 			dc.Rectangle(0, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X, 1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
 
-
+		if (cursor)
+		{
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(&brush0);
+			if (toDisplaySimilarClms) dc.SelectObject(&pen12); else dc.SelectObject(&pen11);
+			dc.Rectangle(2, 2 + OFFSET_Y + mx_y * STEP_Y, OFFSET_X + STEP_X - 1, -1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
+			dc.SetBkMode(OPAQUE);
+			dc.SelectObject(&brush0);
+			dc.SelectObject(&pen4);
+		}
 		if (matrixDone && !onlyPcnt && ((mx_y - visTopLeft.top) > 0))
 		{
 			if (greenClms1[mx_y])
@@ -770,14 +883,7 @@ void CChildView::OnPaint()
 				dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - visTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - visTopLeft.top) * STEP_Y);
 			}
 		}
-		if (cursor)
-		{
-			dc.SetBkMode(TRANSPARENT);
-			dc.SelectObject(&brush0);
-			dc.SelectObject(&pen4);
-			dc.Rectangle(2, 2 + OFFSET_Y + mx_y * STEP_Y, OFFSET_X + STEP_X - 1, -1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
-			dc.SetBkMode(OPAQUE);
-		}
+
 
 
 		dc.SetBkMode(TRANSPARENT);
@@ -810,7 +916,7 @@ void CChildView::OnPaint()
 			{
 				if (mx_x_adj == cCell.x)
 				{
-					if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+					if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && (cCell.x > 0 || toDisplaySimilarClms) && cCell.x <= table2.NumberOfColumns)
 					{
 						cursor = true;
 					}
@@ -831,7 +937,7 @@ void CChildView::OnPaint()
 		}
 		if (mx_x_adj == cCell.x)
 		{
-			if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+			if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && (cCell.x > 0 || toDisplaySimilarClms) && cCell.x <= table2.NumberOfColumns)
 			{
 				 cursor = true;
 			}
@@ -854,6 +960,17 @@ void CChildView::OnPaint()
 			dc.Rectangle(OFFSET_X + mx_x * STEP_X, 0, 1 + OFFSET_X + mx_x * STEP_X + STEP_X, 1 + OFFSET_Y + STEP_Y);
 
 
+		if (cursor)
+		{
+			dc.SetBkMode(TRANSPARENT);
+			dc.SelectObject(&brush0);
+			if (toDisplaySimilarClms) dc.SelectObject(&pen12); else dc.SelectObject(&pen11);
+			dc.Rectangle(2 + OFFSET_X + mx_x * STEP_X, 2, -1 + OFFSET_X + mx_x * STEP_X + STEP_X, OFFSET_Y + STEP_Y - 1);
+			dc.SetBkMode(OPAQUE);
+			dc.SelectObject(&brush0);
+			dc.SelectObject(&pen4);
+		}
+
 		if (matrixDone && !onlyPcnt && ((mx_x - visTopLeft.left) > 0))
 		{
 			if (greenClms2[mx_x])
@@ -870,14 +987,7 @@ void CChildView::OnPaint()
 			}
 		}
 
-		if (cursor)
-		{
-			dc.SetBkMode(TRANSPARENT);
-			dc.SelectObject(&brush0);
-			dc.SelectObject(&pen4);
-			dc.Rectangle(2 + OFFSET_X + mx_x * STEP_X, 2, -1 + OFFSET_X + mx_x * STEP_X + STEP_X, OFFSET_Y + STEP_Y - 1);
-			dc.SetBkMode(OPAQUE);
-		}
+
 
 		dc.SetBkMode(TRANSPARENT);
 		if (isThisAKey(2, mx_x_adj))
@@ -906,7 +1016,7 @@ void CChildView::OnPaint()
 			{
 				for (int mx_x = bnd_X_min; mx_x <= bnd_X_max - visTopLeft.left; mx_x++)
 				{
-
+					dc.SelectObject(&pen2);
 					mx_y_adj = mx_y + visTopLeft.top;
 					mx_x_adj = mx_x + visTopLeft.left;
 					valSimil = mxGet(mx_x_adj, mx_y_adj) * 100 / effMax;
@@ -979,6 +1089,14 @@ void CChildView::OnPaint()
 						dc.LineTo(OFFSET_X + mx_x * STEP_X, OFFSET_Y + STEP_Y + mx_y * STEP_Y);
 						dc.SelectObject(&pen2);
 					}
+					if (toDisplaySimilarClms && similaritiesAcrossTables[mx_y_adj].clm2 == mx_x_adj)
+					{
+						dc.SetBkMode(TRANSPARENT);
+						dc.SelectObject(&keyCurvePen);
+						dc.SelectObject(&brush7);
+						dc.Rectangle(OFFSET_X + (mx_x)* STEP_X + 1, OFFSET_Y + (mx_y)* STEP_Y + 1, OFFSET_X + STEP_X + (mx_x)* STEP_X, OFFSET_Y + STEP_Y + (mx_y)* STEP_Y);
+					}
+
 					dc.SetTextColor(RGB(0, 0, 0));
 					dc.TextOutW(OFFSET_X + mx_x * STEP_X + 1, OFFSET_Y + mx_y * STEP_Y + 7, strSimil);
 
@@ -1017,12 +1135,69 @@ void CChildView::OnPaint()
 				}
 
 			}
+			
 			dc.SelectObject(&pen2);
 
 		}
+
+
+
 		onlyPcnt = false;
 
 	}
+
+	if (toDisplaySimilarClms)
+	{
+		int mx_x, mx_y = 0;
+		//long maxHit = min(table1.NumberOfRows - table1.FirstRowWithData + 1, table2.NumberOfRows - table2.FirstRowWithData + 1);
+		long maxHit = similaritiesAcrossTablesSorted[1].similarity;
+		for (int s_i = similaritiesAcrossTablesSorted[0].similarityOrder; s_i >= 0; s_i--)
+		{
+			ASSERT(s_i != 1);
+			
+			mx_y = similaritiesAcrossTablesSorted[s_i].clm1;
+			mx_x = similaritiesAcrossTablesSorted[s_i].clm2;
+
+			if ((mx_y * mx_x > 0) && ((mx_y - visTopLeft.top) * (mx_x - visTopLeft.left) > 0))
+			{
+				dc.SelectObject(&simsPens[255 * similaritiesAcrossTablesSorted[s_i].similarity / maxHit]);
+				CPoint pt[4] = {
+					CPoint(OFFSET_X + STEP_X + 1, OFFSET_Y + (mx_y - visTopLeft.top) * STEP_Y + STEP_Y / 2),
+					CPoint(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X , OFFSET_Y + (mx_y - visTopLeft.top) * STEP_Y + STEP_Y / 2),
+					CPoint(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X + STEP_X / 2, OFFSET_Y + (mx_y - visTopLeft.top) * STEP_Y),
+					CPoint(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X + STEP_X / 2 , OFFSET_Y + STEP_Y)
+				};
+				dc.PolyBezier(pt, 4);
+
+
+			}
+		}
+		for (int s_i = similaritiesAcrossTablesSorted[0].similarityOrder; s_i >= 0; s_i--)
+		{
+			//ASSERT(mx_y != 9);
+
+			mx_y = similaritiesAcrossTablesSorted[s_i].clm1;
+			mx_x = similaritiesAcrossTablesSorted[s_i].clm2;
+
+			if ((mx_y * mx_x  > 0) && ((mx_y - visTopLeft.top) * (mx_x - visTopLeft.left) > 0))
+			{
+				if (isThisAKey(1, mx_y) && isThisAKey(2, mx_x))
+				{
+					dc.SelectObject(&simsPens[255 * similaritiesAcrossTablesSorted[s_i].similarity / maxHit]);
+					CPoint pt[4] = {
+						CPoint(OFFSET_X + STEP_X + 1, OFFSET_Y + (mx_y - visTopLeft.top) * STEP_Y + STEP_Y / 2),
+						CPoint(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X , OFFSET_Y + (mx_y - visTopLeft.top) * STEP_Y + STEP_Y / 2),
+						CPoint(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X + STEP_X / 2, OFFSET_Y + (mx_y - visTopLeft.top) * STEP_Y),
+						CPoint(OFFSET_X + (mx_x - visTopLeft.left) * STEP_X + STEP_X / 2 , OFFSET_Y + STEP_Y)
+					};
+					dc.SelectObject(&keyCurvePen);
+					dc.PolyBezier(pt, 4);
+				}
+			}
+		}
+	}
+
+
 	dc.SelectObject(&pen4);
 	dc.MoveTo(0, OFFSET_Y + STEP_Y);
 	dc.LineTo(clnt.w, OFFSET_Y + STEP_Y);
@@ -1038,7 +1213,7 @@ void CChildView::OnPaint()
 
 void CChildView::OnPickFirstFile()
 {
-
+	m_newFile1 = false;
 	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // CMsg(IDS_WAIT_TILL_IN_EXCEL)
 
 
@@ -1117,6 +1292,7 @@ void CChildView::OnPickFirstFile()
 	}
 
 	filename1 = fileName;
+	m_newFile1 = true;
 	nUiToBeRefreshed = 3;
 	if (matrixDone > 0)
 	{
@@ -1133,7 +1309,7 @@ void CChildView::OnPickFirstFile()
 
 void CChildView::OnPickSecondFile()
 {
-
+	m_newFile2 = false;
 	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // // CMsg(IDS_WAIT_TILL_IN_EXCEL)
 
 
@@ -1208,6 +1384,7 @@ void CChildView::OnPickSecondFile()
 	}
 
 	filename2 = fileName;
+	m_newFile2 = true;
 	nUiToBeRefreshed = 3;
 	if (matrixDone > 0)
 	{
@@ -1592,6 +1769,13 @@ void CChildView::OnPickFirstSheet()
 		table1.NumberOfRows = iRows;
 		table1.RowWithNames = 1;
 
+		saTmpRet1.Destroy();
+		saTmpRet1 = oRange1.get_Value(covOptional);
+		saTmpRet1.GetUBound(1, &iRows);
+		saTmpRet1.GetUBound(2, &iCols);
+
+
+
 		CString tmps;
 		tmps.Format(_T("%d"), 1);
 		pSpinner1_Names->SetEditText(tmps);
@@ -1634,6 +1818,7 @@ void CChildView::OnPickFirstSheet()
 			cCell.y = 0;
 		}
 
+		
 		HWND hWnd0 = this->GetSafeHwnd();
 		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
 		AfxBeginThread(makePrereq1ThreadProc, hWnd0);
@@ -1745,6 +1930,11 @@ void CChildView::OnPickSecondSheet()
 		table2.NumberOfColumns = iCols;
 		table2.NumberOfRows = iRows;
 		table2.RowWithNames = 1;
+
+		saTmpRet2.Destroy();
+		saTmpRet2 = oRange2.get_Value(covOptional);
+		saTmpRet2.GetUBound(1, &iRows);
+		saTmpRet2.GetUBound(2, &iCols);
 
 		CString tmps;
 		tmps.Format(_T("%d"), 1);
@@ -2400,9 +2590,9 @@ int CChildView::createKeyArrays1()
 	long index[2];
 	COleVariant vData;
 	CString szdata;
-
+	long idx = 0;
 	map1.RemoveAll();
-
+	CString testdata;
 	delete[] keyArr11;
 	keyArr11 = new CString[table1.NumberOfRows + 2];
 	delete[] keyMissing1;
@@ -2441,14 +2631,27 @@ int CChildView::createKeyArrays1()
 				szdata += vData;
 			}
 		}
-		keyArr11[i_i] = szdata;
+
 		keyMissing1[i_i] = false;
-		if (map1.Lookup(szdata, (long&)mapIdx))
+		if (m_bUseIndexes)
 		{
-			notUniqueKeys1 = { i_i, mapIdx, szdata };
-			map1.RemoveAll();
-			return 1;
+			idx = 0;
+			do {
+				idx++;
+				testdata.Format(L"%s_idx%i", szdata, idx);
+			} while (map1.Lookup(testdata, (long&)mapIdx));
+			szdata = testdata;
 		}
+		else
+		{
+			if (map1.Lookup(szdata, (long&)mapIdx))
+			{
+				notUniqueKeys1 = { i_i, mapIdx, szdata };
+				map1.RemoveAll();
+				return 1;
+			}
+		}
+		keyArr11[i_i] = szdata;
 		map1.SetAt(szdata, i_i);
 
 	}
@@ -2465,9 +2668,9 @@ int CChildView::createKeyArrays2()
 	long index[2];
 	COleVariant vData;
 	CString szdata;
-
+	long idx = 0;
 	map2.RemoveAll();
-
+	CString testdata;
 	delete[] keyArr21;
 	keyArr21 = new CString[table2.NumberOfRows + 2];
 	delete[] keyMissing2;
@@ -2509,14 +2712,28 @@ int CChildView::createKeyArrays2()
 				szdata += vData;
 			}
 		}
-		keyArr21[i_i] = szdata;
+
 		keyMissing2[i_i] = false;
-		if (map2.Lookup(szdata, (long&)mapIdx))
+		if (m_bUseIndexes)
 		{
-			notUniqueKeys2 = { i_i, mapIdx, szdata };
-			map2.RemoveAll();
-			return 2;
+			//ASSERT(szdata != L"BLECHOVÁ");
+			idx = 0;
+			do {
+				idx++;
+				testdata.Format(L"%s_idx%i", szdata, idx);
+			} while (map2.Lookup(testdata, (long&)mapIdx));
+			szdata = testdata;
 		}
+		else
+		{
+			if (map2.Lookup(szdata, (long&)mapIdx))
+			{
+				notUniqueKeys1 = { i_i, mapIdx, szdata };
+				map2.RemoveAll();
+				return 2;
+			}
+		}
+		keyArr21[i_i] = szdata;
 		map2.SetAt(szdata, i_i);
 	}
 	PostMessage(CM_UPDATE_PROGRESS2, 0, 1000);
@@ -2589,6 +2806,27 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		cCell.y = 0;
 	}
+
+
+	if (toDisplaySimilarClms)
+	{
+		if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns)
+		{
+			int tmpCellx = similaritiesAcrossTables[cCell.y].clm2;
+			if (tmpCellx > 0 && tmpCellx <= table2.NumberOfColumns)
+			{
+				cCell.x = similaritiesAcrossTables[cCell.y].clm2;
+			}
+			else
+			{
+				cCell.x = cCell.y = 0;
+			}
+		}
+		else
+		{
+			cCell.x = cCell.y = 0;
+		}
+	}
 	if (cCell.x * cCell.y > 0)
 	{
 		CString s;
@@ -2612,22 +2850,36 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 			forceNotOnlyPcnt = false;
 		}
 		RECT rct;
-		rct.left = 0; rct.top = 0; rct.right = OFFSET_X + STEP_X - 2; rct.bottom = OFFSET_Y + STEP_Y - 2;
+		rct.left = 0; rct.top = 0; rct.right = OFFSET_X + STEP_X / 2; rct.bottom = OFFSET_Y + STEP_Y / 2;
 		this->InvalidateRect(&rct, 1);
 
+		if (cCell.y > 0 && cCell.y <= table1.NumberOfColumns && cCell.x > 0 && cCell.x <= table2.NumberOfColumns)
+		{
+			rct.left = OFFSET_X + (cCell.x - visTopLeft.left) * STEP_X + 1; rct.top = 2; rct.right = 1 + OFFSET_X + STEP_X + (cCell.x - visTopLeft.left) * STEP_X; rct.bottom = OFFSET_Y + STEP_Y;
+			this->InvalidateRect(&rct, 0);
+			rct.left = 2; rct.top = OFFSET_Y + (cCell.y - visTopLeft.top)  * STEP_Y + 1; rct.right = OFFSET_X + STEP_X; rct.bottom = 1 + OFFSET_Y + (cCell.y - visTopLeft.top) * STEP_Y + STEP_Y;
+			this->InvalidateRect(&rct, 0);
+		}
 		if (oldCell.y > 0 && oldCell.y <= table1.NumberOfColumns && oldCell.x > 0 && oldCell.x <= table2.NumberOfColumns)
 		{
-			rct.left = OFFSET_X + (cCell.x  - visTopLeft.left) * STEP_X + 1; rct.top = 2; rct.right = 1 + OFFSET_X + STEP_X + (cCell.x  - visTopLeft.left) * STEP_X; rct.bottom = OFFSET_Y + STEP_Y;
-			this->InvalidateRect(&rct, 0);
-			rct.left = 2; rct.top = OFFSET_Y + (cCell.y  - visTopLeft.top)  * STEP_Y + 1; rct.right = OFFSET_X + STEP_X; rct.bottom = 1 + OFFSET_Y + (cCell.y  - visTopLeft.top) * STEP_Y + STEP_Y;
-			this->InvalidateRect(&rct, 0);
 			rct.left = OFFSET_X + (oldCell.x  - visTopLeft.left) * STEP_X + 1; rct.top = 2; rct.right = 1 + OFFSET_X + STEP_X + (oldCell.x  - visTopLeft.left) * STEP_X; rct.bottom = OFFSET_Y + STEP_Y;
 			this->InvalidateRect(&rct, 1);
 			rct.left = 2; rct.top = OFFSET_Y + (oldCell.y  - visTopLeft.top) * STEP_Y + 1; rct.right = OFFSET_X + STEP_X; rct.bottom = 1 + OFFSET_Y + (oldCell.y  - visTopLeft.top) * STEP_Y + STEP_Y;
 			this->InvalidateRect(&rct, 1);
-			onlyPcnt = false;
-			forceNotOnlyPcnt = true;
+
 		}
+		//if (oldCell.x && oldCell.y)
+		//{
+		//	CString traces = L"";
+		//	traces.Format(L"%i, %i, %i, %i\n", oldCell.x, oldCell.y, cCell.x, cCell.y);
+		//	TRACE(traces);
+		//}
+
+
+
+
+		onlyPcnt = false;
+		forceNotOnlyPcnt = true;
 		if (cCell.x * cCell.y == 0)
 		{
 			cCell.x = 0;
@@ -2714,7 +2966,7 @@ void CChildView::OnButton2()
 	}
 	else
 	{
-		MessageBox(L"Nelze provést.\nNejprve vyberte listy obsahující data, která chcete porovnat.");
+		MessageBox(L"Nejprve vyberte listy obsahující data, která chcete porovnat.");
 	}
 
 }
@@ -2854,6 +3106,8 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (table1.NumberOfColumns + 1);
 	sldr = 90;
 
+
+
 	return 0; 
 
 }
@@ -2884,6 +3138,9 @@ void CChildView::OnCheck2()
 void CChildView::OnUpdateButton2(CCmdUI *pCmdUI)
 {
 	if (!&app) pCmdUI->Enable(false); else pCmdUI->Enable(true);
+	//pCmdUI->SetText(m_bUseIndexes ? L"Sestavit klíč" : L"Najít klíč");
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	pButton2 = DYNAMIC_DOWNCAST(CMFCRibbonButton, pRibbon->FindByID(ID_BUTTON2));
 }
 
 void CChildView::OnCheck7()
@@ -3801,11 +4058,12 @@ void CChildView::suggestKeys1()
 		int foundKeysSet1 = 10;
 		while (true)
 		{
-			prgHlpr0 = 100 * (attempts + 1) / (complexity + 1); // only 3 keys
+			prgHlpr0 = attempts % 97; // only 3 keys
 			if (prgHlpr0 > prgHlpr)
 			{
 				prgHlpr = prgHlpr0;
 				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
+				PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
 			}
 
 
@@ -4005,11 +4263,13 @@ void CChildView::suggestKeys2()
 		int foundKeysSet2 = 10;
 		while (true)
 		{
-			prgHlpr0 = 100 * (attempts + 1) / (complexity + 1);
+			prgHlpr0 = attempts % 97;
 			if (prgHlpr0 > prgHlpr)
 			{
 				prgHlpr = prgHlpr0;
 				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
+				PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
+				
 			}
 
 			if (is2BExaminedOnce(2, SUGKEYS - 1))  // TODO: allow some zeros
@@ -4192,6 +4452,44 @@ UINT MutualCheckThreadProc(LPVOID pParam)
 
 }
 
+UINT FindSimsThreadProc(LPVOID pParam)
+{
+	HWND hWnd1 = (HWND)pParam;
+
+	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+
+	pWnd->findSims();
+
+	AfxEndThread(0);
+	return 0;
+
+}
+
+UINT FindSimsThreadProc1(LPVOID pParam)
+{
+	HWND hWnd1 = (HWND)pParam;
+
+	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+
+	pWnd->findSims1();
+
+	AfxEndThread(0);
+	return 0;
+
+}
+
+UINT FindSimsThreadProc2(LPVOID pParam)
+{
+	HWND hWnd1 = (HWND)pParam;
+
+	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+
+	pWnd->findSims2();
+
+	AfxEndThread(0);
+	return 0;
+
+}
 
 bool CChildView::mutualCheck()
 {
@@ -4200,6 +4498,11 @@ bool CChildView::mutualCheck()
 	bestKeyComb.rating = 0;
 	int tmpRslt = 0;
 	// Cascade check
+	if (pKeyProgressBar1 && pKeyProgressBar2)
+	{
+		PostMessage(CM_UPDATE_KEYPROGRESS1, 0, 0);
+		PostMessage(CM_UPDATE_KEYPROGRESS2, 0, 0);
+	}
 	if (getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0  && getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
 	{
 		MessageBox(L"V prvním ani ve druhém souboru nebyly nalezeny žádné použitelné klíče");
@@ -4227,6 +4530,7 @@ bool CChildView::mutualCheck()
 		{
 			prgHlpr = prgHlpr0;
 			PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
+			PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
 		}
 		if (getNumberOfPossibleKeys(1, SUGKEYS, m_i) == order)
 		{
@@ -4249,6 +4553,7 @@ bool CChildView::mutualCheck()
 			{
 				prgHlpr = prgHlpr0;
 				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
+				PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
 			}
 			if (getNumberOfPossibleKeys(1, order, m_i) == order)
 			{
@@ -4265,11 +4570,11 @@ bool CChildView::mutualCheck()
 
 	if (tmpRslt)
 	{
-		PostMessage(CM_UPDATE_PROGRESS, 0, 100000);
+		PostMessage(CM_UPDATE_PROGRESS, 0, 1e5);
 		return true;
 
 	}
-	PostMessage(CM_UPDATE_PROGRESS, 0, 200000);
+	PostMessage(CM_UPDATE_PROGRESS, 0, 2e5);
 	return false;
 
 }
@@ -4300,6 +4605,8 @@ int CChildView::checkKeys(int tab1)
 			{
 				prgHlpr = prgHlpr0;
 				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr );
+				PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
+				
 			}
 			szdata = "";
 
@@ -4350,6 +4657,7 @@ int CChildView::checkKeys(int tab1)
 			{
 				prgHlpr = prgHlpr0;
 				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr );
+				PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
 			}
 			szdata = "";
 
@@ -4389,7 +4697,11 @@ int CChildView::checkKeys(int tab1)
 		}
 		tab2++;
 	}
-
+	if (pKeyProgressBar1 && pKeyProgressBar2)
+	{
+		PostMessage(CM_UPDATE_KEYPROGRESS1, 0, 0);
+		PostMessage(CM_UPDATE_KEYPROGRESS2, 0, 0);
+	}
 	return bestKeyComb.rating;
 
 }
@@ -4448,6 +4760,12 @@ void CChildView::deleteAllKeys()
 		keyPair[i_i].tab2 = 0;
 	}
 	keyPairCounter = 0;
+
+	toDisplaySimilarClms = false;
+	xSimilarityComputed = false;
+	similaritiesAcrossTables.clear();
+	similaritiesAcrossTablesSorted.clear();
+
 }
 
 
@@ -4898,4 +5216,630 @@ int CChildView::getNumberOfPossibleKeys(int table, int order, int item)
 		}
 	}
 	return cnt;
+}
+
+
+// TODO: express findings in working area
+// TODO: control elements appearance
+
+
+void CChildView::findSims() // do not use in case there is a sufficient RAM capacity
+{
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+	long tmpSim;
+	int prgHlpr0, prgHlpr;
+	prgHlpr = prgHlpr0 = 0;
+
+	similaritiesAcrossTables.clear();
+	similaritiesAcrossTablesSorted.clear();
+	SimilaritiesAcrossTables tempSimilarity;
+
+	similaritiesAcrossTables.push_back(tempSimilarity);
+	for (int tmp_i = 1; tmp_i <= table1.NumberOfColumns + 1; tmp_i++)
+	{
+		tempSimilarity.similarityOrder = 0;
+		tempSimilarity.similarity = 0;
+		tempSimilarity.clm1 = tmp_i;
+		tempSimilarity.clm2 = 0;
+		similaritiesAcrossTables.push_back(tempSimilarity);;
+	}
+
+	for (int c_i1 = 1; c_i1 <= table1.NumberOfColumns; c_i1++)
+	{
+		prgHlpr0 = 100 * c_i1 / table1.NumberOfColumns; // only 3 keys
+		if (prgHlpr0 > prgHlpr)
+		{
+			prgHlpr = prgHlpr0;
+			PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
+		}
+		tmpMap1.clear();
+		for (int r_i1 = table1.FirstRowWithData; r_i1 <= table1.NumberOfRows; r_i1++)
+		{
+			index[0] = r_i1;
+			index[1] = c_i1;
+			try {
+				saRet1.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
+			szdata = vData;
+			if ((szdata != L"") && (tmpMap1.find(szdata) == tmpMap1.end()))
+			{
+				tmpMap1[szdata] = r_i1;
+			}
+		}
+
+		for (int c_i2 = 1; c_i2 <= table2.NumberOfColumns; c_i2++)
+		{
+
+			tmpSim = 0;
+			tmpMap2.clear();
+			for (int r_i2 = table2.FirstRowWithData; r_i2 <= table2.NumberOfRows; r_i2++)
+			{
+				index[0] = r_i2;
+				index[1] = c_i2;
+				try {
+					saRet2.GetElement(index, vData); vData = (CString)vData;
+				}
+				catch (COleException* e)
+				{
+					vData = L"";
+				}
+				szdata = vData;
+				if ((szdata != L"") && (tmpMap1.find(szdata) != tmpMap1.end()))
+				{		
+					if (tmpMap2.find(szdata) == tmpMap2.end())
+					{
+						tmpMap2[szdata] = r_i2;
+						tmpSim++;
+					}
+					
+				}
+			}
+
+			if (tmpSim > similaritiesAcrossTables[c_i1].similarity)
+			{
+				similaritiesAcrossTables[c_i1].similarity = tmpSim;
+				similaritiesAcrossTables[c_i1].clm1 = c_i1;
+				similaritiesAcrossTables[c_i1].clm2 = c_i2;
+			}
+		}
+	}
+	int simOrder = 1;
+	tempSimilarity.clm1 = 0;
+	tempSimilarity.clm2 = 0;
+	tempSimilarity.similarity = 0;
+	tempSimilarity.similarityOrder = 0;
+	similaritiesAcrossTablesSorted.push_back(tempSimilarity);
+	for (int i0 = 1; i0 <= table1.NumberOfColumns; i0++)
+	{
+		tempSimilarity.clm1 = 0;
+		tempSimilarity.clm2 = 0;
+		tempSimilarity.similarity = 0;
+		tempSimilarity.similarityOrder = 0;
+
+		for (int i1 = 1; i1 <= table1.NumberOfColumns; i1++)
+		{
+			if ( similaritiesAcrossTables[i1].similarity > 0 && similaritiesAcrossTables[i1].similarity > tempSimilarity.similarity && similaritiesAcrossTables[i1].similarityOrder == 0 ) // clm2 only serves here for storing of the actual measured similarity
+			{
+				tempSimilarity.similarityOrder = simOrder;
+				tempSimilarity.similarity = similaritiesAcrossTables[i1].similarity;
+				tempSimilarity.clm1 = similaritiesAcrossTables[i1].clm1;
+				tempSimilarity.clm2 = similaritiesAcrossTables[i1].clm2;
+			}
+		}
+		if (tempSimilarity.similarity > 0)
+		{
+			simOrder++;
+			similaritiesAcrossTablesSorted.push_back(tempSimilarity);
+			similaritiesAcrossTables[tempSimilarity.clm1].similarityOrder = simOrder;
+		}
+	}
+
+	similaritiesAcrossTablesSorted[0].similarityOrder = simOrder - 1; // at the zero position, there will be stored the total number of all the columns that have a "lookalike" in the second file
+
+	PostMessage(CM_UPDATE_PROGRESS, 0, 0);
+	this->Invalidate();
+	if (simOrder > 1)
+	{
+		toDisplaySimilarClms = true;
+		xSimilarityComputed = true;
+	}
+	lockPrg1 = false;
+	return;
+}
+
+void CChildView::findSims1()
+{
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+	double tmpSim;
+	int prgHlpr0, prgHlpr;
+	prgHlpr = prgHlpr0 = 0;
+
+	std::map<CString, long> thdSafe_tmpMap1; // searching for appropriate keys
+	std::map<CString, long> thdSafe_tmpMap2;
+	//typedef	std::map<CString, long>::iterator Iterator;
+
+	CString what = L"";
+	long occurence1 = 0;
+	long occurence2 = 0;
+	long size1 = 0;
+	long size2 = 0;
+	long minsize = 0;
+	double tmpUnitSim = 0.f;
+
+	int tmp_bnd_hlf = table1.NumberOfColumns / 2;
+
+	for (int c_i1 = 1; c_i1 <= tmp_bnd_hlf; c_i1++)
+	{
+		prgHlpr0 = 100 * c_i1 / tmp_bnd_hlf; // only 3 keys
+		if (prgHlpr0 > prgHlpr)
+		{
+			prgHlpr = prgHlpr0;
+			PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
+		}
+		thdSafe_tmpMap1.clear();
+		for (int r_i1 = table1.FirstRowWithData; r_i1 <= table1.NumberOfRows; r_i1++)
+		{
+			index[0] = r_i1;
+			index[1] = c_i1;
+			try {
+				saRet1.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
+			szdata = vData;
+			if (szdata != L"")
+			{
+				if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
+				{
+					thdSafe_tmpMap1[szdata] = 1;
+				}
+				else
+				{
+					thdSafe_tmpMap1[szdata] = thdSafe_tmpMap1[szdata] + 1;
+				}
+			}
+		}
+
+		for (int c_i2 = 1; c_i2 <= table2.NumberOfColumns; c_i2++)
+		{
+
+
+			thdSafe_tmpMap2.clear();
+			for (int r_i2 = table2.FirstRowWithData; r_i2 <= table2.NumberOfRows; r_i2++)
+			{
+				index[0] = r_i2;
+				index[1] = c_i2;
+				try {
+					saRet2.GetElement(index, vData); vData = (CString)vData;
+				}
+				catch (COleException* e)
+				{
+					vData = L"";
+				}
+				szdata = vData;
+				if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
+				{
+					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
+					{
+						thdSafe_tmpMap2[szdata] = 1;
+						//tmpSim++;
+					}
+					else
+					{
+						thdSafe_tmpMap2[szdata] = thdSafe_tmpMap2[szdata] + 1;
+					}
+
+				}
+			}
+
+			tmpSim = 0;
+			for (auto iterator: thdSafe_tmpMap1)
+			{
+				what = iterator.first;
+				occurence1 = iterator.second;
+				occurence2 = 0;
+				if (thdSafe_tmpMap2.find(what) != thdSafe_tmpMap2.end())
+				{
+					occurence2 = thdSafe_tmpMap2[what];
+					tmpUnitSim = max(occurence1, occurence2) - min(occurence1, occurence2);
+					tmpSim += (tmpUnitSim);
+				}
+	 
+			}
+			size1 = thdSafe_tmpMap1.size();
+			size2 = thdSafe_tmpMap2.size();
+			minsize = min(size1, size2);
+			if (size1 * size2)
+			{
+				tmpSim = minsize - tmpSim;
+			}
+
+			if (tmpSim > similaritiesAcrossTables[c_i1].similarity)
+			{
+				similaritiesAcrossTables[c_i1].similarity = tmpSim;
+				similaritiesAcrossTables[c_i1].clm1 = c_i1;
+				similaritiesAcrossTables[c_i1].clm2 = c_i2;
+			}
+		}
+	}
+	PostMessage(CM_UPDATE_KEYPROGRESS1, 0, 1000);
+	return;
+}
+
+void CChildView::findSims2()
+{
+	long index[2];
+	COleVariant vData;
+	CString szdata;
+	double tmpSim;
+	int prgHlpr0, prgHlpr;
+	prgHlpr = prgHlpr0 = 0;
+
+	std::map<CString, long> thdSafe_tmpMap1; // searching for appropriate keys
+	std::map<CString, long> thdSafe_tmpMap2;
+	//typedef	std::map<CString, long>::iterator Iterator;
+
+	CString what = L"";
+	long occurence1 = 0;
+	long occurence2 = 0;
+	long size1 = 0;
+	long size2 = 0;
+	long minsize = 0;
+	double tmpUnitSim = 0.f;
+
+	int tmp_bnd_hlf = table1.NumberOfColumns / 2;
+
+	for (int c_i1 = table1.NumberOfColumns - tmp_bnd_hlf; c_i1 <= table1.NumberOfColumns; c_i1++)
+	{
+
+
+		prgHlpr0 = 100 * (c_i1 - tmp_bnd_hlf) / (table1.NumberOfColumns - tmp_bnd_hlf); // only 3 keys
+		if (prgHlpr0 > prgHlpr)
+		{
+			prgHlpr = prgHlpr0;
+			PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
+		}
+		thdSafe_tmpMap1.clear();
+		for (int r_i1 = table1.FirstRowWithData; r_i1 <= table1.NumberOfRows; r_i1++)
+		{
+			index[0] = r_i1;
+			index[1] = c_i1;
+			try {
+				saTmpRet1.GetElement(index, vData); vData = (CString)vData;
+			}
+			catch (COleException* e)
+			{
+				vData = L"";
+			}
+			szdata = vData;
+			if (szdata != L"")
+			{
+				if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
+				{
+					thdSafe_tmpMap1[szdata] = 1;
+				}
+				else
+				{
+					thdSafe_tmpMap1[szdata] = thdSafe_tmpMap1[szdata] + 1;
+				}
+			}
+		}
+
+		for (int c_i2 = 1; c_i2 <= table2.NumberOfColumns; c_i2++)
+		{
+
+			
+			thdSafe_tmpMap2.clear();
+			for (int r_i2 = table2.FirstRowWithData; r_i2 <= table2.NumberOfRows; r_i2++)
+			{
+				index[0] = r_i2;
+				index[1] = c_i2;
+				try {
+					saTmpRet2.GetElement(index, vData); vData = (CString)vData;
+				}
+				catch (COleException* e)
+				{
+					vData = L"";
+				}
+				szdata = vData;
+				if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
+				{
+					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
+					{
+						thdSafe_tmpMap2[szdata] = 1;
+						//tmpSim++;
+					}
+					else
+					{
+						thdSafe_tmpMap2[szdata] = thdSafe_tmpMap2[szdata] + 1;
+					}
+
+				}
+			}
+
+			tmpSim = 0;
+			for (auto iterator: thdSafe_tmpMap1)
+			{
+				what = iterator.first;
+				occurence1 = iterator.second;
+				occurence2 = 0;
+				if (thdSafe_tmpMap2.find(what) != thdSafe_tmpMap2.end())
+				{
+					occurence2 = thdSafe_tmpMap2[what];
+
+					tmpUnitSim = max(occurence1, occurence2) - min(occurence1, occurence2);
+					tmpSim += (tmpUnitSim);
+				}
+
+			}
+
+			size1 = thdSafe_tmpMap1.size();
+			size2 = thdSafe_tmpMap2.size();
+			minsize = min(size1, size2);
+			if (size1 * size2)
+			{
+				tmpSim = minsize - tmpSim;
+			}
+			
+			if (tmpSim > similaritiesAcrossTables[c_i1].similarity)
+			{
+				//ASSERT(c_i1 == c_i2);
+				similaritiesAcrossTables[c_i1].similarity = tmpSim;
+				similaritiesAcrossTables[c_i1].clm1 = c_i1;
+				similaritiesAcrossTables[c_i1].clm2 = c_i2;
+			}
+		}
+	}
+	PostMessage(CM_UPDATE_KEYPROGRESS2, 0, 2000);
+	return;
+}
+
+void CChildView::OnSimilarpaircheckbox()
+{
+	if (table1.NumberOfColumns * table2.NumberOfColumns == 0)
+	{
+		return;
+	}
+	else
+	{
+		toDisplaySimilarClms = !toDisplaySimilarClms;
+		pShowSims->Redraw();
+		this->Invalidate();
+	}
+}
+
+
+void CChildView::OnUpdateSimilarpaircheckbox(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(table1.NumberOfColumns * table2.NumberOfColumns && xSimilarityComputed);
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	pShowSims = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, pRibbon->FindByID(ID_SIMILARPAIRCHECKBOX));
+	pCmdUI->SetCheck(toDisplaySimilarClms);
+}
+
+
+void CChildView::OnFindrelBtn()
+{
+	if (table1.NumberOfColumns * table2.NumberOfColumns == 0)
+	{
+		return;
+	}
+	if (lockPrg1 || lockPrg2) {
+		MessageBox(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
+		return;
+	}
+
+	// <Preparation for actual-relatonions check>
+	similaritiesAcrossTables.clear();
+	similaritiesAcrossTablesSorted.clear();
+	SimilaritiesAcrossTables tempSimilarity;
+	tempSimilarity.clm1 = 0;
+	tempSimilarity.clm2 = 0;
+	tempSimilarity.similarity = 0;
+	tempSimilarity.similarityOrder = 0;
+
+	similaritiesAcrossTables.push_back(tempSimilarity);
+	for (int tmp_i = 1; tmp_i <= table1.NumberOfColumns + 1; tmp_i++)
+	{
+		tempSimilarity.similarityOrder = 0;
+		tempSimilarity.similarity = 0;
+		tempSimilarity.clm1 = tmp_i;
+		tempSimilarity.clm2 = 0;
+		similaritiesAcrossTables.push_back(tempSimilarity);;
+	}
+
+	// </Preparation for actual-relations check>
+	toDisplaySimilarClms = false;
+	xSimilarityComputed = false;
+	HWND hWnd0 = this->GetSafeHwnd();
+	//AfxBeginThread(FindSimsThreadProc, hWnd0);
+	AfxBeginThread(FindSimsThreadProc1, hWnd0);
+	AfxBeginThread(FindSimsThreadProc2, hWnd0);
+	lockPrg1 = true;
+	lockPrg2 = true;
+
+}
+
+
+void CChildView::OnIdxcrtBtn()
+{
+	// TODO: Add your command handler code here
+
+}
+
+afx_msg LRESULT CChildView::OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam)
+{
+	if ((UINT)lParam > 99)
+	{
+		pKeyProgressBar1->SetPos(0);
+		if ((UINT)lParam == 1000)
+		{
+			lockPrg1 = false;
+			if (lockPrg2 == false)
+			{
+				finishFindRelations();
+			}
+		}
+	}
+	else
+	{
+		pKeyProgressBar1->SetPos((UINT)lParam);
+	}
+	return 0;
+}
+
+afx_msg LRESULT CChildView::OnCmUpdateKeyProgress2(WPARAM wParam, LPARAM lParam)
+{
+	if ((UINT)lParam > 99)
+	{
+		pKeyProgressBar2->SetPos(0);
+		if ((UINT)lParam == 2000)
+		{
+			lockPrg2 = false;
+			if (lockPrg1 == false)
+			{
+				finishFindRelations();
+			}
+		}
+	}
+	else
+	{
+		pKeyProgressBar2->SetPos((UINT)lParam);
+	}
+	return 0;
+}
+
+void CChildView::OnUpdateKeyProgress1(CCmdUI *pCmdUI)
+{
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	pKeyProgressBar1 = DYNAMIC_DOWNCAST(CMFCRibbonProgressBar, pRibbon->FindByID(ID_KEY_PROGRESS1));
+}
+
+
+void CChildView::OnUpdateKeyProgress2(CCmdUI *pCmdUI)
+{
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	pKeyProgressBar2 = DYNAMIC_DOWNCAST(CMFCRibbonProgressBar, pRibbon->FindByID(ID_KEY_PROGRESS2));
+}
+
+
+void CChildView::finishFindRelations()
+{
+	if (xSimilarityComputed)
+	{
+		return;
+	}
+	SimilaritiesAcrossTables tempSimilarity;
+
+	int simOrder = 1;
+	tempSimilarity.clm1 = 0;
+	tempSimilarity.clm2 = 0;
+	tempSimilarity.similarity = 0;
+	tempSimilarity.similarityOrder = 0;
+	similaritiesAcrossTablesSorted.clear();
+	similaritiesAcrossTablesSorted.push_back(tempSimilarity);
+	for (int i0 = 1; i0 <= table1.NumberOfColumns; i0++)
+	{
+		tempSimilarity.clm1 = 0;
+		tempSimilarity.clm2 = 0;
+		tempSimilarity.similarity = -1;
+		tempSimilarity.similarityOrder = 0;
+
+		for (int i1 = 1; i1 <= table1.NumberOfColumns; i1++)
+		{
+			if (/*similaritiesAcrossTables[i1].similarity > 0 && */ similaritiesAcrossTables[i1].similarity > tempSimilarity.similarity && similaritiesAcrossTables[i1].similarityOrder == 0) // clm2 only serves here for storing of the actual measured similarity
+			{
+				tempSimilarity.similarityOrder = simOrder;
+				tempSimilarity.similarity = similaritiesAcrossTables[i1].similarity;
+				tempSimilarity.clm1 = similaritiesAcrossTables[i1].clm1;
+				tempSimilarity.clm2 = similaritiesAcrossTables[i1].clm2;
+			}
+		}
+		/*if (tempSimilarity.similarity > 0)*/
+		{
+			simOrder++;
+			similaritiesAcrossTablesSorted.push_back(tempSimilarity);
+			similaritiesAcrossTables[tempSimilarity.clm1].similarityOrder = simOrder;
+		}
+	}
+
+	similaritiesAcrossTablesSorted[0].similarityOrder = simOrder - 1; // at the zero position, there will be stored the total number of all the columns that have a "lookalike" in the second file
+
+	this->Invalidate();
+	if (simOrder > 1)
+	{
+		toDisplaySimilarClms = true;
+		xSimilarityComputed = true;
+	}
+	
+}
+
+
+void CChildView::OnUpdateIdxCheckbox(CCmdUI *pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, pRibbon->FindByID(ID_IDX_CHECKBOX));
+	pCmdUI->SetCheck(m_bUseIndexes);
+
+}
+
+int CChildView::ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos)
+{
+	int lenSub = lstrlen(lpszSub);
+	int len = lstrlen(lpszData);
+
+	if (0 < lenSub && 0 < len)
+	{
+		if (startpos == -1 || startpos >= len) startpos = len - 1;
+		for (LPCTSTR lpszReverse = lpszData + startpos;
+			lpszReverse != lpszData; --lpszReverse)
+			if (_tcsncmp(lpszSub, lpszReverse, lenSub) == 0)
+				return (lpszReverse - lpszData);
+	}
+	return -1;
+}
+
+
+
+void CChildView::OnCheckIdx()
+{
+	// TODO: Add your command handler code here
+	m_bUseIndexes = !m_bUseIndexes;
+}
+
+
+void CChildView::OnUpdateCheckIdx(CCmdUI *pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, pRibbon->FindByID(ID_IDX_CHECKBOX));
+	pCmdUI->SetCheck(m_bUseIndexes);
+}
+
+
+void CChildView::OnUsidxCheck()
+{
+	// TODO: Add your command handler code here
+	m_bUseIndexes = !m_bUseIndexes;
+	if (m_bUseIndexes) MessageBox(L"Před využíváním tohoto přepínače se důkladně ujistěte, že používáte vhodný klíč (např. pomocí funkce hledání souvislostí)!");
+}
+
+
+void CChildView::OnUpdateUsidxCheck(CCmdUI *pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
+	pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, pRibbon->FindByID(ID_USIDX_CHECK));
+	pCmdUI->SetCheck(m_bUseIndexes);
 }

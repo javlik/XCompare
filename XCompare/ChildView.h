@@ -124,6 +124,8 @@ protected:
 	afx_msg LRESULT OnCmUpdateProgress(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmUpdateKeyProgress2(WPARAM wParam, LPARAM lParam);
 public:
 	//afx_msg void OnProgress2();
 	void markInFiles();
@@ -180,7 +182,22 @@ public:
 	bool isEntropyStored(int table, int clm, int max);
 	afx_msg void OnUpdateCombo2(CCmdUI *pCmdUI);
 	afx_msg void OnCombo2();
-//	int getPossibleKeyReadiness(int table, int order);
 	int getNumberOfPossibleKeys(int table, int order, int item);
+	void findSims();
+	void findSims1();
+	void findSims2();
+	afx_msg void OnSimilarpaircheckbox();
+	afx_msg void OnUpdateSimilarpaircheckbox(CCmdUI *pCmdUI);
+	afx_msg void OnFindrelBtn();
+	afx_msg void OnIdxcrtBtn();
+	afx_msg void OnUpdateKeyProgress1(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateKeyProgress2(CCmdUI *pCmdUI);
+	void finishFindRelations();
+	afx_msg void OnUpdateIdxCheckbox(CCmdUI *pCmdUI);
+	int ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos);
+	afx_msg void OnCheckIdx();
+	afx_msg void OnUpdateCheckIdx(CCmdUI *pCmdUI);
+	afx_msg void OnUsidxCheck();
+	afx_msg void OnUpdateUsidxCheck(CCmdUI *pCmdUI);
 };
 

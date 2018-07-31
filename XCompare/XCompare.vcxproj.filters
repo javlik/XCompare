@@ -118,6 +118,27 @@
     <Image Include="D:\pix\New folder (2)\legend.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\bitmap3.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\x.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\y-19-512.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\z-19-512.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\buttons.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\buttons2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\buttons_2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ribbon.mfcribbon-ms">

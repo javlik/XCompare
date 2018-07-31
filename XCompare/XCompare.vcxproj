@@ -112,7 +112,7 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
@@ -221,15 +221,22 @@
     <Image Include="..\..\..\..\2017-09-09_22h40_46.png" />
     <Image Include="D:\pix\New folder (2)\legend.bmp" />
     <Image Include="res\bitmap1.bmp" />
+    <Image Include="res\bitmap3.bmp" />
     <Image Include="res\buttons.bmp" />
+    <Image Include="res\buttons.png" />
+    <Image Include="res\buttons2.png" />
+    <Image Include="res\buttons_2.png" />
     <Image Include="res\filelarge.bmp" />
     <Image Include="res\filesmall.bmp" />
     <Image Include="res\main.bmp" />
+    <Image Include="res\x.png" />
     <Image Include="res\XCompare.ico" />
     <Image Include="res\Toolbar.bmp" />
     <Image Include="res\Toolbar256.bmp" />
     <Image Include="res\writelarge.bmp" />
     <Image Include="res\writesmall.bmp" />
+    <Image Include="res\y-19-512.png" />
+    <Image Include="res\z-19-512.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

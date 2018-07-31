@@ -40,6 +40,8 @@
 #define IDS_EDIT_MENU                   306
 #define IDR_RIBBON                      307
 #define IDB_BITMAP1                     321
+#define IDB_PNG4                        336
+#define IDB_PNG1                        337
 #define ID_WRITE_PASTEASHYPERLINK       32770
 #define ID_PICK_FIRST_FILE              32780
 #define ID_PICK_FIRST_SHEET             32781
@@ -49,6 +51,7 @@
 #define ID_SPIN2_FDATA                  32787
 #define ID_SPIN2_NAMES                  32788
 #define ID_CREATE_MATRIX                32790
+#define ID_PROGRESS3                    32791
 #define ID_PROGRESS1                    32792
 #define ID_PROGRESS2                    32793
 #define ID_BUTTON2                      32794
@@ -65,6 +68,10 @@
 #define ID_SPIN2                        32808
 #define ID_CHECK2                       32809
 #define ID_PUT_TO_FRONT                 32809
+#define ID_SIMILARPAIRS                 32809
+#define ID_IDX_CHECKBOX                 32809
+#define ID_USEIDX_CHECKBOX              32809
+#define ID_USEINDEXES_CHECK             32809
 #define ID_CHECK4                       32811
 #define ID_CHECK5                       32812
 #define ID_TOLERANCE                    32813
@@ -72,12 +79,19 @@
 #define ID_CHECK7                       32828
 #define ID_BUTTON5                      32830
 #define ID_CHECK3                       32833
-#define ID_PROGRESS3                    32834
 #define ID_DIFFS_LIST                   32835
 #define ID_SEL1                         32839
 #define ID_BUTTON6                      32841
 #define ID_PUT2FRONT                    32842
 #define ID_COMBO2                       32848
+#define ID_CREATEKEYS                   32849
+#define ID_SIMILARPAIRCHECKBOX          32850
+#define ID_IDXCRT_BTN                   32851
+#define ID_FINDREL_BTN                  32852
+#define ID_CHKKEYS_BTN                  32853
+#define ID_KEY_PROGRESS1                32854
+#define ID_KEY_PROGRESS2                32855
+#define ID_USIDX_CHECK                  32857
 #define IDS_EMPTY                       61204
 #define IDS_WAIT_TILL_IN_EXCEL          61205
 #define IDS_PATH_TO_FILE                61206
@@ -109,8 +123,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        326
-#define _APS_NEXT_COMMAND_VALUE         32849
+#define _APS_NEXT_RESOURCE_VALUE        338
+#define _APS_NEXT_COMMAND_VALUE         32858
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
