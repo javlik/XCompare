@@ -5,7 +5,7 @@ Its main benefits and the purposes for which this app was made are:
 - fast comparison if the structure is similar. In this case, the tool is able to automatically distinguish and mark differences directly in the tables.
 - since version 2, this app is also able to find and visualize relations between columns across the tables.
 
-Note: XCompare utilizes installed a Microsoft Excel application (through OLE interprocess communication) so make sure you have it installed before using XCompare. This way, XCompare can mark all the found differences directly in the open XLS(X) documents. 
+Note: XCompare utilizes the Microsoft Excel application (through OLE interprocess communication) so make sure you have it installed before using XCompare. This way, XCompare can mark all the found differences directly in the open XLS(X) documents. 
 
 
 --------------------------------------------------------------------------------------------------------------------------------------------
