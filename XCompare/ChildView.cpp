@@ -1866,7 +1866,7 @@ void CChildView::OnSpin1Fdata()
 {
 	CString tmps = pSpinner1_Fdata->GetEditText();
 	int tmpi = _ttoi(tmps);
-	if (tmpi < 2) tmpi = 1;
+	if (tmpi < 2) tmpi = 1; 
 	if (tmpi > 64) tmpi = 64;
 	tmps.Format(_T("%d"), tmpi);
 	pSpinner1_Fdata->SetEditText(tmps);
@@ -4820,7 +4820,6 @@ int CChildView::getNthKey(int table, int key)
 
 void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 {
-	// TODO: Add your message handler code here and/or call default
 
 	if (cCell.x * cCell.y)
 	{
@@ -5184,7 +5183,6 @@ void CChildView::OnUpdateCombo2(CCmdUI *pCmdUI)
 
 void CChildView::OnCombo2()
 {
-	// TODO: Add your command handler code here
 	if (pCombo2->GetCurSel() == 0) complexity = 10000;
 	if (pCombo2->GetCurSel() == 1) complexity = 100000;
 	if (pCombo2->GetCurSel() == 2) complexity = 1000000;
@@ -5218,9 +5216,6 @@ int CChildView::getNumberOfPossibleKeys(int table, int order, int item)
 	return cnt;
 }
 
-
-// TODO: express findings in working area
-// TODO: control elements appearance
 
 
 void CChildView::findSims() // do not use in case there is a sufficient RAM capacity
@@ -5673,7 +5668,6 @@ void CChildView::OnFindrelBtn()
 
 void CChildView::OnIdxcrtBtn()
 {
-	// TODO: Add your command handler code here
 
 }
 
@@ -5787,7 +5781,6 @@ void CChildView::finishFindRelations()
 
 void CChildView::OnUpdateIdxCheckbox(CCmdUI *pCmdUI)
 {
-	// TODO: Add your command update UI handler code here
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, pRibbon->FindByID(ID_IDX_CHECKBOX));
 	pCmdUI->SetCheck(m_bUseIndexes);
@@ -5814,14 +5807,12 @@ int CChildView::ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos)
 
 void CChildView::OnCheckIdx()
 {
-	// TODO: Add your command handler code here
 	m_bUseIndexes = !m_bUseIndexes;
 }
 
 
 void CChildView::OnUpdateCheckIdx(CCmdUI *pCmdUI)
 {
-	// TODO: Add your command update UI handler code here
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, pRibbon->FindByID(ID_IDX_CHECKBOX));
 	pCmdUI->SetCheck(m_bUseIndexes);
@@ -5830,7 +5821,6 @@ void CChildView::OnUpdateCheckIdx(CCmdUI *pCmdUI)
 
 void CChildView::OnUsidxCheck()
 {
-	// TODO: Add your command handler code here
 	m_bUseIndexes = !m_bUseIndexes;
 	if (m_bUseIndexes) MessageBox(L"Před využíváním tohoto přepínače se důkladně ujistěte, že používáte vhodný klíč (např. pomocí funkce hledání souvislostí)!");
 }
@@ -5838,7 +5828,6 @@ void CChildView::OnUsidxCheck()
 
 void CChildView::OnUpdateUsidxCheck(CCmdUI *pCmdUI)
 {
-	// TODO: Add your command update UI handler code here
 	pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, pRibbon->FindByID(ID_USIDX_CHECK));
 	pCmdUI->SetCheck(m_bUseIndexes);
