@@ -486,7 +486,7 @@ CChildView::CChildView()
 
 	for (int i = 0; i < 256; i++)
 	{
-		simsPens[i].CreatePen(PS_ENDCAP_FLAT, (i) / 32 + 0.5,  RGB((255 - i) / 1.1, (255 - i) / 1.1, (255 - i) / 1.1));
+		simsPens[i].CreatePen(PS_ENDCAP_FLAT, (i) / 32 + 0.5,  RGB((255 - i) / 1.5 + 40, (255 - i) / 1.5 + 40, (255 - i) / 1.5 + 40));
 	}
 	keyCurvePen.CreatePen(PS_ENDCAP_FLAT, 2, RGB(100, 150, 250));
 
@@ -1153,7 +1153,7 @@ void CChildView::OnPaint()
 		long maxHit = similaritiesAcrossTablesSorted[1].similarity;
 		for (int s_i = similaritiesAcrossTablesSorted[0].similarityOrder; s_i >= 0; s_i--)
 		{
-			ASSERT(s_i != 1);
+			//ASSERT(s_i != 1);
 			
 			mx_y = similaritiesAcrossTablesSorted[s_i].clm1;
 			mx_x = similaritiesAcrossTablesSorted[s_i].clm2;
@@ -2716,7 +2716,6 @@ int CChildView::createKeyArrays2()
 		keyMissing2[i_i] = false;
 		if (m_bUseIndexes)
 		{
-			//ASSERT(szdata != L"BLECHOVÁ");
 			idx = 0;
 			do {
 				idx++;
@@ -2728,7 +2727,7 @@ int CChildView::createKeyArrays2()
 		{
 			if (map2.Lookup(szdata, (long&)mapIdx))
 			{
-				notUniqueKeys1 = { i_i, mapIdx, szdata };
+				notUniqueKeys2 = { i_i, mapIdx, szdata };  // this error is on purpose
 				map2.RemoveAll();
 				return 2;
 			}
@@ -5353,7 +5352,7 @@ void CChildView::findSims1()
 	long index[2];
 	COleVariant vData;
 	CString szdata;
-	double tmpSim;
+	long long tmpSim;
 	int prgHlpr0, prgHlpr;
 	prgHlpr = prgHlpr0 = 0;
 
@@ -5368,6 +5367,7 @@ void CChildView::findSims1()
 	long size2 = 0;
 	long minsize = 0;
 	double tmpUnitSim = 0.f;
+	long tmp_varRat = 0;
 
 	int tmp_bnd_hlf = table1.NumberOfColumns / 2;
 
@@ -5451,12 +5451,25 @@ void CChildView::findSims1()
 				}
 	 
 			}
-			size1 = thdSafe_tmpMap1.size();
-			size2 = thdSafe_tmpMap2.size();
+
+			size1 = table1.NumberOfRows - table1.FirstRowWithData + 1; //size1 = thdSafe_tmpMap1.size();
+			size2 = table2.NumberOfRows - table2.FirstRowWithData + 1; //size2 = thdSafe_tmpMap2.size();
 			minsize = min(size1, size2);
-			if (size1 * size2)
+			minsize = minsize ? minsize : 1;
+			//if (tmpSim) // size1 * size2)
+			ASSERT(c_i1 != 16);
 			{
-				tmpSim = minsize - tmpSim;
+				tmp_varRat = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
+				if (tmp_varRat)
+				{
+					tmp_varRat = tmp_varRat ? tmp_varRat : 1;
+					tmp_varRat = (minsize < tmp_varRat ? 1 : minsize / tmp_varRat);
+					tmpSim = (minsize - tmpSim) / tmp_varRat + 1;
+				}
+				if (tmpSim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
+				{
+					tmpSim = 1;
+				}
 			}
 
 			if (tmpSim > similaritiesAcrossTables[c_i1].similarity)
@@ -5476,7 +5489,7 @@ void CChildView::findSims2()
 	long index[2];
 	COleVariant vData;
 	CString szdata;
-	double tmpSim;
+	long long tmpSim;
 	int prgHlpr0, prgHlpr;
 	prgHlpr = prgHlpr0 = 0;
 
@@ -5491,6 +5504,7 @@ void CChildView::findSims2()
 	long size2 = 0;
 	long minsize = 0;
 	double tmpUnitSim = 0.f;
+	long tmp_varRat = 0;
 
 	int tmp_bnd_hlf = table1.NumberOfColumns / 2;
 
@@ -5578,12 +5592,26 @@ void CChildView::findSims2()
 
 			}
 
-			size1 = thdSafe_tmpMap1.size();
-			size2 = thdSafe_tmpMap2.size();
+			size1 = table1.NumberOfRows - table1.FirstRowWithData + 1; //size1 = thdSafe_tmpMap1.size();
+			size2 = table2.NumberOfRows - table2.FirstRowWithData + 1; //size2 = thdSafe_tmpMap2.size();
 			minsize = min(size1, size2);
-			if (size1 * size2)
+			minsize = minsize ? minsize : 1;
+
+
+
+			//if (tmpSim) // size1 * size2)
 			{
-				tmpSim = minsize - tmpSim;
+				tmp_varRat = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
+				if (tmp_varRat)
+				{
+					tmp_varRat = tmp_varRat ? tmp_varRat : 1;
+					tmp_varRat = (minsize < tmp_varRat ? 1 : minsize / tmp_varRat);
+					tmpSim = (minsize - tmpSim) / tmp_varRat + 1;
+				}
+				if (tmpSim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
+				{
+					tmpSim = 1;
+				}
 			}
 			
 			if (tmpSim > similaritiesAcrossTables[c_i1].similarity)
