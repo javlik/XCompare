@@ -104,6 +104,7 @@ struct SimilaritiesAcrossTables {
 	int clm2;
 	long similarity;
 	int similarityOrder;
+	int pureSim;
 };
 
 
@@ -5366,8 +5367,13 @@ void CChildView::findSims1()
 	long size1 = 0;
 	long size2 = 0;
 	long minsize = 0;
+	long maxsize = 0;
 	double tmpUnitSim = 0.f;
 	long tmp_varRat = 0;
+	long sim = 0;
+	long sumOccurence1 = 0;
+	long sumOccurence2 = 0;
+	long pureSim;
 
 	int tmp_bnd_hlf = table1.NumberOfColumns / 2;
 
@@ -5437,46 +5443,61 @@ void CChildView::findSims1()
 				}
 			}
 
+			sumOccurence1 = sumOccurence2 = 0;
 			tmpSim = 0;
 			for (auto iterator: thdSafe_tmpMap1)
 			{
 				what = iterator.first;
 				occurence1 = iterator.second;
+				sumOccurence1 += occurence1;
 				occurence2 = 0;
 				if (thdSafe_tmpMap2.find(what) != thdSafe_tmpMap2.end())
 				{
 					occurence2 = thdSafe_tmpMap2[what];
+					sumOccurence2 += occurence2;
 					tmpUnitSim = max(occurence1, occurence2) - min(occurence1, occurence2);
 					tmpSim += (tmpUnitSim);
 				}
 	 
 			}
-
+			sim = tmpSim;
 			size1 = table1.NumberOfRows - table1.FirstRowWithData + 1; //size1 = thdSafe_tmpMap1.size();
 			size2 = table2.NumberOfRows - table2.FirstRowWithData + 1; //size2 = thdSafe_tmpMap2.size();
 			minsize = min(size1, size2);
 			minsize = minsize ? minsize : 1;
-			//if (tmpSim) // size1 * size2)
-			ASSERT(c_i1 != 16);
+
+			maxsize = max(size1, size2);
+
 			{
 				tmp_varRat = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
 				if (tmp_varRat)
 				{
 					tmp_varRat = tmp_varRat ? tmp_varRat : 1;
 					tmp_varRat = (minsize < tmp_varRat ? 1 : minsize / tmp_varRat);
-					tmpSim = (minsize - tmpSim) / tmp_varRat + 1;
+					sim = (minsize - sim) / tmp_varRat + 1;
 				}
-				if (tmpSim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
+				if (sim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
 				{
-					tmpSim = 1;
+					sim = 1;
 				}
 			}
 
-			if (tmpSim > similaritiesAcrossTables[c_i1].similarity)
+			//if (c_i1 == 16)
+			//{
+			//	//CString s;
+			//	//s.Format(L"c_i1: %n    c_i2: %n    tmp_varRat: %n", c_i1, c_i2, tmp_varRat);
+				TRACE(L"c_i1: %i    c_i2: %i    thdSafe_tmpMap1.size(): %i     thdSafe_tmpMap2.size(): %i     tmpSim: %i    sumOccurence1: %i    sumOccurence2: %i\n", c_i1, c_i2, thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size(), tmpSim, sumOccurence1, sumOccurence2);
+			//}
+
+
+				pureSim = (maxsize - abs(sumOccurence2 - sumOccurence1)) - tmpSim;
+
+			if (pureSim > similaritiesAcrossTables[c_i1].pureSim && sim > 0)
 			{
-				similaritiesAcrossTables[c_i1].similarity = tmpSim;
+				similaritiesAcrossTables[c_i1].similarity = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
 				similaritiesAcrossTables[c_i1].clm1 = c_i1;
 				similaritiesAcrossTables[c_i1].clm2 = c_i2;
+				similaritiesAcrossTables[c_i1].pureSim = pureSim;
 			}
 		}
 	}
@@ -5503,8 +5524,13 @@ void CChildView::findSims2()
 	long size1 = 0;
 	long size2 = 0;
 	long minsize = 0;
+	long maxsize = 0;
 	double tmpUnitSim = 0.f;
 	long tmp_varRat = 0;
+	long sim = 0;
+	long sumOccurence1 = 0;
+	long sumOccurence2 = 0;
+	long pureSim;
 
 	int tmp_bnd_hlf = table1.NumberOfColumns / 2;
 
@@ -5576,50 +5602,60 @@ void CChildView::findSims2()
 				}
 			}
 
+			sumOccurence1 = sumOccurence2 = 0;
 			tmpSim = 0;
 			for (auto iterator: thdSafe_tmpMap1)
 			{
 				what = iterator.first;
 				occurence1 = iterator.second;
+				sumOccurence1 += occurence1;
 				occurence2 = 0;
 				if (thdSafe_tmpMap2.find(what) != thdSafe_tmpMap2.end())
 				{
 					occurence2 = thdSafe_tmpMap2[what];
-
+					sumOccurence2 += occurence2;
 					tmpUnitSim = max(occurence1, occurence2) - min(occurence1, occurence2);
 					tmpSim += (tmpUnitSim);
 				}
 
 			}
+			sim = tmpSim;
 
 			size1 = table1.NumberOfRows - table1.FirstRowWithData + 1; //size1 = thdSafe_tmpMap1.size();
 			size2 = table2.NumberOfRows - table2.FirstRowWithData + 1; //size2 = thdSafe_tmpMap2.size();
 			minsize = min(size1, size2);
 			minsize = minsize ? minsize : 1;
 
+			maxsize = max(size1, size2);
 
-
-			//if (tmpSim) // size1 * size2)
 			{
 				tmp_varRat = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
 				if (tmp_varRat)
 				{
 					tmp_varRat = tmp_varRat ? tmp_varRat : 1;
 					tmp_varRat = (minsize < tmp_varRat ? 1 : minsize / tmp_varRat);
-					tmpSim = (minsize - tmpSim) / tmp_varRat + 1;
+					sim = (minsize - sim) / tmp_varRat + 1;
 				}
-				if (tmpSim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
+				if (sim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
 				{
-					tmpSim = 1;
+					sim = 1;
 				}
 			}
+
+			//{
+			//	//CString s;
+			//	//s.Format(L"c_i1: %n    c_i2: %n    tmp_varRat: %n", c_i1, c_i2, tmp_varRat);
+				TRACE(L"c_i1: %i    c_i2: %i    thdSafe_tmpMap1.size(): %i     thdSafe_tmpMap2.size(): %i     tmpSim: %i    sumOccurence1: %i    sumOccurence2: %i\n", c_i1, c_i2, thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size(), tmpSim, sumOccurence1, sumOccurence2);
+			//}
+
+			pureSim = (maxsize - abs(sumOccurence2 - sumOccurence1)) - tmpSim;
 			
-			if (tmpSim > similaritiesAcrossTables[c_i1].similarity)
+			if (pureSim > similaritiesAcrossTables[c_i1].pureSim && sim > 0)
 			{
-				//ASSERT(c_i1 == c_i2);
-				similaritiesAcrossTables[c_i1].similarity = tmpSim;
+				similaritiesAcrossTables[c_i1].similarity = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
 				similaritiesAcrossTables[c_i1].clm1 = c_i1;
 				similaritiesAcrossTables[c_i1].clm2 = c_i2;
+				similaritiesAcrossTables[c_i1].pureSim = pureSim;
 			}
 		}
 	}
