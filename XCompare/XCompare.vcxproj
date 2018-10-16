@@ -218,6 +218,7 @@
     <ResourceCompile Include="XCompare.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\..\..\..\..\d\pix\New folder (2)\legend.bmp" />
     <Image Include="..\..\..\..\2017-09-09_22h40_46.png" />
     <Image Include="D:\pix\New folder (2)\legend.bmp" />
     <Image Include="res\bitmap1.bmp" />

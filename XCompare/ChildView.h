@@ -199,5 +199,13 @@ public:
 	afx_msg void OnUpdateCheckIdx(CCmdUI *pCmdUI);
 	afx_msg void OnUsidxCheck();
 	afx_msg void OnUpdateUsidxCheck(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateRows1(CCmdUI *pCmdUI);
+	afx_msg void OnRows1();
+	afx_msg void OnUpdateCols1(CCmdUI *pCmdUI);
+	afx_msg void OnCols1();
+	afx_msg void OnUpdateRows2(CCmdUI *pCmdUI);
+	afx_msg void OnRows2();
+	afx_msg void OnCols2();
+	afx_msg void OnUpdateCols2(CCmdUI *pCmdUI);
 };
 

@@ -92,6 +92,11 @@
 #define ID_KEY_PROGRESS1                32854
 #define ID_KEY_PROGRESS2                32855
 #define ID_USIDX_CHECK                  32857
+#define ID_COLS1                        32858
+#define ID_ROWS2                        32859
+#define ID_SPIN5                        32860
+#define ID_COLS2                        32860
+#define ID_ROWS1                        32862
 #define IDS_EMPTY                       61204
 #define IDS_WAIT_TILL_IN_EXCEL          61205
 #define IDS_PATH_TO_FILE                61206
@@ -124,7 +129,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        338
-#define _APS_NEXT_COMMAND_VALUE         32858
+#define _APS_NEXT_COMMAND_VALUE         32863
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
