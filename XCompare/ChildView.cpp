@@ -1,5 +1,4 @@
-﻿#pragma once
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <cstring>
 #include <map>
 #include <vector>
