@@ -8,7 +8,7 @@ Its main benefits and the purposes for which this program was made are:
 Note: XCompare utilizes the Microsoft Excel application (through OLE interprocess communication) so make sure you have it installed before using XCompare. This way, XCompare can mark all the found differences directly in the open XLS(X) documents. 
 
 
------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
 Licence notice: The application and all its parts including its source code may be freely distributed, with the reservation that if you use parts of the source code in your own work you have to mention the author's name in the derivative source code.
 
 © 2018 Jiří Havlík
