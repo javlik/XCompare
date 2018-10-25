@@ -200,6 +200,8 @@ BEGIN
     IDS_OPEN                "Otevøít soubor ..."
     IDS_SAVE                "Uložit"
     IDS_SAVE_AS             "Uložit jako ..."
+    IDS_KEY_SUITABILITY     "Vhodnost samost. klíèe:"
+    IDS_WAIT_PRELIM_CHK     "Poèkejte dokud nebude dokonèena pøedbìžná kontrola dat"
 END
 
 STRINGTABLE
@@ -251,6 +253,22 @@ BEGIN
     IDS_DURING_MARKING_THREAD_BLOCKED 
                             "Bìhem oznaèování odlišností je pracovní vlákno blokováno. Prosím o trpìlivost."
     IDS_NOT_SELECTED        "(nevybrán)"
+    IDS_FRST_CHOOSE_DATA    "Nejprve vyberte listy obsahující data, která chcete porovnat."
+    IDS_KEY_COMB_FOUND      "Byla nalezena vhodná kombinace klíèových sloupcù.\nTato kombinace umožòuje porovnat %i spoleèných øádkù"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INCOMPATBL_KEY_FOUND 
+                            "V obou tabulkách byly nalezeny klíèe, které ale nejsou vzájemnì sluèitelné.\nSoubory nelze porovnat bez pøedchozí úpravy tabulek."
+    IDS_NO_SHEET_SELCTD_IN_FRST 
+                            "V prvním souboru není vybrán list obsahující data"
+    IDS_NO_SHEET_SELCTD_IN_SCND 
+                            "Ve druhém souboru není vybrán list obsahující data"
+    IDS_NTHR_TBL_KEY_FND    "V prvním ani ve druhém souboru nebyly nalezeny žádné použitelné klíèe"
+    IDS_NO_KEY_FND_IN_FRST  "V prvním souboru nebyly nalezeny žádné použitelné klíèe"
+    IDS_NO_KEY_FND_IN_SCND  "Ve druhém souboru nebyly nalezeny žádné použitelné klíèe"
+    IDS_IDXING_WARNING      "Pøed využíváním tohoto pøepínaèe se dùkladnì ujistìte, že používáte vhodný klíè (napø. pomocí funkce hledání souvislostí)!"
 END
 
 #endif    // Czech (Czech Republic) resources

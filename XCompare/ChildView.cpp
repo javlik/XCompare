@@ -589,7 +589,7 @@ void CChildView::OnPaint()
 			dc.SetTextColor(RGB(50, 100, 250));
 			dc.SetBkMode(TRANSPARENT);
 			dc.SelectObject(&font1C);
-			dc.TextOutW(5, 30, L"Vhodnost samost. klíče:");
+			dc.TextOutW(5, 30, CMsg(IDS_KEY_SUITABILITY));// IDS_KEY_SUITABILITY
 			dc.SelectObject(&font4);
 			prcnt.Format(L"~ %i%%", 100 * m_vecSimilaritiesAcrossTables[M_CCell.y].similarity / min(m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1, m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1));
 			dc.TextOutW(15, 60, prcnt);
@@ -1392,7 +1392,7 @@ void CChildView::OnPickFirstSheet()
 {
 	int tmpWSN = m_pSheetCombo1->GetCurSel() + 1;
 	CString tmpWSS = m_pSheetCombo1->GetEditText();
-	if (g_pMainFrame) g_pMainFrame->updateStatusBar(L"Počkejte dokud nebude dokončena předběžná kontrola dat"); // CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_PRELIM_CHK)); // CMsg(IDS_WAIT_PRELIM_CHK)
 	if (tmpWSN > 0)
 	{
 		m_saRet1.Destroy();
@@ -2410,7 +2410,7 @@ void CChildView::OnButton2()
 	}
 	else
 	{
-		MessageBox(L"Nejprve vyberte listy obsahující data, která chcete porovnat.");
+		MessageBox(CMsg(IDS_FRST_CHOOSE_DATA)); //CMsg(IDS_FRST_CHOOSE_DATA)
 	}
 }
 CString CChildView::convertR1C1(int row, int clm)
@@ -2632,14 +2632,14 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 			m_bWaitingForKeys = false;
 			usePossibleKeys();	
 			CString tmpS;
-			tmpS.Format(L"Byla nalezena vhodná kombinace klíčových sloupců.\nTato kombinace umožňuje porovnat %i společných řádků", m_BestKeyComb.cnt);
+			tmpS.Format(CMsg(IDS_KEY_COMB_FOUND), m_BestKeyComb.cnt); // CMsg(IDS_KEY_COMB_FOUND)
 			MessageBox(tmpS);
 			EndWaitCursor();
 		}
 		if ((UINT)lParam == 200000)
 		{
 			m_bWaitingForKeys = false;
-			MessageBox(L"V obou tabulkách byly nalezeny klíče, které ale nejsou vzájemně slučitelné.\nSoubory nelze porovnat bez předchozí úpravy tabulek.");
+			MessageBox(CMsg(IDS_INCOMPATBL_KEY_FOUND)); // CMsg(IDS_INCOMPATBL_KEY_FOUND)
 			EndWaitCursor();
 		}
 	}
@@ -3365,7 +3365,7 @@ void CChildView::suggestKeys1()
 	}
 	else
 	{
-		MessageBox(L"V prvním souboru není vybrán list obsahující data"); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)
+		MessageBox(CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)
 	}
 	PostMessage(CM_UPDATE_PROGRESS, 0, 10000);
 	return;
@@ -3527,7 +3527,7 @@ void CChildView::suggestKeys2()
 	}
 	else
 	{
-		MessageBox(L"V prvním souboru není vybrán list obsahující data"); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)
+		MessageBox(CMsg(IDS_NO_SHEET_SELCTD_IN_SCND)); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_SCND)
 	}
 	PostMessage(CM_UPDATE_PROGRESS2, 0, 20000);
 	return;
@@ -3659,17 +3659,17 @@ bool CChildView::mutualCheck()
 	}
 	if (getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0  && getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
 	{
-		MessageBox(L"V prvním ani ve druhém souboru nebyly nalezeny žádné použitelné klíče");
+		MessageBox(CMsg(IDS_NTHR_TBL_KEY_FND)); // CMsg(IDS_NTHR_TBL_KEY_FND)
 		return false;
 	}
 	if (getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0)
 	{
-		MessageBox(L"V prvním souboru nebyly nalezeny žádné použitelné klíče");
+		MessageBox(CMsg(IDS_NO_KEY_FND_IN_FRST)); // CMsg(IDS_NO_KEY_FND_IN_FRST)
 		return false;
 	}
 	if (getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
 	{
-		MessageBox(L"Ve druhém souboru nebyly nalezeny žádné použitelné klíče");
+		MessageBox(CMsg(IDS_NO_KEY_FND_IN_SCND)); // CMsg(IDS_NO_KEY_FND_IN_SCND)
 		return false;
 	}
 	int m_i = 0;
@@ -4859,7 +4859,7 @@ void CChildView::OnUpdateCheckIdx(CCmdUI *pCmdUI)
 void CChildView::OnUsidxCheck()
 {
 	m_bUseIndexes = !m_bUseIndexes;
-	if (m_bUseIndexes) MessageBox(L"Před využíváním tohoto přepínače se důkladně ujistěte, že používáte vhodný klíč (např. pomocí funkce hledání souvislostí)!");
+	if (m_bUseIndexes) MessageBox(CMsg(IDS_IDXING_WARNING)); // CMsg(IDS_IDXING_WARNING)
 }
 void CChildView::OnUpdateUsidxCheck(CCmdUI *pCmdUI)
 {

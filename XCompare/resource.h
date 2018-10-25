@@ -6,6 +6,8 @@
 #define IDS_OPEN                        2
 #define IDS_SAVE                        3
 #define IDS_SAVE_AS                     4
+#define IDS_KEY_SUITABILITY             5
+#define IDS_WAIT_PRELIM_CHK             6
 #define IDD_ABOUTBOX                    9
 #define IDP_OLE_INIT_FAILED             100
 #define IDB_WRITESMALL                  110
@@ -123,6 +125,15 @@
 #define IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS 61227
 #define IDS_DURING_MARKING_THREAD_BLOCKED 61228
 #define IDS_NOT_SELECTED                61229
+#define IDS_FRST_CHOOSE_DATA            61230
+#define IDS_KEY_COMB_FOUND              61231
+#define IDS_INCOMPATBL_KEY_FOUND        61232
+#define IDS_NO_SHEET_SELCTD_IN_FRST     61233
+#define IDS_NO_SHEET_SELCTD_IN_SCND     61234
+#define IDS_NTHR_TBL_KEY_FND            61235
+#define IDS_NO_KEY_FND_IN_FRST          61236
+#define IDS_NO_KEY_FND_IN_SCND          61237
+#define IDS_IDXING_WARNING              61238
 
 // Next default values for new objects
 // 
