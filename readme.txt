@@ -1,7 +1,7 @@
 XCompare is a tool that can be used for very fast comparison of Excel tables.
 
 Its main benefits and the purposes for which this tool was made are:
-- it can compare Excel tables that have very different structure - especially with different headers, different order of columns
+- it can compare Excel tables that structurally differ - different headers, different order of columns
   and/or rows.
 - Fully automatic comparison process if both tables' names are identical. In this case, the tool will mark all discovered
   differences directly in the Excel files (via OLE).
