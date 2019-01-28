@@ -16,4 +16,4 @@ Licence notice: The application and all its parts including its source code may 
 that if you use parts of the source code in your own work you have to mention the author's name in the derivative source code.
 
 © 2018 Jiří Havlík
-License CC BY-SA 4.0
+License BSD
