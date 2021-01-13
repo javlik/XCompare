@@ -8,6 +8,7 @@
 #define IDS_SAVE_AS                     4
 #define IDS_KEY_SUITABILITY             5
 #define IDS_WAIT_PRELIM_CHK             6
+#define IDS_STRING7                     7
 #define IDD_ABOUTBOX                    9
 #define IDP_OLE_INIT_FAILED             100
 #define IDB_WRITESMALL                  110
