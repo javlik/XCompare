@@ -1,9 +1,9 @@
 XCompare is a tool that can be used for very fast comparison of Excel tables.
 
 Its main benefits and the purposes for which this tool was made are:
-- it can compare Excel tables that have very different structure - especially with different headers, different order of columns
+- it can compare Excel tables that structurally differ - different headers, different order of columns
   and/or rows.
-- Fully automatic comparison process if both tables have identical column names. In this case, the tool will mark all discovered
+- Fully automatic comparison process if both tables' names are identical. In this case, the tool will mark all discovered
   differences directly in the Excel files (via OLE).
 - since version 2, this app is also able to find and visualize relations between columns across the tables.
 
@@ -12,8 +12,8 @@ installed before using XCompare. This way, XCompare can mark all the found diffe
 
 
 --------------------------------------------------------------------------------------------------------------------------------
-Licence notice: The application and all its parts including its source code may be freely used in any way, with the reservation
+License notice: The application and all its parts including its source code may be freely used in any way, with the reservation
 that if you use parts of the source code in your own work you have to mention the author's name in the derivative source code.
 
 © 2018 Jiří Havlík
-License CC BY-SA 4.0
+License BSD
