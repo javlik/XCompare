@@ -112,9 +112,6 @@
     <Image Include="res\XCompare.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\..\..\..\2017-09-09_22h40_46.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="D:\pix\New folder (2)\legend.bmp">
       <Filter>Resource Files</Filter>
     </Image>
@@ -140,6 +137,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\..\..\..\..\..\..\d\pix\New folder (2)\legend.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\2018-08-05_20h29_41.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="img\2018-08-05_21h23_02.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
