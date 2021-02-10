@@ -1,4 +1,4 @@
-XCompare is a tool that can be used for very fast comparison of Excel tables.
+XCompare is a fast comparison tool for Excel tables.
 
 Its main benefits and the purposes for which this tool was made are:
 - it can compare Excel tables that structurally differ - different headers, different order of columns and/or rows.
