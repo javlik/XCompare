@@ -7,7 +7,7 @@ Its main benefits and the purposes for which this tool was made are:
 
 Note: XCompare utilizes the Microsoft Excel application (through OLE interprocess communication) so make sure you have it installed before using XCompare. This way, XCompare can mark all the found differences directly in the open XLS(X) documents. 
 
-Also note: The tool's UI is currently available only for czech lang.
+Also note: The tool's UI is currently available only in czech lang.
 
 
 ![alt text](XCompare/img/2018-08-05_20h29_41.png)
