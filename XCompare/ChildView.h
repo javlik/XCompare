@@ -14,6 +14,8 @@
 
 
 #pragma once
+#include "Constants.h"
+#include "TableData.h"
 #include "CApplication.h"
 #include "CWorkbooks.h"
 #include "CWorkbook.h"
@@ -22,6 +24,8 @@
 #include "CRange.h"
 #include "CCellFormat.h"
 #include "Cnterior.h"
+#include <vector>
+#include <map>
 
 // CChildView window
 
@@ -207,5 +211,209 @@ public:
 	afx_msg void OnRows2();
 	afx_msg void OnCols2();
 	afx_msg void OnUpdateCols2(CCmdUI *pCmdUI);
+
+	// ---------------------------------------------------------------
+	// Data members (moved from .cpp file-scope globals)
+	// ---------------------------------------------------------------
+
+	// Public: accessed directly by worker thread functions
+public:
+	BOOL         m_bUniqueKeys1; // keys in table 1 are unique
+	BOOL         m_bUniqueKeys2; // keys in table 2 are unique
+	bool         m_bLockPrg1;    // thread 1 is running
+	bool         m_bLockPrg2;    // thread 2 is running
+	NotUniqueKeys m_NotUniqueKeys1;
+	NotUniqueKeys m_NotUniqueKeys2;
+
+private:
+	// Synchronisation between threads
+	bool m_bWaitingForKeys;
+	bool m_bKeys1done;
+	bool m_bKeys2done;
+	bool m_bKeysGathering1done;
+	bool m_bKeysGathering2done;
+
+	// Algorithm parameters
+	int     m_nComplexity;
+	CString m_szRsltTxt;
+
+	// Large checked-key buffers (one entry per attempted key combination)
+	std::vector<unsigned long long> m_nCheckedKeys1;
+	std::vector<unsigned long long> m_nCheckedKeys2;
+	int m_nCheckedKeysCounter1;
+	int m_nCheckedKeysCounter2;
+
+	// Colour palette (20 user-selectable highlight colours)
+	Palette m_Palette[20];
+
+	// Key-suggestion data structures
+	PossibleKeys m_PossibleKeys1[256];
+	PossibleKeys m_PossibleKeys2[256];
+	KeyPair      m_KeyPair[256];
+	int          m_nKeyPairCounter;
+	BestKeyComb  m_BestKeyComb;
+	int          m_nPossibleKeyCounter1;
+	int          m_nPossibleKeyCounter2;
+	long         m_nInvEntropy1[256];
+	long         m_nInvEntropy2[256];
+	int          m_nSortedEntropy1[256];
+	int          m_nSortedEntropy2[256];
+
+	// Prerequisite / process state
+	bool m_bPrereq1valid;
+	bool m_bPrereq2valid;
+	int  m_nOldx;
+	int  m_nOldy;
+	int  m_nChosenColor1;
+	int  m_nChosenColor2;
+	Clnt m_Clnt;
+	bool m_bDoAutoMark;
+	int  m_nNatrixDone;
+	int  m_nPrereqDone;
+	bool m_bMarkIdentCols;
+	bool m_bSameNames;
+	int  m_nEffMax;
+
+	// Dynamic data arrays (Step 2: converted from raw pointers to vectors)
+	std::vector<char>    m_pchMainArr1;     // first char of each cell, table 1
+	std::vector<char>    m_pchMainArr2;     // first char of each cell, table 2
+	std::vector<bool>    m_pbMarkIn1Arr;    // cells to mark in file 1
+	std::vector<bool>    m_pbMarkIn2Arr;    // cells to mark in file 2
+	std::vector<CString> m_pszKeyArr11;     // concatenated key strings, table 1
+	std::vector<CString> m_pszKeyArr21;     // concatenated key strings, table 2
+	std::vector<CString> m_pszTmpKeyArr11;  // temporary key strings, table 1
+	std::vector<CString> m_pszTmpKeyArr21;  // temporary key strings, table 2
+	std::vector<bool>    m_pbKeyMissing1;   // missing-key flags, table 1
+	std::vector<bool>    m_pbKeyMissing2;   // missing-key flags, table 2
+	std::vector<bool>    m_pbTmpKeyMissing1;
+	std::vector<bool>    m_pbTmpKeyMissing2;
+	std::vector<int>     m_pnMainMatrix;    // result comparison matrix
+	std::vector<bool>    m_pbMarkedMatrix;  // marked cells in the matrix
+	std::vector<bool>    m_pbEmptyClms1;    // empty column flags, table 1
+	std::vector<bool>    m_pbEmptyClms2;    // empty column flags, table 2
+	std::vector<bool>    m_pbGreenClms1;    // fully-matched column flags, table 1
+	std::vector<bool>    m_pbGreenClms2;    // fully-matched column flags, table 2
+	std::vector<long>    m_pnFoundDifferences; // difference row indices per column
+
+	// Entropy tracking for key suggestion
+	int m_nExaminedKeys1[SUGKEYS + 4];
+	int m_nExaminedKeys2[SUGKEYS + 4];
+	int m_nTmpKeys1[SUGKEYS + 4];
+	int m_nTmpKeys2[SUGKEYS + 4];
+
+	// Cross-table similarity results
+	std::vector<SimilaritiesAcrossTables> m_vecSimilaritiesAcrossTables;
+	std::vector<SimilaritiesAcrossTables> m_vecSimilaritiesAcrossTablesSorted;
+	long m_nSelectedDifference;
+
+	// MFC Ribbon pointer
+	CMFCRibbonBar* m_pRibbon;
+
+	// Table descriptors
+	Table m_Table1;
+	Table m_Table2;
+
+	// OLE / Excel connection objects
+	COleSafeArray m_saRet1;
+	COleSafeArray m_saRet2;
+	COleSafeArray m_saTmpRet1;
+	COleSafeArray m_saTmpRet2;
+	CString       m_szFilename1;
+	CString       m_szFilename2;
+	CWorkbooks    m_Books1;
+	CWorkbook     m_Book1;
+	CWorksheets   m_Sheets1;
+	CWorksheet    m_Sheet1;
+	CRange        m_oRange1;
+	CWorkbooks    m_Books2;
+	CWorkbook     m_Book2;
+	CWorksheets   m_Sheets2;
+	CWorksheet    m_Sheet2;
+	CRange        m_oRange2;
+	CCellFormat   m_CellFormat;
+	Cnterior      m_Interior;
+	COleVariant   covTrue;
+	COleVariant   covFalse;
+	COleVariant   covOptional;
+	CApplication  m_App;
+	CMap<CString, LPCTSTR, long, long> m_Map1;
+	CMap<CString, LPCTSTR, long, long> m_Map2;
+	std::map<CString, long> m_mapTmpMap1;
+	std::map<CString, long> m_mapTmpMap2;
+
+	// UI state
+	int   m_nUiToBeRefreshed;
+	float m_fZoom;
+	int   m_nPrgval1;
+
+	// Ribbon UI element pointers
+	CMFCRibbonProgressBar* m_pProgressBar1;
+	CMFCRibbonProgressBar* m_pProgressBar2;
+	CMFCRibbonProgressBar* m_pKeyProgressBar1;
+	CMFCRibbonProgressBar* m_pKeyProgressBar2;
+	CMFCRibbonComboBox*    m_pCombo2;
+	CMFCRibbonComboBox*    m_pSheetCombo1;
+	CMFCRibbonComboBox*    m_pSheetCombo2;
+	CMFCRibbonEdit*        m_pSpinner1_Fdata;
+	CMFCRibbonEdit*        m_pSpinner1_Names;
+	CMFCRibbonEdit*        m_pSpinner2_Fdata;
+	CMFCRibbonEdit*        m_pSpinner2_Names;
+	CMFCRibbonCheckBox*    m_pMarkIn1;
+	CMFCRibbonCheckBox*    m_pMarkIn2;
+	CMFCRibbonSlider*      m_pSlider;
+	CMFCRibbonButton*      m_pUnhideExcel;
+	CMFCRibbonCheckBox*    m_pVerifyKeys;
+	CMFCRibbonCheckBox*    m_pSameNames;
+	CMFCRibbonColorButton* m_pColorPicker1;
+	CMFCRibbonColorButton* m_pColorPicker2;
+	CMFCRibbonCheckBox*    m_pAuto;
+	CMFCRibbonComboBox*    m_pFoundDifferences;
+	CMFCRibbonLabel*       m_pLabel0;
+	CMFCRibbonLabel*       m_pLabel1;
+	CMFCRibbonLabel*       m_pLabel2;
+	CMFCRibbonCheckBox*    m_pToFront;
+	CMFCRibbonCheckBox*    m_pShowSims;
+	CMFCRibbonButton*      m_pCreateNewKeys;
+	CMFCRibbonButton*      m_pButton2;
+	CMFCRibbonCheckBox*    m_pUseIndices;
+	CMFCRibbonEdit*        m_pRows1;
+	CMFCRibbonEdit*        m_pCols1;
+	CMFCRibbonEdit*        m_pRows2;
+	CMFCRibbonEdit*        m_pCols2;
+
+	// Scroll / view state
+	bool       m_bToFront;
+	int        m_nScrolled_X;
+	int        m_nScrolled_Y;
+	ChosenCell M_CCell;
+	ChosenCell m_CClickedCell;
+	ChosenCell m_CPrevClickedCell;
+	ChosenCell m_OldCell;
+	VisTopLeft m_VisTopLeft;
+	bool m_bIn1file;
+	bool m_bIn2file;
+	bool m_bToDisplaySimilarClms;
+	bool m_bXSimilarityComputed;
+	bool m_bAutoMark;
+	bool m_bVerifyKeys;
+	bool m_bToInitSB;
+	int  m_nCellWidth;
+	int  m_nCellHeight;
+	int  m_nRibbonWidth;
+	int  m_nViewWidth;
+	int  m_nViewHeight;
+	int  m_nHScrollPos;
+	int  m_nVScrollPos;
+	int  m_nHPageSize;
+	int  m_nVPageSize;
+	bool m_bOnlyPcnt;
+	bool m_bForceNotOnlyPcnt;
+	int  m_nSldr;
+	CPen m_SimsPens[256];
+	CPen m_KeyCurvePen;
+	bool m_bUseIndexes;
+	bool m_bNewFile1;
+	bool m_bNewFile2;
+	CString m_szRsrcs;
 };
 

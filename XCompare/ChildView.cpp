@@ -7,254 +7,13 @@
 #include "MainFrm.h"
 #include "Msg.h"
 extern CMainFrame* g_pMainFrame; // pointer to FrameWindow
-#define LINESIZE 8 // thickness of thick lines drawn in the visual representation of the result matrix
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-#define swap(a,b) (a ^= b), (b ^= a), (a ^= b);
-#define sgn(x) ( (int) ( (x > 0) - (x < 0) ) )
-#define SUGKEYS 10
-#define MAX_ATTEMPTS 1000000
-#define MAX_CFileDialog_FILE_COUNT 1 // Number of selectable files in file selectors
-#define FILE_LIST_BUFFER_SIZE ((MAX_CFileDialog_FILE_COUNT * (MAX_PATH + 1)) + 1) 
-#define CM_UPDATE_PROGRESS WM_APP + 1
-#define CM_UPDATE_PROGRESS2 WM_APP + 2
-#define CM_UPDATE_PROGRESS3 WM_APP + 3
-#define CM_UPDATE_KEYPROGRESS1 WM_APP + 4
-#define CM_UPDATE_KEYPROGRESS2 WM_APP + 5
-#define OFFSET_Y 100 // height of a column (within the visual representation of the result matrix) that contains the names of column taken from the second table
-#define OFFSET_X 100 // width of a row ... first table
-#define STEP_X 24 // width of a cell ...
-#define STEP_Y 24 // height of a cell ...
-BOOL m_bUniqueKeys1; // to indicate whether values taken from key columns are identical - this is an inherent prerequisite for the comparison to be successful
-BOOL m_bUniqueKeys2; // the same as above - for the second file
-bool m_bWaitingForKeys; // indicates status of waiting for maps of keys
-bool m_bKeys1done; // indicates status of readiness of keys for the first table
-bool m_bKeys2done; // indicates status of readiness of keys for the second table
-bool m_bKeysGathering1done;
-bool m_bKeysGathering2done;
-int m_nComplexity;
-CString m_szRsltTxt; // human understandable text indicating some information related to the matrix - displayed in the status bar
-struct PossibleKeys {
-	int k[256];
-};
-//char autoKey1[256];
-//char autoKey2[256];
-unsigned long long m_nCheckedKeys1[MAX_ATTEMPTS + 1];
-unsigned long long m_nCheckedKeys2[MAX_ATTEMPTS + 1];
-int m_nCheckedKeysCounter1;
-int m_nCheckedKeysCounter2;
-struct Palette {
-	int red;
-	int green;
-	int blue;
-}; // structure type for color of cells
-// int threadCnt;
-struct Table {
-	int WorkSheetNumber;
-	long MaxNumberOfRows;
-	long MaxNumberOfCols;	
-	long NumberOfRows;
-	int FirstRowWithData;
-	int RowWithNames;
-	int NumberOfColumns;
-	CString Columns[256];
-	bool keys[256];
-	int keysCnt;
-}; // structure type for description of tables
-struct VisTopLeft {
-	int top;
-	int left;
-}; // contains coords (in the units of matrix cells) of scrolled matrix
-struct  KeyPair {
-	int tab1;
-	int tab2;
-};
-struct SimilaritiesAcrossTables {
-	int clm1;
-	int clm2;
-	long similarity;
-	int similarityOrder;
-	int pureSim;
-};
-struct ChosenCell {
-	int x;
-	int y;
-}; // contains coords (in the matrix cells) of the cell that is pointed by mouse
-struct Clnt {
-	int w;
-	int h;
-}; // Size of client area (in pixels)
-struct BestKeyComb {
-	int pk1;
-	int pk2;
-	int rating;
-	long cnt;
-};
-struct NotUniqueKeys {
-	long firstRow;
-	long secondRow;
-	CString keyString;
-}; // if keys are found to not be unique, this structure contains the rows of the first found duplicate
-NotUniqueKeys m_NotUniqueKeys1, m_NotUniqueKeys2;
-//int threadCounter; // to be even more scallable in future
-//int stepCounter;
-Palette m_Palette[20]; // user can choose one of the 20 colors that will be used for background of found difference 
-PossibleKeys m_PossibleKeys1[256]; // Contains combinations of found unique keys sorted by invEntropy
-PossibleKeys m_PossibleKeys2[256];
-KeyPair m_KeyPair[256]; // Unsorted pairs of keys
-int		m_nKeyPairCounter; // The counter of key pairts - obviously
-BestKeyComb m_BestKeyComb; // Found the most appropriate combination of keys
-int m_nPossibleKeyCounter1 = 0; // Counter of possible keys - without respect to the other table
-int m_nPossibleKeyCounter2 = 0; // 
-long m_nInvEntropy1[256]; // Rating of "entropy" for found possible combinations - without respect to other table
-long m_nInvEntropy2[256];
-int m_nSortedEntropy1[256]; // Sorted rating of entropy - without respect to other table
-int m_nSortedEntropy2[256];
-bool m_bPrereq1valid, m_bPrereq2valid; // are prerequisities for execution of main process fulfilled
-int m_nOldx, m_nOldy; // coords of last chosen cell
-int m_nChosenColor1, m_nChosenColor2; // color will be used as a background in XLS file to mark difference
-Clnt m_Clnt; // client area
-bool m_bLockPrg1; // indicates status of computing in threads (inversely)
-bool m_bLockPrg2; // ... same as above
-bool m_bDoAutoMark; // whether user selected the option for automatic marking in XLS files
-int m_nNatrixDone; // result matrix is done and ready for follow-up analysis
-int m_nPrereqDone; // prerequisities for main comparison process are fulfilled
-bool m_bMarkIdentCols;  // not used
-bool m_bSameNames; // user wants the cells that intersects columns with same names to be marked by thick border
-int m_nEffMax; // counted up number of keys that were found in both files
-char *m_pchMainArr1; // this 2D array contains first character of content of each cell taken from the first XLS file (first horizontally, then vertically)
-char *m_pchMainArr2; // .... the second XLS file
-bool *m_pbMarkIn1Arr; // this 2D array indicates whether a cell at its coordinates (see above) is to be marked in the first file
-bool *m_pbMarkIn2Arr; // ... in the second file.
-CString *m_pszKeyArr11; // array of the strings found in the first key column in the first file
-CString *m_pszKeyArr21; // ... the first key ... the second file
-CString *m_pszTmpKeyArr11; // General temporary dynamic array of concatenated keys
-CString *m_pszTmpKeyArr21;
-bool *m_pbKeyMissing1; // General dynamic array of empty keys
-bool *m_pbKeyMissing2; 
-bool *m_pbTmpKeyMissing1; // General temporary dynamic array of empty keys
-bool *m_pbTmpKeyMissing2;
-int m_nExaminedKeys1[SUGKEYS + 4]; // Array of keys that were (or were not yet) checked for their inv entropy
-int m_nExaminedKeys2[SUGKEYS + 4];
-int m_nTmpKeys1[SUGKEYS + 4]; // Temporary array of keys that were checked for entropy - this workaround protects against possible collision of threads (in cpu cache)
-int m_nTmpKeys2[SUGKEYS + 4];
-int *m_pnMainMatrix; // 2D array representing the result matrix
-bool *m_pbMarkedMatrix; // 2D array indicating marked cells in the result matrix
-bool *m_pbEmptyClms1; // 1D array indicating empty columns in the first file
-bool *m_pbEmptyClms2; // .... the second file
-bool *m_pbGreenClms1; // 1D array indicating whether a column has its "lookalike" in the second file
-bool *m_pbGreenClms2; // 1D array indicating whether a column has its "lookalike" in the first file
-long *m_pnFoundDifferences; // number of differences found between intersected columns (for the doubleclicked cell)
-//SimilaritiesAcrossTables *similaritiesAcrossTables; // the best similarity for each column across tables
-std::vector<SimilaritiesAcrossTables> m_vecSimilaritiesAcrossTables;
-std::vector<SimilaritiesAcrossTables> m_vecSimilaritiesAcrossTablesSorted;
-long m_nSelectedDifference; // difference picked by user in the drop down box in the "analysis" tab
-CMFCRibbonBar* m_pRibbon; // pointer to ribbon object
-						//CMFCRibbonStatusBarPane *statusBarPane;
-Table m_Table1; // Important information of tables (number of columns, rows, first row under header, etc.)
-Table m_Table2;
-COleSafeArray m_saRet1; // OLE object for connection to first Excel file
-COleSafeArray m_saRet2; // ... second Excel file
-COleSafeArray m_saTmpRet1; // temporary OLE object - this workaround hopefully protects against cache collisions
-COleSafeArray m_saTmpRet2;
-CString m_szFilename1; // name of the first file that is to be compared
-CString m_szFilename2; // .... second ....
-CWorkbooks m_Books1; // TypeLib objects
-CWorkbook m_Book1; // ...
-CWorksheets m_Sheets1; // ...
-CWorksheet m_Sheet1; // ...
-CRange m_oRange1; // ...
-CWorkbooks m_Books2; // TypeLib objects
-CWorkbook m_Book2; // ...
-CWorksheets m_Sheets2; // ...
-CWorksheet m_Sheet2; // ...
-CRange m_oRange2; // ...
-CCellFormat m_CellFormat; // TypeLib object
-Cnterior m_Interior; // TypeLib object
-COleVariant
-covTrue((short)TRUE),
-covFalse((short)FALSE),
-covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR); // OLE constants
-CApplication m_App; // application object
-CMap <CString, LPCTSTR, long, long> m_Map1; // map for keys in the first file
-CMap <CString, LPCTSTR, long, long> m_Map2; // ... second file
-										  //CMap <CString, LPCTSTR, long, long> tmpMap1; // map for keys in the first file
-										  //CMap <CString, LPCTSTR, long, long> tmpMap2; // ... second file
-std::map<CString, long> m_mapTmpMap1; // searching for appropriate keys
-std::map<CString, long> m_mapTmpMap2;
-int m_nUiToBeRefreshed; // how many times the UI is to be refreshed (just a workaround)
-float m_fZoom; // not used at the moment
-int m_nPrgval1; // not used 
-CMFCRibbonProgressBar* m_pProgressBar1; // CMFCRibbon UI objects
-CMFCRibbonProgressBar* m_pProgressBar2;
-CMFCRibbonProgressBar* m_pKeyProgressBar1;
-CMFCRibbonProgressBar* m_pKeyProgressBar2;
-CMFCRibbonComboBox* m_pCombo2;  // Pointers to GUI elements
-CMFCRibbonComboBox* m_pSheetCombo1;
-CMFCRibbonComboBox* m_pSheetCombo2;
-CMFCRibbonEdit* m_pSpinner1_Fdata;
-CMFCRibbonEdit* m_pSpinner1_Names;
-CMFCRibbonEdit* m_pSpinner2_Fdata;
-CMFCRibbonEdit* m_pSpinner2_Names;
-CMFCRibbonCheckBox* m_pMarkIn1;
-CMFCRibbonCheckBox* m_pMarkIn2;
-CMFCRibbonSlider* m_pSlider;
-CMFCRibbonButton* m_pUnhideExcel;
-CMFCRibbonCheckBox* m_pVerifyKeys;
-CMFCRibbonCheckBox* m_pSameNames;
-CMFCRibbonColorButton* m_pColorPicker1;
-CMFCRibbonColorButton* m_pColorPicker2;
-CMFCRibbonCheckBox* m_pAuto;
-CMFCRibbonComboBox* m_pFoundDifferences;
-CMFCRibbonLabel* m_pLabel0;
-CMFCRibbonLabel* m_pLabel1;
-CMFCRibbonLabel* m_pLabel2;
-CMFCRibbonCheckBox* m_pToFront;
-CMFCRibbonCheckBox* m_pShowSims;
-CMFCRibbonButton* m_pCreateNewKeys;
-CMFCRibbonButton* m_pButton2;
-CMFCRibbonCheckBox* m_pUseIndices;
-CMFCRibbonEdit* m_pRows1;
-CMFCRibbonEdit* m_pCols1;
-CMFCRibbonEdit* m_pRows2;
-CMFCRibbonEdit* m_pCols2;
-bool m_bToFront; // should Excel be moved to front when the difference is requested to be shown?
-int m_nScrolled_X; // how many cells did we scroll horizontally?
-int m_nScrolled_Y; // how many cells did we scroll vertically?
-ChosenCell M_CCell; // this structure contains coordinates of the cell the mouse pointer is hovering above.
-ChosenCell m_CClickedCell;
-ChosenCell m_CPrevClickedCell;
-ChosenCell m_OldCell;
-VisTopLeft m_VisTopLeft; // the coordinates of the topmost and leftmost visible cell
-bool m_bIn1file; // whether are differences to be marked in the first file
-bool m_bIn2file; // ... second file
-bool m_bToDisplaySimilarClms; // whether similar columns across the tables are to be displayed
-bool m_bXSimilarityComputed; // whether we have results of similarity across tables
-bool m_bAutoMark; // do we request automatic marking of differences?
-bool m_bVerifyKeys; // not used anymore - the check of the uniqueness of keys is mandatory and as such it is accomplished automatically
-bool m_bToInitSB; // not used anymore
-int m_nCellWidth;   // Cell width in pixels
-int m_nCellHeight;  // Cell height in pixels
-int m_nRibbonWidth; // Ribbon width in pixels
-int m_nViewWidth;   // Workspace width in pixels
-int m_nViewHeight;  // Workspace height in pixels
-int m_nHScrollPos;  // Horizontal scroll position
-int m_nVScrollPos;  // Vertical scroll position
-int m_nHPageSize;   // Horizontal page size
-int m_nVPageSize;   // Vertical page size
-bool m_bOnlyPcnt; // whether we want to see detail of a hovered cell
-bool m_bForceNotOnlyPcnt; // inverse of the above (just a helper)
-int m_nSldr; // value set on the slider in the "analysis" tab
-CPen m_SimsPens[256];
-CPen m_KeyCurvePen;
-bool m_bUseIndexes;
-bool m_bNewFile1, m_bNewFile2;
-		  // CChildView
-// <Declaration of threads>
+
+// Forward declarations of worker thread functions
 UINT MyThreadProc(LPVOID pParam);
 UINT MyThreadProc2(LPVOID pParam);
-// CreateKeys1ThreadProc(LPVOID pParam);
 UINT MyThreadProc3(LPVOID pParam);
 UINT CreateKeys1ThreadProc(LPVOID pParam);
 UINT CreateKeys2ThreadProc(LPVOID pParam);
@@ -266,8 +25,6 @@ UINT MutualCheckThreadProc(LPVOID pParam);
 UINT FindSimsThreadProc(LPVOID pParam);
 UINT FindSimsThreadProc1(LPVOID pParam);
 UINT FindSimsThreadProc2(LPVOID pParam);
-CString m_szRsrcs;
-// </Declaration of threads>
 CChildView::CChildView()
 {
 	//threadCnt = 1;
@@ -315,30 +72,62 @@ CChildView::CChildView()
 	m_fZoom = 100;
 	m_nPrgval1 = 100; // just for test
 				   //CMFCRibbonBar* pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar(); // in the constructor is too early
-	m_pchMainArr1 = new char[1]; // this 2D array contains first character of content of each cell taken from the first XLS file (first horizontally, then vertically)
-	m_pchMainArr2 = new char[1]; // .... the second XLS file
-	m_pbMarkIn1Arr = new bool[1]; // this 2D array indicates whether a cell at its coordinates (see above) is to be marked in the first file
-	m_pbMarkIn2Arr = new bool[1]; // ... in the second file.
-	m_pszKeyArr11 = new CString[1]; // array of the strings found in the first key column in the first file
-							   //keyArr12 = new CString[1]; // ... the second key ... the first file
-							   //keyArr13 = new CString[1]; // ... the third key ... the first file
-	m_pszKeyArr21 = new CString[1]; // ... the first key ... the second file
-							   //keyArr22 = new CString[1]; // ... the second key ... the second file
-							   //keyArr23 = new CString[1]; // ... the third key ... the second file
-	m_pszTmpKeyArr11 = new CString[1];
-	m_pszTmpKeyArr21 = new CString[1];
-	m_pbKeyMissing1 = new bool[1];
-	m_pbKeyMissing2 = new bool[1];
-	m_pbTmpKeyMissing1 = new bool[1];
-	m_pbTmpKeyMissing2 = new bool[1];
-	m_pnMainMatrix = new int[1]; // 2D array representing the result matrix
-	m_pbMarkedMatrix = new bool[1]; // 2D array indicating marked cells in the result matrix
-	m_pbEmptyClms1 = new bool[1]; // 1D array indicating empty columns in the first file
-	m_pbEmptyClms2 = new bool[1]; // .... the second file
-	m_pbGreenClms1 = new bool[1]; // 1D array indicating whether a column has its "lookalike" in the second file
-	m_pbGreenClms2 = new bool[1]; // 1D array indicating whether a column has its "lookalike" in the first file
-	m_pnFoundDifferences = new long[1]; // number of differences found between intersected columns (for the doubleclicked cell) 
-	//similaritiesAcrossTables = new SimilaritiesAcrossTables[1];
+	// OLE constants (were global, now class members)
+	covTrue    = COleVariant((short)TRUE);
+	covFalse   = COleVariant((short)FALSE);
+	covOptional = COleVariant((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
+	// Checked-key buffers (converted from fixed-size globals to vectors)
+	m_nCheckedKeys1.assign(MAX_ATTEMPTS + 1, 0ULL);
+	m_nCheckedKeys2.assign(MAX_ATTEMPTS + 1, 0ULL);
+	// Members that were zero-initialised as globals but not yet in constructor
+	m_bWaitingForKeys    = false;
+	m_bKeys1done         = false;
+	m_bKeys2done         = false;
+	m_bKeysGathering1done = false;
+	m_bKeysGathering2done = false;
+	m_nCheckedKeysCounter1 = 0;
+	m_nCheckedKeysCounter2 = 0;
+	m_nKeyPairCounter    = 0;
+	m_nPossibleKeyCounter1 = 0;
+	m_nPossibleKeyCounter2 = 0;
+	m_nOldx = 0; m_nOldy = 0;
+	m_Clnt.w = 0; m_Clnt.h = 0;
+	m_nNatrixDone  = 0;
+	m_nPrereqDone  = 0;
+	m_bMarkIdentCols = false;
+	m_nCellWidth  = 0; m_nCellHeight  = 0;
+	m_nRibbonWidth = 0;
+	m_nViewWidth  = 0; m_nViewHeight  = 0;
+	m_nHScrollPos = 0; m_nVScrollPos  = 0;
+	m_nHPageSize  = 0; m_nVPageSize   = 0;
+	m_nScrolled_X = 0; m_nScrolled_Y  = 0;
+	m_CClickedCell.x = 0; m_CClickedCell.y = 0;
+	m_CPrevClickedCell.x = 0; m_CPrevClickedCell.y = 0;
+	m_pRibbon         = nullptr;
+	m_pProgressBar1   = nullptr; m_pProgressBar2   = nullptr;
+	m_pKeyProgressBar1 = nullptr; m_pKeyProgressBar2 = nullptr;
+	m_pCombo2         = nullptr;
+	m_pSheetCombo1    = nullptr; m_pSheetCombo2    = nullptr;
+	m_pSpinner1_Fdata = nullptr; m_pSpinner1_Names = nullptr;
+	m_pSpinner2_Fdata = nullptr; m_pSpinner2_Names = nullptr;
+	m_pMarkIn1        = nullptr; m_pMarkIn2        = nullptr;
+	m_pSlider         = nullptr; m_pUnhideExcel    = nullptr;
+	m_pVerifyKeys     = nullptr; m_pSameNames      = nullptr;
+	m_pColorPicker1   = nullptr; m_pColorPicker2   = nullptr;
+	m_pAuto           = nullptr;
+	m_pFoundDifferences = nullptr;
+	m_pLabel0         = nullptr; m_pLabel1         = nullptr; m_pLabel2 = nullptr;
+	m_pToFront        = nullptr; m_pShowSims       = nullptr;
+	m_pCreateNewKeys  = nullptr; m_pButton2        = nullptr;
+	m_pUseIndices     = nullptr;
+	m_pRows1 = nullptr; m_pCols1 = nullptr;
+	m_pRows2 = nullptr; m_pCols2 = nullptr;
+	for (int i = 0; i < 256; i++) { m_nInvEntropy1[i] = 0; m_nInvEntropy2[i] = 0; }
+	for (int i = 0; i < 256; i++) { m_nSortedEntropy1[i] = 0; m_nSortedEntropy2[i] = 0; }
+	for (int i = 0; i < SUGKEYS + 4; i++) {
+		m_nExaminedKeys1[i] = 0; m_nExaminedKeys2[i] = 0;
+		m_nTmpKeys1[i] = 0;      m_nTmpKeys2[i] = 0;
+	}
 	m_bIn1file = false;
 	m_bIn2file = false;
 	m_bSameNames = false;
@@ -373,29 +162,7 @@ CChildView::CChildView()
 /// </summary>
 CChildView::~CChildView()
 {
-	delete[] m_pchMainArr1;
-	delete[] m_pchMainArr2; //char[1]; // ....  XLS files
-	delete[] m_pbMarkIn1Arr; //bool[1]; // this 2D array indicates whether a cell at its coordinates (see above) is to be marked in the first file
-	delete[] m_pbMarkIn2Arr; //bool[1]; // ... in the second file.
-	delete[] m_pszKeyArr11; //CString[1]; // array of the strings found in the first key column in the first file
-							   //keyArr12; //CString[1]; // ... the second key ... the first file
-							   //keyArr13; //CString[1]; // ... the third key ... the first file
-	delete[] m_pszKeyArr21; //CString[1]; // ... the first key ... the second file
-							   //keyArr22; //CString[1]; // ... the second key ... the second file
-							   //keyArr23; //CString[1]; // ... the third key ... the second file
-	delete[] m_pszTmpKeyArr11; //CString[1];
-	delete[] m_pszTmpKeyArr21; //CString[1];
-	delete[] m_pbKeyMissing1; //bool[1];
-	delete[] m_pbKeyMissing2; //bool[1];
-	delete[] m_pbTmpKeyMissing1; //bool[1];
-	delete[] m_pbTmpKeyMissing2; //bool[1];
-	delete[] m_pnMainMatrix; //int[1]; // 2D array representing the result matrix
-	delete[] m_pbMarkedMatrix; //bool[1]; // 2D array indicating marked cells in the result matrix
-	delete[] m_pbEmptyClms1; //bool[1]; // 1D array indicating empty columns in the first file
-	delete[] m_pbEmptyClms2; //bool[1]; // .... the second file
-	delete[] m_pbGreenClms1; //bool[1]; // 1D array indicating whether a column has its "lookalike" in the second file
-	delete[] m_pbGreenClms2; //bool[1]; // 1D array indicating whether a column has its "lookalike" in the first file
-	delete[] m_pnFoundDifferences; //long[1]; // number of differences found between intersected columns (for the doubleclicked cell) 
+	// Dynamic arrays (std::vector) release memory automatically.
 }
 
 
@@ -1870,8 +1637,7 @@ void CChildView::makeCharArr1()
 		long prgHlpr0, prgHlpr;
 		prgHlpr0 = 0;
 		prgHlpr = 0;
-		delete[] m_pchMainArr1;
-		m_pchMainArr1 = new char[arSize1];
+		m_pchMainArr1.assign(arSize1, 0);
 		long index[2];
 		char chr;
 		COleVariant vData;
@@ -1923,8 +1689,7 @@ void CChildView::makeCharArr2()
 		long prgHlpr0, prgHlpr;
 		prgHlpr0 = 0;
 		prgHlpr = 0;
-		delete[] m_pchMainArr2;
-		m_pchMainArr2 = new char[arSize2];
+		m_pchMainArr2.assign(arSize2, 0);
 		long index[2];
 		char chr;
 		COleVariant vData;
@@ -2002,15 +1767,8 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 void CChildView::mxClear(int x, int y)
 {
 	int size = (x + 1) * (y + 1);
-	delete[] m_pnMainMatrix;
-	m_pnMainMatrix = new int[size];
-	delete[] m_pbMarkedMatrix;
-	m_pbMarkedMatrix = new bool[size];
-	for (int i = 0; i < size; i++)
-	{
-		m_pnMainMatrix[i] = 0;
-		m_pbMarkedMatrix[i] = false;
-	}
+	m_pnMainMatrix.assign(size, 0);
+	m_pbMarkedMatrix.assign(size, false);
 }
 
 
@@ -2066,9 +1824,7 @@ bool CChildView::mxMarkedGet(int x, int y)
 /// </summary>
 void CChildView::checkEmptiness1()
 {
-	delete[] m_pbEmptyClms1;
-	m_pbEmptyClms1 = new bool[m_Table1.NumberOfColumns + 2];
-	for (int i = 0; i <= m_Table1.NumberOfColumns; i++) m_pbEmptyClms1[i] = true;
+	m_pbEmptyClms1.assign(m_Table1.NumberOfColumns + 2, true);
 	long prgHlpr0, prgHlpr;
 	prgHlpr0 = 0;
 	prgHlpr = 0;
@@ -2099,9 +1855,7 @@ void CChildView::checkEmptiness1()
 /// </summary>
 void CChildView::checkEmptiness2()
 {
-	delete[] m_pbEmptyClms2;
-	m_pbEmptyClms2 = new bool[m_Table2.NumberOfColumns + 2];
-	for (int i = 0; i <= m_Table2.NumberOfColumns; i++) m_pbEmptyClms2[i] = true;
+	m_pbEmptyClms2.assign(m_Table2.NumberOfColumns + 2, true);
 	long prgHlpr0, prgHlpr;
 	prgHlpr0 = 0;
 	prgHlpr = 0;
@@ -2350,12 +2104,8 @@ void CChildView::firstPass()
 			//}
 		}
 	}
-	delete[] m_pbGreenClms1;
-	m_pbGreenClms1 = new bool[m_Table1.NumberOfColumns + 2];
-	delete[] m_pbGreenClms2;
-	m_pbGreenClms2 = new bool[m_Table2.NumberOfColumns + 2];
-	for (int i = 0; i <= m_Table1.NumberOfColumns; i++) m_pbGreenClms1[i] = false; // TODO: could have been moved to the cyclus below in the "else" branch - for better performance
-	for (int i = 0; i <= m_Table2.NumberOfColumns; i++) m_pbGreenClms2[i] = false; // dtto
+	m_pbGreenClms1.assign(m_Table1.NumberOfColumns + 2, false);
+	m_pbGreenClms2.assign(m_Table2.NumberOfColumns + 2, false);
 	for (int i_c = 1; i_c <= m_Table2.NumberOfColumns; i_c++)
 	{
 		for (int i_r = 1; i_r <= m_Table1.NumberOfColumns; i_r++)
@@ -2388,10 +2138,8 @@ int CChildView::createKeyArrays1()
 	long idx = 0;
 	m_Map1.RemoveAll();
 	CString testdata;
-	delete[] m_pszKeyArr11;
-	m_pszKeyArr11 = new CString[m_Table1.NumberOfRows + 2];
-	delete[] m_pbKeyMissing1;
-	m_pbKeyMissing1 = new bool[m_Table1.NumberOfRows + 2];
+	m_pszKeyArr11.assign(m_Table1.NumberOfRows + 2, L"");
+	m_pbKeyMissing1.assign(m_Table1.NumberOfRows + 2, false);
 	m_bLockPrg1 = true;
 	int prgHlpr = 0, prgHlpr0 = 0;
 	for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
@@ -2464,10 +2212,8 @@ int CChildView::createKeyArrays2()
 	long idx = 0;
 	m_Map2.RemoveAll();
 	CString testdata;
-	delete[] m_pszKeyArr21;
-	m_pszKeyArr21 = new CString[m_Table2.NumberOfRows + 2];
-	delete[] m_pbKeyMissing2;
-	m_pbKeyMissing2 = new bool[m_Table2.NumberOfRows + 2];
+	m_pszKeyArr21.assign(m_Table2.NumberOfRows + 2, L"");
+	m_pbKeyMissing2.assign(m_Table2.NumberOfRows + 2, false);
 	m_bLockPrg2 = true;
 	int prgHlpr = 0, prgHlpr0 = 0;
 	prgHlpr = 0;
@@ -3342,9 +3088,9 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 UINT MyThreadProc2(LPVOID pParam)
 {
 	HWND hWnd1 = (HWND)pParam;
-	m_bUniqueKeys1 = false;
-	m_bUniqueKeys2 = false;
 	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	pWnd->m_bUniqueKeys1 = false;
+	pWnd->m_bUniqueKeys2 = false;
 	int rslt;
 	rslt = pWnd->createKeyArrays1();
 	if (rslt == 1)
@@ -3352,7 +3098,7 @@ UINT MyThreadProc2(LPVOID pParam)
 		pWnd->MessageBox(CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE)); // CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE)
 		return 0;
 	}
-	m_bUniqueKeys1 = true;
+	pWnd->m_bUniqueKeys1 = true;
 	rslt = pWnd->createKeyArrays2();
 	if (rslt == 2)
 	{
@@ -3373,21 +3119,20 @@ UINT MyThreadProc2(LPVOID pParam)
 UINT CreateKeys1ThreadProc(LPVOID pParam)
 {
 	HWND hWnd1 = (HWND)pParam;
-	m_bUniqueKeys1 = false;
 	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	pWnd->m_bUniqueKeys1 = false;
 	int rslt;
 	rslt = pWnd->createKeyArrays1();
 	if (rslt == 1)
 	{
 		CString s;
-		NotUniqueKeys* nu;
-		nu = &m_NotUniqueKeys1;
+		NotUniqueKeys* nu = &pWnd->m_NotUniqueKeys1;
 		s.Format(CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS), nu->keyString, nu->firstRow, nu->secondRow); // CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS)
 		pWnd->MessageBox(s);
-		m_bLockPrg1 = false;
+		pWnd->m_bLockPrg1 = false;
 		return 0;
 	}
-	m_bUniqueKeys1 = true;
+	pWnd->m_bUniqueKeys1 = true;
 	AfxEndThread(0);
 	return 0;
 }
@@ -3402,21 +3147,20 @@ UINT CreateKeys1ThreadProc(LPVOID pParam)
 UINT CreateKeys2ThreadProc(LPVOID pParam)
 {
 	HWND hWnd1 = (HWND)pParam;
-	m_bUniqueKeys2 = false;
 	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	pWnd->m_bUniqueKeys2 = false;
 	int rslt;
 	rslt = pWnd->createKeyArrays2();
 	if (rslt == 2)
 	{
 		CString s;
-		NotUniqueKeys* nu;
-		nu = &m_NotUniqueKeys2;
+		NotUniqueKeys* nu = &pWnd->m_NotUniqueKeys2;
 		s.Format(CMsg(IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS), nu->keyString, nu->firstRow, nu->secondRow); // CMsg(IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS)
 		pWnd->MessageBox(s);
-		m_bLockPrg2 = false;
+		pWnd->m_bLockPrg2 = false;
 		return 0;
 	}
-	m_bUniqueKeys2 = true;
+	pWnd->m_bUniqueKeys2 = true;
 	AfxEndThread(0);
 	return 0;
 }
@@ -3484,12 +3228,9 @@ void CChildView::markInFiles()
 	cy = M_CCell.y;
 	m_nOldy = cy;
 	m_nOldx = cx;
-	delete[] m_pbMarkIn1Arr;
-	m_pbMarkIn1Arr = new bool[m_Table1.NumberOfRows + 2];
-	delete[] m_pbMarkIn2Arr;
-	m_pbMarkIn2Arr = new bool[m_Table2.NumberOfRows + 2];
-	delete[] m_pnFoundDifferences;
-	m_pnFoundDifferences = new long[m_Table1.NumberOfRows + 2];
+	m_pbMarkIn1Arr.assign(m_Table1.NumberOfRows + 2, false);
+	m_pbMarkIn2Arr.assign(m_Table2.NumberOfRows + 2, false);
+	m_pnFoundDifferences.assign(m_Table1.NumberOfRows + 2, 0L);
 	for (int i1 = 0; i1 <= m_Table1.NumberOfRows + 1; i1++)
 	{
 		m_pbMarkIn1Arr[i1] = false;
@@ -3606,8 +3347,7 @@ void CChildView::OnUpdateCheck3(CCmdUI* pCmdUI)
 void CChildView::makePrereq1()
 {
 	m_bPrereq1valid = false;
-	delete[] m_pchMainArr1;
-	m_pchMainArr1 = new char[m_Table1.NumberOfRows + 2];
+	m_pchMainArr1.assign(m_Table1.NumberOfRows + 2, 0);
 	makeCharArr1();
 	checkEmptiness1();
 	m_bPrereq1valid = true;
@@ -3621,8 +3361,7 @@ void CChildView::makePrereq1()
 void CChildView::makePrereq2()
 {
 	m_bPrereq2valid = false;
-	delete[] m_pchMainArr2;
-	m_pchMainArr2 = new char[m_Table2.NumberOfRows + 2];
+	m_pchMainArr2.assign(m_Table2.NumberOfRows + 2, 0);
 	makeCharArr2();
 	checkEmptiness2();
 	m_bPrereq2valid = true;
@@ -4294,9 +4033,9 @@ void CChildView::clearPossibleKeys()
 /// <param name="c">The c.</param>
 inline void CChildView::sort3(int& a, int& b, int& c)
 {
-	if (c < b) swap(c, b);
-	if (b < a) swap(b, a);
-	if (c < b) swap(c, b);
+	if (c < b) std::swap(c, b);
+	if (b < a) std::swap(b, a);
+	if (c < b) std::swap(c, b);
 }
 
 
