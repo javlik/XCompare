@@ -402,6 +402,15 @@ public:
         }
         m_nKeyPairCounter--;
     }
+    void insertKeyAt(int n, int col1, int col2)
+    {
+        for (int i = m_nKeyPairCounter; i > n; i--)
+        {
+            m_KeyPair[i].tab1 = m_KeyPair[i - 1].tab1;
+            m_KeyPair[i].tab2 = m_KeyPair[i - 1].tab2;
+        }
+        m_nKeyPairCounter++;
+    }
     bool isThisAKey(int table, int column) const
     {
         for (int i = 0; i < m_nKeyPairCounter; i++)

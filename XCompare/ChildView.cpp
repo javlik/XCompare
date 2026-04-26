@@ -1531,19 +1531,7 @@ void CChildView::OnSpin2Names()
 /// <summary>
 /// Makes the character arr1.
 /// </summary>
-void CChildView::makeCharArr1()
-{
-	// Delegated to ComparisonEngine via makePrereq1()
-}
 
-
-/// <summary>
-/// Makes the character arr2.
-/// </summary>
-void CChildView::makeCharArr2()
-{
-	// Delegated to ComparisonEngine via makePrereq2()
-}
 
 
 
@@ -1628,20 +1616,7 @@ bool CChildView::mxMarkedGet(int x, int y)
 /// <summary>
 /// Checks the emptiness1.
 /// </summary>
-void CChildView::checkEmptiness1()
-{
-	// Delegated to ComparisonEngine via makePrereq1()
-}
 
-
-
-/// <summary>
-/// Checks the emptiness2.
-/// </summary>
-void CChildView::checkEmptiness2()
-{
-	// Delegated to ComparisonEngine via makePrereq2()
-}
 
 
 
@@ -3074,6 +3049,7 @@ void CChildView::suggestKeys1()
 			// Loop through the data and report the contents.
 			szdata += getCellValue1(i_h, i_i);
 			if ((m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
+			{
 				m_mapTmpMap1[szdata] = i_i;
 				m_nInvEntropy1[i_h]++;
 			}
@@ -3236,6 +3212,7 @@ void CChildView::suggestKeys2()
 			// Loop through the data and report the contents.
 			szdata += getCellValue2(i_h, i_i);
 			if ((m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end()))
+			{
 				m_mapTmpMap2[szdata] = i_i;
 				m_nInvEntropy2[i_h]++;
 			}

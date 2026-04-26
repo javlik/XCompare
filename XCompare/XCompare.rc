@@ -70,7 +70,7 @@ END
 // Bitmap
 //
 
-IDB_BITMAP1             BITMAP                  "C:\\d\\pix\\New folder (2)\\legend.bmp"
+IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ IDB_PNG1                PNG                     "res\\x.png"
 
 STRINGTABLE
 BEGIN
-    IDP_OLE_INIT_FAILED     "Inicializace OLE selhala. Ujistìte se, že používate správnou verzi OLE knihoven"
+    IDP_OLE_INIT_FAILED     "Inicializace OLE selhala. Ujistï¿½te se, ï¿½e pouï¿½ï¿½vate sprï¿½vnou verzi OLE knihoven"
 END
 
 STRINGTABLE
@@ -101,7 +101,7 @@ END
 STRINGTABLE
 BEGIN
     AFX_IDS_APP_TITLE       "XCompare"
-    AFX_IDS_IDLEMESSAGE     "Pøipraven"
+    AFX_IDS_IDLEMESSAGE     "Pï¿½ipraven"
 END
 
 STRINGTABLE
@@ -117,7 +117,7 @@ END
 STRINGTABLE
 BEGIN
     ID_APP_ABOUT            "Zobrazit informace o programu, verze a copyright\nO programu..."
-    ID_APP_EXIT             "Ukonèit aplikaci"
+    ID_APP_EXIT             "Ukonï¿½it aplikaci"
 END
 
 STRINGTABLE
@@ -167,25 +167,25 @@ STRINGTABLE
 BEGIN
     AFX_IDS_SCRESTORE       "Restore the window to normal size"
     AFX_IDS_SCTASKLIST      "Activate Task List"
-    IDS_EMPTY               "(prázdné)"
-    IDS_WAIT_TILL_IN_EXCEL  "Poèkejte, dokud se soubor nenahraje do Excelu"
+    IDS_EMPTY               "(prï¿½zdnï¿½)"
+    IDS_WAIT_TILL_IN_EXCEL  "Poï¿½kejte, dokud se soubor nenahraje do Excelu"
     IDS_PATH_TO_FILE        "Cesta k souboru:  %s\r\n\r\n"
-    IDS_FILE_SUCCESFULLY_LOADED "Soubor úspìšnì nahrán"
+    IDS_FILE_SUCCESFULLY_LOADED "Soubor ï¿½spï¿½nï¿½ nahrï¿½n"
     IDS_ANOTHER_PROCESS_STILL_RUNNING 
-                            "Pracovní vlákno je blokováno jiným procesem.\nPoèkejte prosím."
-    IDS_ATLEAST_ONE_KEY     "Pøed spuštìním porovnání musíte vybrat alespoò 1 klíè pro každý soubor."
-    IDS_COMPARISON_IN_PROGRESS "Probíhá køížové porovnávání"
+                            "Pracovnï¿½ vlï¿½kno je blokovï¿½no jinï¿½m procesem.\nPoï¿½kejte prosï¿½m."
+    IDS_ATLEAST_ONE_KEY     "Pï¿½ed spuï¿½tï¿½nï¿½m porovnï¿½nï¿½ musï¿½te vybrat alespoï¿½ 1 klï¿½ï¿½ pro kaï¿½dï¿½ soubor."
+    IDS_COMPARISON_IN_PROGRESS "Probï¿½hï¿½ kï¿½ï¿½ovï¿½ porovnï¿½vï¿½nï¿½"
     IDS_1ST_FILE            "1. soubor: "
     IDS_2ND_FILE            "2. soubor: "
-    IDS_EXCEL_CANNOT_RUN    "Aplikace MS Excel nemohla být spuštìna."
+    IDS_EXCEL_CANNOT_RUN    "Aplikace MS Excel nemohla bï¿½t spuï¿½tï¿½na."
     IDS_WAIT_UNTIL_PRELIMINARY_CHECK 
-                            "Poèkejte dokud nebude dokonèena pøedbìžná kontrola dat"
-    IDS_DATA_VERIFIED       "Data ovìøena"
+                            "Poï¿½kejte dokud nebude dokonï¿½ena pï¿½edbï¿½nï¿½ kontrola dat"
+    IDS_DATA_VERIFIED       "Data ovï¿½ï¿½ena"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_PANE1        "Vyberte soubory k porovnání"
+    IDS_STATUS_PANE1        "Vyberte soubory k porovnï¿½nï¿½"
     IDS_STATUS_PANE2        "Pane 2"
 END
 
@@ -196,79 +196,79 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NEW                 "Nové porovnávání"
-    IDS_OPEN                "Otevøít soubor ..."
-    IDS_SAVE                "Uložit"
-    IDS_SAVE_AS             "Uložit jako ..."
-    IDS_KEY_SUITABILITY     "Vhodnost samost. klíèe:"
-    IDS_WAIT_PRELIM_CHK     "Poèkejte dokud nebude dokonèena pøedbìžná kontrola dat"
+    IDS_NEW                 "Novï¿½ porovnï¿½vï¿½nï¿½"
+    IDS_OPEN                "Otevï¿½ï¿½t soubor ..."
+    IDS_SAVE                "Uloï¿½it"
+    IDS_SAVE_AS             "Uloï¿½it jako ..."
+    IDS_KEY_SUITABILITY     "Vhodnost samost. klï¿½ï¿½e:"
+    IDS_WAIT_PRELIM_CHK     "Poï¿½kejte dokud nebude dokonï¿½ena pï¿½edbï¿½nï¿½ kontrola dat"
 END
 
 STRINGTABLE
 BEGIN
-    ID_CHECK3               "Použitelné pouze pokud jsou názvy sloupcù v obou souborech identické\nPro identické názvy sloupcù"
-    ID_DIFFS_LIST           "Po kliknutí na jedno z tlaèítek vpravo ji mužete lokalizovat v 1. nebo 2. souboru\nZvolte odlišnost"
+    ID_CHECK3               "Pouï¿½itelnï¿½ pouze pokud jsou nï¿½zvy sloupcï¿½ v obou souborech identickï¿½\nPro identickï¿½ nï¿½zvy sloupcï¿½"
+    ID_DIFFS_LIST           "Po kliknutï¿½ na jedno z tlaï¿½ï¿½tek vpravo ji muï¿½ete lokalizovat v 1. nebo 2. souboru\nZvolte odliï¿½nost"
 END
 
 STRINGTABLE
 BEGIN
-    ID_BUTTON3              "pro pozadí nalezených rozdílù\nVyberte barvu"
-    ID_KEY1_1               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
-    ID_KEY1_2               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
+    ID_BUTTON3              "pro pozadï¿½ nalezenï¿½ch rozdï¿½lï¿½\nVyberte barvu"
+    ID_KEY1_1               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
+    ID_KEY1_2               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
 END
 
 STRINGTABLE
 BEGIN
-    ID_KEY2_1               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
-    ID_KEY2_2               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
-    ID_KEY1_3               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
-    ID_KEY2_3               "Klíèe musí být v každém øádku jedineèné pro celou tabulku\nVyberte klíèe"
-    ID_CHECK4               "Oznaèovat po dvojkliknutí na buòku nebo automaticky\nOznaèovat odlišnosti prímo v porovnávaném souboru"
-    ID_CHECK5               "Oznaèovat po dvojkliknutí na buòku nebo automaticky\nOznaèovat odlišnosti prímo v porovnávaném souboru"
+    ID_KEY2_1               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
+    ID_KEY2_2               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
+    ID_KEY1_3               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
+    ID_KEY2_3               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
+    ID_CHECK4               "Oznaï¿½ovat po dvojkliknutï¿½ na buï¿½ku nebo automaticky\nOznaï¿½ovat odliï¿½nosti prï¿½mo v porovnï¿½vanï¿½m souboru"
+    ID_CHECK5               "Oznaï¿½ovat po dvojkliknutï¿½ na buï¿½ku nebo automaticky\nOznaï¿½ovat odliï¿½nosti prï¿½mo v porovnï¿½vanï¿½m souboru"
 END
 
 STRINGTABLE
 BEGIN
-    ID_CHECK7               "Zapnout/vypnout zvýrazòování dvojice sloupcù s identickými názvy\nZvýraznit ohranicení bunek pro dvojice stejnojmenných sloupcù"
-    ID_BUTTON5              "pro pozadí nalezených rozdílù\nVyberte barvu"
+    ID_CHECK7               "Zapnout/vypnout zvï¿½razï¿½ovï¿½nï¿½ dvojice sloupcï¿½ s identickï¿½mi nï¿½zvy\nZvï¿½raznit ohranicenï¿½ bunek pro dvojice stejnojmennï¿½ch sloupcï¿½"
+    ID_BUTTON5              "pro pozadï¿½ nalezenï¿½ch rozdï¿½lï¿½\nVyberte barvu"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_NAME             "bez názvu "
-    IDS_MARKING_IN_EXCEL_RUNNING "Probíhá oznaèování odlišností v Excelu"
-    IDS_COORDS              "Èíslo sloupce v 1. souboru: %i;  Èíslo sloupce ve 2. souboru: %i"
-    IDS_MARK_SUSP_INTERS    "Oznaèit prùseèíky sloupcù, jejichž podobnost je vyšší, než %i"
+    IDS_NO_NAME             "bez nï¿½zvu "
+    IDS_MARKING_IN_EXCEL_RUNNING "Probï¿½hï¿½ oznaï¿½ovï¿½nï¿½ odliï¿½nostï¿½ v Excelu"
+    IDS_COORDS              "ï¿½ï¿½slo sloupce v 1. souboru: %i;  ï¿½ï¿½slo sloupce ve 2. souboru: %i"
+    IDS_MARK_SUSP_INTERS    "Oznaï¿½it prï¿½seï¿½ï¿½ky sloupcï¿½, jejichï¿½ podobnost je vyï¿½ï¿½ï¿½, neï¿½ %i"
     IDS_FOUND_KEYS_FROM_TOTAL 
-                            "Bylo nalezeno %i párù klíèù z celkových %i øádkù v souboru è.1 a %i øádkù v souboru è.2"
-    IDS_DONE                "Dokonèeno"
-    IDS_X_COMP_IN_PRGRS     "Probíhá køížové porovnávání"
-    IDS_MARKING_DONE        "Oznaèování dokonèeno"
-    IDS_CHOSEN_KEYS1_NOT_UNIQUE "Zvolené klíèe pro 1. soubor nejsou jedineèné"
-    IDS_CHOSEN_KEYS2_NOT_UNIQUE "Zvolené klíèe pro 2. soubor nejsou jedineèné"
+                            "Bylo nalezeno %i pï¿½rï¿½ klï¿½ï¿½ï¿½ z celkovï¿½ch %i ï¿½ï¿½dkï¿½ v souboru ï¿½.1 a %i ï¿½ï¿½dkï¿½ v souboru ï¿½.2"
+    IDS_DONE                "Dokonï¿½eno"
+    IDS_X_COMP_IN_PRGRS     "Probï¿½hï¿½ kï¿½ï¿½ovï¿½ porovnï¿½vï¿½nï¿½"
+    IDS_MARKING_DONE        "Oznaï¿½ovï¿½nï¿½ dokonï¿½eno"
+    IDS_CHOSEN_KEYS1_NOT_UNIQUE "Zvolenï¿½ klï¿½ï¿½e pro 1. soubor nejsou jedineï¿½nï¿½"
+    IDS_CHOSEN_KEYS2_NOT_UNIQUE "Zvolenï¿½ klï¿½ï¿½e pro 2. soubor nejsou jedineï¿½nï¿½"
     IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS 
-                            "Vybrané klíèe pro 1. tabulku nejsou jedineèné.\nNalezen identický klíè '%s' na øádcích %i a %i"
+                            "Vybranï¿½ klï¿½ï¿½e pro 1. tabulku nejsou jedineï¿½nï¿½.\nNalezen identickï¿½ klï¿½ï¿½ '%s' na ï¿½ï¿½dcï¿½ch %i a %i"
     IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS 
-                            "Vybrané klíèe pro 2. tabulku nejsou jedineèné.\nNalezen identický klíè '%s' na øádcích %i a %i"
+                            "Vybranï¿½ klï¿½ï¿½e pro 2. tabulku nejsou jedineï¿½nï¿½.\nNalezen identickï¿½ klï¿½ï¿½ '%s' na ï¿½ï¿½dcï¿½ch %i a %i"
     IDS_DURING_MARKING_THREAD_BLOCKED 
-                            "Bìhem oznaèování odlišností je pracovní vlákno blokováno. Prosím o trpìlivost."
-    IDS_NOT_SELECTED        "(nevybrán)"
-    IDS_FRST_CHOOSE_DATA    "Nejprve vyberte listy obsahující data, která chcete porovnat."
-    IDS_KEY_COMB_FOUND      "Byla nalezena vhodná kombinace klíèových sloupcù.\nTato kombinace umožòuje porovnat %i spoleèných øádkù"
+                            "Bï¿½hem oznaï¿½ovï¿½nï¿½ odliï¿½nostï¿½ je pracovnï¿½ vlï¿½kno blokovï¿½no. Prosï¿½m o trpï¿½livost."
+    IDS_NOT_SELECTED        "(nevybrï¿½n)"
+    IDS_FRST_CHOOSE_DATA    "Nejprve vyberte listy obsahujï¿½cï¿½ data, kterï¿½ chcete porovnat."
+    IDS_KEY_COMB_FOUND      "Byla nalezena vhodnï¿½ kombinace klï¿½ï¿½ovï¿½ch sloupcï¿½.\nTato kombinace umoï¿½ï¿½uje porovnat %i spoleï¿½nï¿½ch ï¿½ï¿½dkï¿½"
 END
 
 STRINGTABLE
 BEGIN
     IDS_INCOMPATBL_KEY_FOUND 
-                            "V obou tabulkách byly nalezeny klíèe, které ale nejsou vzájemnì sluèitelné.\nSoubory nelze porovnat bez pøedchozí úpravy tabulek."
+                            "V obou tabulkï¿½ch byly nalezeny klï¿½ï¿½e, kterï¿½ ale nejsou vzï¿½jemnï¿½ sluï¿½itelnï¿½.\nSoubory nelze porovnat bez pï¿½edchozï¿½ ï¿½pravy tabulek."
     IDS_NO_SHEET_SELCTD_IN_FRST 
-                            "V prvním souboru není vybrán list obsahující data"
+                            "V prvnï¿½m souboru nenï¿½ vybrï¿½n list obsahujï¿½cï¿½ data"
     IDS_NO_SHEET_SELCTD_IN_SCND 
-                            "Ve druhém souboru není vybrán list obsahující data"
-    IDS_NTHR_TBL_KEY_FND    "V prvním ani ve druhém souboru nebyly nalezeny žádné použitelné klíèe"
-    IDS_NO_KEY_FND_IN_FRST  "V prvním souboru nebyly nalezeny žádné použitelné klíèe"
-    IDS_NO_KEY_FND_IN_SCND  "Ve druhém souboru nebyly nalezeny žádné použitelné klíèe"
-    IDS_IDXING_WARNING      "Pøed využíváním tohoto pøepínaèe se dùkladnì ujistìte, že používáte vhodný klíè (napø. pomocí funkce hledání souvislostí)!"
+                            "Ve druhï¿½m souboru nenï¿½ vybrï¿½n list obsahujï¿½cï¿½ data"
+    IDS_NTHR_TBL_KEY_FND    "V prvnï¿½m ani ve druhï¿½m souboru nebyly nalezeny ï¿½ï¿½dnï¿½ pouï¿½itelnï¿½ klï¿½ï¿½e"
+    IDS_NO_KEY_FND_IN_FRST  "V prvnï¿½m souboru nebyly nalezeny ï¿½ï¿½dnï¿½ pouï¿½itelnï¿½ klï¿½ï¿½e"
+    IDS_NO_KEY_FND_IN_SCND  "Ve druhï¿½m souboru nebyly nalezeny ï¿½ï¿½dnï¿½ pouï¿½itelnï¿½ klï¿½ï¿½e"
+    IDS_IDXING_WARNING      "Pï¿½ed vyuï¿½ï¿½vï¿½nï¿½m tohoto pï¿½epï¿½naï¿½e se dï¿½kladnï¿½ ujistï¿½te, ï¿½e pouï¿½ï¿½vï¿½te vhodnï¿½ klï¿½ï¿½ (napï¿½. pomocï¿½ funkce hledï¿½nï¿½ souvislostï¿½)!"
 END
 
 #endif    // Czech (Czech Republic) resources
@@ -370,9 +370,9 @@ BEGIN
             MENUITEM "Visual Studio 200&8",         ID_VIEW_APPLOOK_VS_2008
             POPUP "Office 200&7"
             BEGIN
-                MENUITEM "&Modrý styl",                 ID_VIEW_APPLOOK_OFF_2007_BLUE
-                MENUITEM "È&erný styl",                 ID_VIEW_APPLOOK_OFF_2007_BLACK
-                MENUITEM "&Støíbrný styl",              ID_VIEW_APPLOOK_OFF_2007_SILVER
+                MENUITEM "&Modrï¿½ styl",                 ID_VIEW_APPLOOK_OFF_2007_BLUE
+                MENUITEM "ï¿½&ernï¿½ styl",                 ID_VIEW_APPLOOK_OFF_2007_BLACK
+                MENUITEM "&Stï¿½ï¿½brnï¿½ styl",              ID_VIEW_APPLOOK_OFF_2007_SILVER
                 MENUITEM "&Aqua",                       ID_VIEW_APPLOOK_OFF_2007_AQUA
             END
         END
@@ -405,9 +405,9 @@ END
 
 IDR_THEME_MENU MENU
 BEGIN
-    MENUITEM "Office 2007 (&Modrý Styl)",   ID_VIEW_APPLOOK_OFF_2007_BLUE
-    MENUITEM "Office 2007 (C&erný styl)",   ID_VIEW_APPLOOK_OFF_2007_BLACK
-    MENUITEM "Office 2007 (&Stríbrný styl)", ID_VIEW_APPLOOK_OFF_2007_SILVER
+    MENUITEM "Office 2007 (&Modrï¿½ Styl)",   ID_VIEW_APPLOOK_OFF_2007_BLUE
+    MENUITEM "Office 2007 (C&ernï¿½ styl)",   ID_VIEW_APPLOOK_OFF_2007_BLACK
+    MENUITEM "Office 2007 (&Strï¿½brnï¿½ styl)", ID_VIEW_APPLOOK_OFF_2007_SILVER
     MENUITEM "Office 2007 (&Aqua)",         ID_VIEW_APPLOOK_OFF_2007_AQUA
     MENUITEM "Win&dows 7",                  ID_VIEW_APPLOOK_WINDOWS_7
 END
@@ -459,7 +459,7 @@ BEGIN
             VALUE "FileDescription", "XCompare"
             VALUE "FileVersion", "2.0.1.2"
             VALUE "InternalName", "XCompare.exe"
-            VALUE "LegalCopyright", "© 2018 Jirí Havlík, License CC BY-SA 4.0"
+            VALUE "LegalCopyright", "ï¿½ 2018 Jirï¿½ Havlï¿½k, License CC BY-SA 4.0"
             VALUE "OriginalFilename", "XCompare.exe"
             VALUE "ProductName", "XCompare (Cross comparison tool)"
             VALUE "ProductVersion", "2.0.1.2"

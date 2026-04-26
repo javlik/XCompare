@@ -79,6 +79,12 @@ public:
 	void firstPass();
 	int createKeyArrays1();
 	int createKeyArrays2();
+	bool checkKeysUniqueness1();
+	bool checkKeysUniqueness2();
+	int mxGet(int x, int y);
+	void mxClear(int x, int y);
+	int mxPut(int x, int y);
+	bool mxMarkedGet(int x, int y);
 	CString getCellValue1(int column, int row);
 	CString getCellValue2(int column, int row);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -205,6 +211,7 @@ public:
 	bool         m_bLockPrg1;    // thread 1 is running
 	bool         m_bLockPrg2;    // thread 2 is running
 	// m_NotUniqueKeys1/2 are now in m_engine.m_NotUniqueKeys1/2
+	ComparisonEngine m_engine;
 
 private:
 	// Synchronisation between threads
@@ -290,7 +297,7 @@ private:
 	std::map<CString, long> m_mapTmpMap1;
 	std::map<CString, long> m_mapTmpMap2;
 
-	ComparisonEngine m_engine;
+	// m_engine is now public (accessed by thread procs)
 
 	// UI state
 	int   m_nUiToBeRefreshed;
