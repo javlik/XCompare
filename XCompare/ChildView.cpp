@@ -32,8 +32,7 @@ CChildView::CChildView()
 	m_bToFront = false;
 	m_nSelectedDifference = 0;
 	m_bForceNotOnlyPcnt = true;
-	m_bPrereq1valid = false;
-	m_bPrereq2valid = false;
+	// m_bPrereq1valid / m_bPrereq2valid are now inside m_engine
 	m_nChosenColor1 = 13;
 	m_nChosenColor2 = 13;
 	m_Palette[0] = { 0,   0,   0 };
@@ -84,7 +83,7 @@ CChildView::CChildView()
 	m_bKeysGathering2done = false;
 	m_nCheckedKeysCounter1 = 0;
 	m_nCheckedKeysCounter2 = 0;
-	m_nKeyPairCounter    = 0;
+	// m_nKeyPairCounter is now inside m_engine
 	m_nPossibleKeyCounter1 = 0;
 	m_nPossibleKeyCounter2 = 0;
 	m_nOldx = 0; m_nOldy = 0;
@@ -147,6 +146,7 @@ CChildView::CChildView()
 	}
 	m_KeyCurvePen.CreatePen(PS_ENDCAP_FLAT, 2, RGB(100, 150, 250));
 	m_bUseIndexes = false;
+	m_engine.m_bUseIndexes = false;
 	m_bNewFile1 = false;
 	m_bNewFile2 = false;
 	m_nComplexity = 100000;
@@ -343,7 +343,7 @@ void CChildView::OnPaint()
 			dc.SetTextColor(RGB(0, 255, 0));
 			prcnt.Format(L"=:%i", sameness);
 			dc.TextOutW(5, 50, prcnt);
-			if (m_pbEmptyClms1[M_CCell.y] && m_pbEmptyClms2[M_CCell.x])
+			if (m_engine.isEmptyCol1(M_CCell.y) && m_engine.isEmptyCol2(M_CCell.x))
 			{
 				dc.SetTextColor(RGB(0, 0, 0));
 				dc.TextOutW(5, 80, CMsg(IDS_EMPTY)); // CMsg(IDS_EMPTY)
@@ -477,7 +477,7 @@ void CChildView::OnPaint()
 				dc.SelectObject(&brush1);
 				dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - m_VisTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - m_VisTopLeft.top) * STEP_Y);
 			}
-			if (m_pbEmptyClms1[mx_y])
+			if (m_engine.isEmptyCol1(mx_y))
 			{
 				dc.SelectObject(&pen6);
 				dc.SelectObject(&brush2);
@@ -571,7 +571,7 @@ void CChildView::OnPaint()
 				dc.SelectObject(&brush1);
 				dc.Ellipse(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y, OFFSET_X + STEP_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
 			}
-			if (m_pbEmptyClms2[mx_x])
+			if (m_engine.isEmptyCol2(mx_x))
 			{
 				dc.SelectObject(&pen6);
 				dc.SelectObject(&brush2);
@@ -615,7 +615,7 @@ void CChildView::OnPaint()
 					{
 						if (valSimil == 100)
 						{
-							if (m_pbEmptyClms1[mx_y_adj] || m_pbEmptyClms2[mx_x_adj])
+							if (m_engine.isEmptyCol1(mx_y_adj) || m_engine.isEmptyCol2(mx_x_adj))
 							{
 								dc.SelectObject(&brush2);
 							}
@@ -1341,7 +1341,7 @@ void CChildView::OnSpin1Fdata()
 	tmps.Format(_T("%d"), tmpi);
 	m_pSpinner1_Fdata->SetEditText(tmps);
 	m_Table1.FirstRowWithData = tmpi;
-	m_bPrereq1valid = false;
+	m_engine.invalidatePrereq1();
 }
 
 
@@ -1491,7 +1491,7 @@ void CChildView::OnSpin2Fdata()
 	tmps.Format(_T("%d"), tmpi);
 	m_pSpinner2_Fdata->SetEditText(tmps);
 	m_Table2.FirstRowWithData = tmpi;
-	m_bPrereq2valid = false;
+	m_engine.invalidatePrereq2();
 }
 
 
@@ -1533,42 +1533,8 @@ void CChildView::OnSpin2Names()
 /// </summary>
 void CChildView::makeCharArr1()
 {
-	if (int arSize1 = (m_Table1.NumberOfColumns + 1) * (m_Table1.NumberOfRows + 1))
-	{
-		long prgHlpr0, prgHlpr;
-		prgHlpr0 = 0;
-		prgHlpr = 0;
-		m_pchMainArr1.assign(arSize1, 0);
-		long index[2];
-		char chr;
-		COleVariant vData;
-		CString szdata;
-		for (int i_c = 1; i_c <= m_Table1.NumberOfColumns; i_c++)
-		{
-			prgHlpr0 = 100 * i_c / m_Table1.NumberOfColumns;
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-			}
-			for (int i_r = 1; i_r <= m_Table1.NumberOfRows; i_r++)
-			{
-				szdata = getCellValue1(i_c, i_r);
-				if (szdata == "")
-				{
-					chr = 0;
-				}
-				else
-				{
-					chr = szdata[0];
-				}
-				m_pchMainArr1[(i_r - 1) * m_Table1.NumberOfColumns + i_c] = chr;
-			}
-		}
-	}
-	PostMessage(CM_UPDATE_PROGRESS, 0, 100);
+	// Delegated to ComparisonEngine via makePrereq1()
 }
-
 
 
 /// <summary>
@@ -1576,42 +1542,7 @@ void CChildView::makeCharArr1()
 /// </summary>
 void CChildView::makeCharArr2()
 {
-	if (int arSize2 = (m_Table2.NumberOfColumns + 1) * (m_Table2.NumberOfRows + 1))
-	{
-		long prgHlpr0, prgHlpr;
-		prgHlpr0 = 0;
-		prgHlpr = 0;
-		m_pchMainArr2.assign(arSize2, 0);
-		long index[2];
-		char chr;
-		COleVariant vData;
-		CString szdata;
-		for (int i_c = 1; i_c <= m_Table2.NumberOfColumns; i_c++)
-		{
-			prgHlpr0 = 100 * i_c / m_Table2.NumberOfColumns;
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-			}
-			//TRACE("i_c: %i\n", i_c);
-			for (int i_r = 1; i_r <= m_Table2.NumberOfRows; i_r++)
-			{
-				//TRACE("i_r: %i, i_c: %i\n", i_r, i_c);
-				szdata = getCellValue2(i_c, i_r);
-				if (szdata == "")
-				{
-					chr = 0;
-				}
-				else
-				{
-					chr = szdata[0];
-				}
-				m_pchMainArr2[(i_r - 1) * m_Table2.NumberOfColumns + i_c] = chr;
-			}
-		}
-	}
-	PostMessage(CM_UPDATE_PROGRESS2, 0, 100);
+	// Delegated to ComparisonEngine via makePrereq2()
 }
 
 
@@ -1699,28 +1630,7 @@ bool CChildView::mxMarkedGet(int x, int y)
 /// </summary>
 void CChildView::checkEmptiness1()
 {
-	m_pbEmptyClms1.assign(m_Table1.NumberOfColumns + 2, true);
-	long prgHlpr0, prgHlpr;
-	prgHlpr0 = 0;
-	prgHlpr = 0;
-	for (int i_c = 1; i_c <= m_Table1.NumberOfColumns; i_c++)
-	{
-		prgHlpr0 = 100 * i_c / m_Table1.NumberOfColumns;
-		if (prgHlpr0 > prgHlpr + 10)
-		{
-			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-		}
-		for (int i_r = m_Table1.FirstRowWithData; i_r <= m_Table1.NumberOfRows; i_r++)
-		{
-			if (m_pchMainArr1[(i_r - 1) * m_Table1.NumberOfColumns + i_c])
-			{
-				m_pbEmptyClms1[i_c] = false;
-				break;
-			}
-		}
-	}
-	PostMessage(CM_UPDATE_PROGRESS, 0, 100);
+	// Delegated to ComparisonEngine via makePrereq1()
 }
 
 
@@ -1730,28 +1640,7 @@ void CChildView::checkEmptiness1()
 /// </summary>
 void CChildView::checkEmptiness2()
 {
-	m_pbEmptyClms2.assign(m_Table2.NumberOfColumns + 2, true);
-	long prgHlpr0, prgHlpr;
-	prgHlpr0 = 0;
-	prgHlpr = 0;
-	for (int i_c = 1; i_c <= m_Table2.NumberOfColumns; i_c++)
-	{
-		prgHlpr0 = 100 * i_c / m_Table2.NumberOfColumns;
-		if (prgHlpr0 > prgHlpr + 10)
-		{
-			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-		}
-		for (int i_r = m_Table2.FirstRowWithData; i_r <= m_Table2.NumberOfRows; i_r++)
-		{
-			if (m_pchMainArr2[(i_r - 1) * m_Table2.NumberOfColumns + i_c])
-			{
-				m_pbEmptyClms2[i_c] = false;
-				break;
-			}
-		}
-	}
-	PostMessage(CM_UPDATE_PROGRESS2, 0, 100);
+	// Delegated to ComparisonEngine via makePrereq2()
 }
 
 
@@ -1763,30 +1652,9 @@ void CChildView::checkEmptiness2()
 bool CChildView::checkKeysUniqueness1()
 {
 	m_bLockPrg1 = true;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	CString szTaken_A, szTaken_B;
-	for (int i0 = m_Table1.FirstRowWithData; i0 <= m_Table1.NumberOfRows; i0++)
-	{
-		prgHlpr0 = 100 * i0 / m_Table1.NumberOfRows;
-		if (prgHlpr0 > prgHlpr)
-		{
-			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-		}
-		szTaken_A = m_pszKeyArr11[i0];
-		for (int i1 = i0 + 1; i1 <= m_Table1.NumberOfRows; i1++)
-		{
-			szTaken_B = m_pszKeyArr11[i1];
-			if (szTaken_A == szTaken_B)
-			{
-				m_bLockPrg1 = false;
-				PostMessage(CM_UPDATE_PROGRESS, 0, 100);
-				return false;
-			}
-		}
-	}
+	bool result = m_engine.checkKeysUniqueness1();
 	m_bLockPrg1 = false;
-	return true;
+	return result;
 }
 
 
@@ -1798,30 +1666,9 @@ bool CChildView::checkKeysUniqueness1()
 bool CChildView::checkKeysUniqueness2()
 {
 	m_bLockPrg2 = true;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	CString szTaken_A, szTaken_B;
-	for (int i0 = m_Table2.FirstRowWithData; i0 <= m_Table2.NumberOfRows; i0++)
-	{
-		prgHlpr0 = 100 * i0 / m_Table2.NumberOfRows;
-		if (prgHlpr0 > prgHlpr)
-		{
-			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-		}
-		szTaken_A = m_pszKeyArr21[i0];
-		for (int i1 = i0 + 1; i1 <= m_Table2.NumberOfRows; i1++)
-		{
-			szTaken_B = m_pszKeyArr21[i1];
-			if (szTaken_A == szTaken_B)
-			{
-				m_bLockPrg2 = false;
-				PostMessage(CM_UPDATE_PROGRESS2, 0, 100);
-				return false;
-			}
-		}
-	}
+	bool result = m_engine.checkKeysUniqueness2();
 	m_bLockPrg2 = false;
-	return true;
+	return result;
 }
 
 
@@ -1831,169 +1678,12 @@ bool CChildView::checkKeysUniqueness2()
 /// </summary>
 void CChildView::firstPass()
 {
-	if (!m_bPrereq1valid) makePrereq1();
-	if (!m_bPrereq2valid) makePrereq2();
-	m_bDoAutoMark = m_bAutoMark;
 	m_bLockPrg1 = true;
-	CString concatenatedKey1, concatenatedKey2;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	char firstChar1, firstChar2;
-	m_nEffMax = 0;
-	mxClear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
-	POSITION mapPos1;
-	mapPos1 = m_Map1.GetStartPosition();
-	//// The commented code below is used only if the keys are stored in arrays instead of maps
-	long /*keyRow1, */ keyRow2;
-	int fchar1_y, fchar2_y;
-	//int i1; // iterator for progress visualisation;
-	//i1 = table1.FirstRowWithData-1;
-	if (m_bAutoMark)
-	{
-		for (long i1 = m_Table1.FirstRowWithData; i1 <= m_Table1.NumberOfRows; i1++)
-			//while (mapPos1 !=  NULL)
-		{
-			//i1++;
-			prgHlpr0 = 99 * i1 / m_Table1.NumberOfRows; // 99: because 100 would terminate the thread immaturely
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-				//pProgressBar1->SetPos(prgHlpr);
-			}
-			//map1.GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
-			concatenatedKey1 = m_pszKeyArr11[i1];
-			//for (int i2 = table2.FirstRowWithData; i2 <= table2.NumberOfRows; i2++)
-			//{
-			//concatenatedKey2 = keyArr21[i2];
-			//if (concatenatedKey1 == concatenatedKey2)
-			if (m_Map2.Lookup(concatenatedKey1, (long&)keyRow2))
-			{
-				m_nEffMax++;
-				//procBoundaries[thrdIdx].effPortion++;
-				fchar1_y = (i1 - 1) * m_Table1.NumberOfColumns;
-				for (int i3 = 1; i3 <= m_Table1.NumberOfColumns; i3++)
-				{
-					firstChar1 = m_pchMainArr1[fchar1_y + i3];
-					fchar2_y = (keyRow2 - 1) * m_Table2.NumberOfColumns;
-					for (int i4 = 1; i4 <= m_Table2.NumberOfColumns; i4++)
-					{
-						firstChar2 = m_pchMainArr2[fchar2_y + i4];
-						if (firstChar1 == firstChar2)
-						{
-							// empty combination OR ...
-							//TRACE("i1 = %d and i3 = %d\n", i1, i3);
-							if (firstChar1 == 0 || (getCellValue1(i3, i1) == getCellValue2(i4, keyRow2)))
-							{
-								mxPut(i4, i3);
-							}
-							else
-							{
-								if (m_Table1.Columns[i3] == m_Table2.Columns[i4])
-								{
-									m_pchMainArr1[fchar1_y + i3] = 1;
-									m_pchMainArr2[fchar2_y + i4] = 1;
-								}
-							}
-						}
-						else
-						{
-							if (m_Table1.Columns[i3] == m_Table2.Columns[i4])
-							{
-								m_pchMainArr1[fchar1_y + i3] = 1;
-								m_pchMainArr2[fchar2_y + i4] = 1;
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				m_pbKeyMissing1[i1] = true;
-			}
-			//}
-		}
-		if (m_bIn2file)
-		{
-			long keyRow1;
-			prgHlpr = 0; prgHlpr0 = 0;
-			for (long i1_2 = m_Table2.FirstRowWithData; i1_2 <= m_Table2.NumberOfRows; i1_2++)
-			{
-				prgHlpr0 = 100 * i1_2 / m_Table2.NumberOfRows;
-				if (prgHlpr0 > prgHlpr)
-				{
-					prgHlpr = prgHlpr0;
-					PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-				}
-				concatenatedKey2 = m_pszKeyArr21[i1_2];
-				if (!m_Map1.Lookup(concatenatedKey2, (long&)keyRow1))
-				{
-					m_pbKeyMissing2[i1_2] = true;
-				}
-			}
-		}
-		PostMessage(CM_UPDATE_PROGRESS, 0, 100); // because otherwise the "resolve auto mark" procedure would be started prematurely
-	}
-	else
-	{
-		for (long i1 = m_Table1.FirstRowWithData; i1 <= m_Table1.NumberOfRows; i1++)
-			//while (mapPos1 !=  NULL)
-		{
-			//i1++;
-			prgHlpr0 = 100 * i1 / m_Table1.NumberOfRows;
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-				//pProgressBar1->SetPos(prgHlpr);
-			}
-			//map1.GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
-			concatenatedKey1 = m_pszKeyArr11[i1];
-			//for (int i2 = table2.FirstRowWithData; i2 <= table2.NumberOfRows; i2++)
-			//{
-			//concatenatedKey2 = keyArr21[i2];
-			//if (concatenatedKey1 == concatenatedKey2)
-			if (m_Map2.Lookup(concatenatedKey1, (long&)keyRow2))
-			{
-				m_nEffMax++;
-				//procBoundaries[thrdIdx].effPortion++;
-				fchar1_y = (i1 - 1) * m_Table1.NumberOfColumns;
-				for (int i3 = 1; i3 <= m_Table1.NumberOfColumns; i3++)
-				{
-					firstChar1 = m_pchMainArr1[fchar1_y + i3];
-					fchar2_y = (keyRow2 - 1) * m_Table2.NumberOfColumns;
-					for (int i4 = 1; i4 <= m_Table2.NumberOfColumns; i4++)
-					{
-						firstChar2 = m_pchMainArr2[fchar2_y + i4];
-						if (firstChar1 == firstChar2)
-						{
-							// empty combination OR ...
-							//TRACE("i1 = %d and i3 = %d\n", i1, i3);
-							if (firstChar1 == 0 || (getCellValue1(i3, i1) == getCellValue2(i4, keyRow2)))
-							{
-								mxPut(i4, i3);
-							}
-						}
-					}
-				}
-			}
-			//}
-		}
-	}
-	m_pbGreenClms1.assign(m_Table1.NumberOfColumns + 2, false);
-	m_pbGreenClms2.assign(m_Table2.NumberOfColumns + 2, false);
-	for (int i_c = 1; i_c <= m_Table2.NumberOfColumns; i_c++)
-	{
-		for (int i_r = 1; i_r <= m_Table1.NumberOfColumns; i_r++)
-		{
-			if (mxGet(i_c, i_r) == m_nEffMax)
-			{
-				m_pbGreenClms1[i_r] = true;
-				m_pbGreenClms2[i_c] = true;
-			}
-		}
-	}
+	m_engine.setTables(m_Table1, m_Table2);
+	m_engine.firstPass(m_matrix, m_bAutoMark, m_bIn2file,
+	                   m_pbGreenClms1, m_pbGreenClms2,
+	                   m_nEffMax, m_bDoAutoMark);
 	m_nNatrixDone++;
-	PostMessage(CM_UPDATE_PROGRESS, 0, 1000);
 	m_bLockPrg1 = false;
 }
 
@@ -2005,61 +1695,12 @@ void CChildView::firstPass()
 /// <returns></returns>
 int CChildView::createKeyArrays1()
 {
-	m_NotUniqueKeys1 = { 0, 0, L"" };
-	long mapIdx;
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	long idx = 0;
-	m_Map1.RemoveAll();
-	CString testdata;
-	m_pszKeyArr11.assign(m_Table1.NumberOfRows + 2, L"");
-	m_pbKeyMissing1.assign(m_Table1.NumberOfRows + 2, false);
+	m_engine.setTables(m_Table1, m_Table2);
+	m_engine.m_bUseIndexes = m_bUseIndexes;
 	m_bLockPrg1 = true;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
-	{
-		prgHlpr0 = 100 * i_i / m_Table1.NumberOfRows;
-		if (prgHlpr0 > prgHlpr)
-		{
-			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-		}
-		szdata = "";
-		int nthKey;
-		for (int k_i = 0; k_i < m_nKeyPairCounter; k_i++)
-		{
-			nthKey = getNthKey(1, k_i);
-			if (nthKey)
-			{
-				// Loop through the data and report the contents.
-				szdata += getCellValue1(nthKey, i_i);
-			}
-		}
-		m_pbKeyMissing1[i_i] = false;
-		if (m_bUseIndexes)
-		{
-			idx = 0;
-			do {
-				idx++;
-				testdata.Format(L"%s_idx%i", szdata, idx);
-			} while (m_Map1.Lookup(testdata, (long&)mapIdx));
-			szdata = testdata;
-		}
-		else
-		{
-			if (m_Map1.Lookup(szdata, (long&)mapIdx))
-			{
-				m_NotUniqueKeys1 = { i_i, mapIdx, szdata };
-				m_Map1.RemoveAll();
-				return 1;
-			}
-		}
-		m_pszKeyArr11[i_i] = szdata;
-		m_Map1.SetAt(szdata, i_i);
-	}
-	PostMessage(CM_UPDATE_PROGRESS, 0, 1000);
-	return 0;
+	int result = m_engine.createKeyArrays1();
+	m_bLockPrg1 = false;
+	return result;
 }
 
 
@@ -2070,63 +1711,12 @@ int CChildView::createKeyArrays1()
 /// <returns></returns>
 int CChildView::createKeyArrays2()
 {
-	m_NotUniqueKeys2 = { 0, 0, L"" };
-	long mapIdx;
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	long idx = 0;
-	m_Map2.RemoveAll();
-	CString testdata;
-	m_pszKeyArr21.assign(m_Table2.NumberOfRows + 2, L"");
-	m_pbKeyMissing2.assign(m_Table2.NumberOfRows + 2, false);
+	m_engine.setTables(m_Table1, m_Table2);
+	m_engine.m_bUseIndexes = m_bUseIndexes;
 	m_bLockPrg2 = true;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	prgHlpr = 0;
-	prgHlpr0 = 0;
-	for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
-	{
-		prgHlpr0 = 100 * i_i / m_Table2.NumberOfRows;
-		if (prgHlpr0 > prgHlpr)
-		{
-			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-		}
-		szdata = "";
-		int nthKey;
-		for (int k_i = 0; k_i < m_nKeyPairCounter; k_i++)
-		{
-			nthKey = getNthKey(2, k_i);
-			if (nthKey)
-			{
-				// Loop through the data and report the contents.
-				szdata += getCellValue2(nthKey, i_i);
-			}
-		}
-		m_pbKeyMissing2[i_i] = false;
-		if (m_bUseIndexes)
-		{
-			idx = 0;
-			do {
-				idx++;
-				testdata.Format(L"%s_idx%i", szdata, idx);
-			} while (m_Map2.Lookup(testdata, (long&)mapIdx));
-			szdata = testdata;
-		}
-		else
-		{
-			if (m_Map2.Lookup(szdata, (long&)mapIdx))
-			{
-				m_NotUniqueKeys2 = { i_i, mapIdx, szdata };  // this error is on purpose
-				m_Map2.RemoveAll();
-				return 2;
-			}
-		}
-		m_pszKeyArr21[i_i] = szdata;
-		m_Map2.SetAt(szdata, i_i);
-	}
-	PostMessage(CM_UPDATE_PROGRESS2, 0, 1000);
-	return 0;
+	int result = m_engine.createKeyArrays2();
+	m_bLockPrg2 = false;
+	return result;
 }
 
 
@@ -2514,6 +2104,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_nViewWidth = STEP_X + OFFSET_X + ((m_Table2.NumberOfColumns + 1) * m_nCellWidth) + m_nRibbonWidth;
 	m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (m_Table1.NumberOfColumns + 1);
 	m_nSldr = 90;
+	m_engine.init(GetSafeHwnd(), m_excel1, m_excel2, m_Table1, m_Table2);
 	return 0; 
 }
 
@@ -2809,7 +2400,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 						fndDfrnc2 += getCellValue2(m_nOldx, dfrncRow2);
 						fndDfrnc2 = fndDfrnc2.Left(26);
 						selKey = L"";
-						selKey.Format(L"%s%s   (key): %s", fndDfrnc1, fndDfrnc2, m_pszKeyArr11[i1]);
+						selKey.Format(L"%s%s   (key): %s", fndDfrnc1, fndDfrnc2, m_engine.getKeyStr1(i1));
 						fndDfrnc = selKey.Left(54);
 						//fndDfrnc = fndDfrnc1 + fndDfrnc2 + selKey;
 						m_pFoundDifferences->AddItem((LPCTSTR)fndDfrnc);
@@ -2943,7 +2534,7 @@ UINT CreateKeys1ThreadProc(LPVOID pParam)
 	if (rslt == 1)
 	{
 		CString s;
-		NotUniqueKeys* nu = &pWnd->m_NotUniqueKeys1;
+		NotUniqueKeys* nu = &pWnd->m_engine.m_NotUniqueKeys1;
 		s.Format(CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS), nu->keyString, nu->firstRow, nu->secondRow); // CMsg(IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS)
 		pWnd->MessageBox(s);
 		pWnd->m_bLockPrg1 = false;
@@ -2971,7 +2562,7 @@ UINT CreateKeys2ThreadProc(LPVOID pParam)
 	if (rslt == 2)
 	{
 		CString s;
-		NotUniqueKeys* nu = &pWnd->m_NotUniqueKeys2;
+		NotUniqueKeys* nu = &pWnd->m_engine.m_NotUniqueKeys2;
 		s.Format(CMsg(IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS), nu->keyString, nu->firstRow, nu->secondRow); // CMsg(IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS)
 		pWnd->MessageBox(s);
 		pWnd->m_bLockPrg2 = false;
@@ -3059,7 +2650,7 @@ void CChildView::markInFiles()
 	}
 	long keyRow1, keyRow2;
 	POSITION mapPos1;
-	mapPos1 = m_Map1.GetStartPosition();
+	mapPos1 = m_engine.getMap1().GetStartPosition();
 	int i1; // iterator for progress visualisation;
 	i1 = m_Table1.FirstRowWithData - 1;
 	while (mapPos1 != NULL)
@@ -3071,8 +2662,8 @@ void CChildView::markInFiles()
 			prgHlpr = prgHlpr0;
 			PostMessage(CM_UPDATE_PROGRESS3, 0, prgHlpr);
 		}
-		m_Map1.GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
-		if (m_Map2.Lookup(concatenatedKey1, (long&)keyRow2))
+		m_engine.getMap1().GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
+		if (m_engine.getMap2().Lookup(concatenatedKey1, (long&)keyRow2))
 		{
 			if (!(getCellValue1(cy, keyRow1) == getCellValue2(cx, keyRow2)))
 			{
@@ -3163,11 +2754,8 @@ void CChildView::OnUpdateCheck3(CCmdUI* pCmdUI)
 /// </summary>
 void CChildView::makePrereq1()
 {
-	m_bPrereq1valid = false;
-	m_pchMainArr1.assign(m_Table1.NumberOfRows + 2, 0);
-	makeCharArr1();
-	checkEmptiness1();
-	m_bPrereq1valid = true;
+	m_engine.setTables(m_Table1, m_Table2);
+	m_engine.makePrereq1();
 }
 
 
@@ -3177,11 +2765,8 @@ void CChildView::makePrereq1()
 /// </summary>
 void CChildView::makePrereq2()
 {
-	m_bPrereq2valid = false;
-	m_pchMainArr2.assign(m_Table2.NumberOfRows + 2, 0);
-	makeCharArr2();
-	checkEmptiness2();
-	m_bPrereq2valid = true;
+	m_engine.setTables(m_Table1, m_Table2);
+	m_engine.makePrereq2();
 }
 
 
@@ -3228,7 +2813,7 @@ void CChildView::resolveAutoMark()
 							prgHlpr_y = prgHlpr0_y;
 							PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
 						}
-						if (m_pchMainArr1[(r1 - 1) * m_Table1.NumberOfColumns + c1] == 1)
+						if (m_engine.getMainChar1(r1, c1) == 1)
 						{
 							if (starts == L"")
 							{
@@ -3267,7 +2852,7 @@ void CChildView::resolveAutoMark()
 							prgHlpr_y = prgHlpr0_y;
 							PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
 						}
-						if (m_pchMainArr2[(r2 - 1) * m_Table2.NumberOfColumns + c2] == 1)
+						if (m_engine.getMainChar2(r2, c2) == 1)
 						{
 							if (starts == L"")
 							{
@@ -3297,7 +2882,7 @@ void CChildView::resolveAutoMark()
 	}
 	for (long r1 = m_Table1.FirstRowWithData; r1 <= m_Table1.NumberOfRows; r1++)
 	{
-		if (m_pbKeyMissing1[r1])
+		if (m_engine.isKeyMissing1(r1))
 		{
 			starts = convertR1C1(r1, 1);
 			ends = convertR1C1(r1, m_Table1.NumberOfColumns);
@@ -3306,7 +2891,7 @@ void CChildView::resolveAutoMark()
 	}
 	for (long r2 = m_Table2.FirstRowWithData; r2 <= m_Table2.NumberOfRows; r2++)
 	{
-		if (m_pbKeyMissing2[r2]) // c1 - because we need it to run just once
+		if (m_engine.isKeyMissing2(r2)) // c1 - because we need it to run just once
 		{
 			starts = convertR1C1(r2, 1);
 			ends = convertR1C1(r2, m_Table2.NumberOfColumns);
@@ -4090,31 +3675,7 @@ int CChildView::checkKeys(int tab1)
 /// <returns></returns>
 int CChildView::deleteKey(int table, int column)
 {
-	int rslt = 0;
-	int tmp_i = 0;
-	if (table == 1)
-	{
-		for (tmp_i = 0; tmp_i < m_nKeyPairCounter; tmp_i++)
-		{
-			if (m_KeyPair[tmp_i].tab1 == column)
-			{
-				deleteKeyAt(tmp_i);
-				rslt++;
-			}
-		}
-	}
-	if (table == 2)
-	{
-		for (tmp_i = 0; tmp_i < m_nKeyPairCounter; tmp_i++)
-		{
-			if (m_KeyPair[tmp_i].tab2 == column)
-			{
-				deleteKeyAt(tmp_i);
-				rslt++;
-			}
-		}
-	}
-	return rslt;
+	return m_engine.deleteKey(table, column);
 }
 
 
@@ -4126,14 +3687,7 @@ int CChildView::deleteKey(int table, int column)
 /// <param name="column">The column.</param>
 void CChildView::setKey(int table, int column)
 {
-	if (table == 1)
-	{
-		m_KeyPair[m_nKeyPairCounter].tab1 = column;
-	}
-	if (table == 2)
-	{
-		m_KeyPair[m_nKeyPairCounter].tab2 = column;
-	}
+	m_engine.setNthKey(m_engine.getKeyPairCounter(), table == 1 ? column : 0, table == 2 ? column : 0);
 }
 
 
@@ -4143,12 +3697,7 @@ void CChildView::setKey(int table, int column)
 /// </summary>
 void CChildView::deleteAllKeys()
 {
-	for (int i_i = 1; i_i < m_nKeyPairCounter; i_i++)
-	{
-		m_KeyPair[i_i].tab1 = 0;
-		m_KeyPair[i_i].tab2 = 0;
-	}
-	m_nKeyPairCounter = 0;
+	m_engine.deleteAllKeys();
 	m_bToDisplaySimilarClms = false;
 	m_bXSimilarityComputed = false;
 	m_vecSimilaritiesAcrossTables.clear();
@@ -4163,7 +3712,7 @@ void CChildView::deleteAllKeys()
 /// <returns></returns>
 bool CChildView::areThereAnyKeys()
 {
-	return m_nKeyPairCounter == 0 ? false : true;
+	return m_engine.areThereAnyKeys();
 }
 
 
@@ -4178,28 +3727,7 @@ bool CChildView::areThereAnyKeys()
 /// </returns>
 bool CChildView::isThisAKey(int table, int column)
 {
-	if (table == 1)
-	{
-		for (int tmp_i = 0; tmp_i < m_nKeyPairCounter; tmp_i++)
-		{
-			if (m_KeyPair[tmp_i].tab1 == column)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	if (table == 2)
-	{
-		for (int tmp_i = 0; tmp_i < m_nKeyPairCounter; tmp_i++)
-		{
-			if (m_KeyPair[tmp_i].tab2 == column)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
+	return m_engine.isThisAKey(table, column);
 }
 
 
@@ -4212,14 +3740,7 @@ bool CChildView::isThisAKey(int table, int column)
 /// <returns></returns>
 int CChildView::getNthKey(int table, int key)
 {
-	if (table == 1)
-	{
-		return m_KeyPair[key].tab1;
-	}
-	else
-	{
-		return m_KeyPair[key].tab2;
-	}
+	return m_engine.getNthKey(table, key);
 }
 
 
@@ -4255,8 +3776,7 @@ void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 /// <param name="col2">The col2.</param>
 void CChildView::setNthKey(int n, int col1, int col2)
 {
-	m_KeyPair[n].tab1 = col1;
-	m_KeyPair[n].tab2 = col2;
+	m_engine.setNthKey(n, col1, col2);
 }
 
 
@@ -4269,12 +3789,7 @@ void CChildView::setNthKey(int n, int col1, int col2)
 /// <param name="col2">The col2.</param>
 void CChildView::insertKeyAt(int n, int col1, int col2)
 {
-	for (int tmp_i = m_nKeyPairCounter; tmp_i > n; tmp_i--)
-	{
-		m_KeyPair[tmp_i].tab1 = m_KeyPair[tmp_i - 1].tab1;
-		m_KeyPair[tmp_i].tab2 = m_KeyPair[tmp_i - 1].tab2;
-	}
-	m_nKeyPairCounter++;
+	m_engine.insertKeyAt(n, col1, col2);
 }
 
 
@@ -4285,12 +3800,7 @@ void CChildView::insertKeyAt(int n, int col1, int col2)
 /// <param name="n">The n.</param>
 void CChildView::deleteKeyAt(int n)
 {
-	for (int tmp_i = n; tmp_i < m_nKeyPairCounter; tmp_i++)
-	{
-		m_KeyPair[tmp_i].tab1 = m_KeyPair[tmp_i + 1].tab1;
-		m_KeyPair[tmp_i].tab2 = m_KeyPair[tmp_i + 1].tab2;
-	}
-	m_nKeyPairCounter--;
+	m_engine.deleteKeyAt(n);
 }
 
 
@@ -4302,9 +3812,7 @@ void CChildView::deleteKeyAt(int n)
 /// <param name="col2">The col2.</param>
 void CChildView::pushKey(int col1, int col2)
 {
-	m_KeyPair[m_nKeyPairCounter].tab1 = col1;
-	m_KeyPair[m_nKeyPairCounter].tab2 = col2;
-	m_nKeyPairCounter++;
+	m_engine.pushKey(col1, col2);
 }
 
 
@@ -5341,6 +4849,7 @@ int CChildView::ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos)
 void CChildView::OnCheckIdx()
 {
 	m_bUseIndexes = !m_bUseIndexes;
+	m_engine.m_bUseIndexes = m_bUseIndexes;
 }
 
 
@@ -5364,6 +4873,7 @@ void CChildView::OnUpdateCheckIdx(CCmdUI* pCmdUI)
 void CChildView::OnUsidxCheck()
 {
 	m_bUseIndexes = !m_bUseIndexes;
+	m_engine.m_bUseIndexes = m_bUseIndexes;
 	if (m_bUseIndexes) MessageBox(CMsg(IDS_IDXING_WARNING)); // CMsg(IDS_IDXING_WARNING)
 }
 

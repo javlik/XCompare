@@ -18,6 +18,7 @@
 #include "TableData.h"
 #include "ComparisonMatrix.h"
 #include "ExcelConnector.h"
+#include "ComparisonEngine.h"
 #include <vector>
 #include <map>
 
@@ -74,15 +75,7 @@ public:
 	afx_msg void OnSpin2Fdata();
 	afx_msg void OnUpdateSpin2Names(CCmdUI *pCmdUI);
 	afx_msg void OnSpin2Names();
-	void makeCharArr1();
-	void makeCharArr2();
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
-
-	void checkEmptiness1();
-	void checkEmptiness2();
-	bool checkKeysUniqueness1();
-	bool checkKeysUniqueness2();
-	//void firstPass(int thrdIdx);
 	void firstPass();
 	int createKeyArrays1();
 	int createKeyArrays2();
@@ -128,8 +121,8 @@ public:
 	afx_msg void OnUpdateButton3(CCmdUI *pCmdUI);
 	afx_msg void OnCheck3();
 	afx_msg void OnUpdateCheck3(CCmdUI *pCmdUI);
-	void makePrereq1();
-	void makePrereq2();
+	void makePrereq1(); // delegates to m_engine
+	void makePrereq2(); // delegates to m_engine
 	void resolveAutoMark();
 	void DrainMsgQueue(void);
 	afx_msg void OnDiffslist();
@@ -161,7 +154,7 @@ public:
 	int getNthKey(int table, int key);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	void setNthKey(int n, int col1, int col2);
-	void insertKeyAt(int n, int col1, int col2);
+	void insertKeyAt(int n, int col1, int col2); // kept for compatibility
 	void deleteKeyAt(int n);
 	void pushKey(int col1, int col2);
 	bool usePossibleKeys();
@@ -211,8 +204,7 @@ public:
 	BOOL         m_bUniqueKeys2; // keys in table 2 are unique
 	bool         m_bLockPrg1;    // thread 1 is running
 	bool         m_bLockPrg2;    // thread 2 is running
-	NotUniqueKeys m_NotUniqueKeys1;
-	NotUniqueKeys m_NotUniqueKeys2;
+	// m_NotUniqueKeys1/2 are now in m_engine.m_NotUniqueKeys1/2
 
 private:
 	// Synchronisation between threads
@@ -248,9 +240,7 @@ private:
 	int          m_nSortedEntropy1[256];
 	int          m_nSortedEntropy2[256];
 
-	// Prerequisite / process state
-	bool m_bPrereq1valid;
-	bool m_bPrereq2valid;
+	// Prerequisite validity is now tracked inside m_engine
 	int  m_nOldx;
 	int  m_nOldy;
 	int  m_nChosenColor1;
@@ -263,25 +253,14 @@ private:
 	bool m_bSameNames;
 	int  m_nEffMax;
 
-	// Dynamic data arrays (Step 2: converted from raw pointers to vectors)
-	std::vector<char>    m_pchMainArr1;     // first char of each cell, table 1
-	std::vector<char>    m_pchMainArr2;     // first char of each cell, table 2
+	// Dynamic data arrays
 	std::vector<bool>    m_pbMarkIn1Arr;    // cells to mark in file 1
 	std::vector<bool>    m_pbMarkIn2Arr;    // cells to mark in file 2
-	std::vector<CString> m_pszKeyArr11;     // concatenated key strings, table 1
-	std::vector<CString> m_pszKeyArr21;     // concatenated key strings, table 2
-	std::vector<CString> m_pszTmpKeyArr11;  // temporary key strings, table 1
-	std::vector<CString> m_pszTmpKeyArr21;  // temporary key strings, table 2
-	std::vector<bool>    m_pbKeyMissing1;   // missing-key flags, table 1
-	std::vector<bool>    m_pbKeyMissing2;   // missing-key flags, table 2
-	std::vector<bool>    m_pbTmpKeyMissing1;
-	std::vector<bool>    m_pbTmpKeyMissing2;
 	ComparisonMatrix     m_matrix;          // result comparison matrix
-	std::vector<bool>    m_pbEmptyClms1;    // empty column flags, table 1
-	std::vector<bool>    m_pbEmptyClms2;    // empty column flags, table 2
 	std::vector<bool>    m_pbGreenClms1;    // fully-matched column flags, table 1
 	std::vector<bool>    m_pbGreenClms2;    // fully-matched column flags, table 2
 	std::vector<long>    m_pnFoundDifferences; // difference row indices per column
+	// Arrays now owned by m_engine: m_pchMainArr1/2, m_pszKeyArr11/21, m_pbKeyMissing1/2, m_pbEmptyClms1/2
 
 	// Entropy tracking for key suggestion
 	int m_nExaminedKeys1[SUGKEYS + 4];
@@ -307,10 +286,11 @@ private:
 	CApplication   m_App;
 	CString        m_szFilename1;
 	CString        m_szFilename2;
-	CMap<CString, LPCTSTR, long, long> m_Map1;
-	CMap<CString, LPCTSTR, long, long> m_Map2;
+	// m_Map1/m_Map2 are now inside m_engine
 	std::map<CString, long> m_mapTmpMap1;
 	std::map<CString, long> m_mapTmpMap2;
+
+	ComparisonEngine m_engine;
 
 	// UI state
 	int   m_nUiToBeRefreshed;
