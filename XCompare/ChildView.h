@@ -16,6 +16,7 @@
 #pragma once
 #include "Constants.h"
 #include "TableData.h"
+#include "ComparisonMatrix.h"
 #include "CApplication.h"
 #include "CWorkbooks.h"
 #include "CWorkbook.h"
@@ -85,10 +86,7 @@ public:
 	void makeCharArr1();
 	void makeCharArr2();
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
-	void mxClear(int x, int y);
-	int mxPut(int x, int y);
-	int mxGet(int x, int y);
-	bool mxMarkedGet(int x, int y);
+
 	void checkEmptiness1();
 	void checkEmptiness2();
 	bool checkKeysUniqueness1();
@@ -287,8 +285,7 @@ private:
 	std::vector<bool>    m_pbKeyMissing2;   // missing-key flags, table 2
 	std::vector<bool>    m_pbTmpKeyMissing1;
 	std::vector<bool>    m_pbTmpKeyMissing2;
-	std::vector<int>     m_pnMainMatrix;    // result comparison matrix
-	std::vector<bool>    m_pbMarkedMatrix;  // marked cells in the matrix
+	ComparisonMatrix     m_matrix;          // result comparison matrix
 	std::vector<bool>    m_pbEmptyClms1;    // empty column flags, table 1
 	std::vector<bool>    m_pbEmptyClms2;    // empty column flags, table 2
 	std::vector<bool>    m_pbGreenClms1;    // fully-matched column flags, table 1

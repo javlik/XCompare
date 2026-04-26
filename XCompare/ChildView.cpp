@@ -1750,7 +1750,7 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		m_bLockPrg2 = true;
 		HWND hWnd0 = this->GetSafeHwnd();
 		int mx_X_max = m_Table2.NumberOfColumns;
-		m_pbMarkedMatrix[(M_CCell.y - 1) * mx_X_max + M_CCell.x] = true;
+		m_matrix.setMarked(M_CCell.x, M_CCell.y);
 		this->Invalidate();
 		AfxBeginThread(MyThreadProc3, hWnd0);
 	}
@@ -1766,9 +1766,7 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 /// <param name="y">The y.</param>
 void CChildView::mxClear(int x, int y)
 {
-	int size = (x + 1) * (y + 1);
-	m_pnMainMatrix.assign(size, 0);
-	m_pbMarkedMatrix.assign(size, false);
+	m_matrix.clear(x, y);
 }
 
 
@@ -1781,9 +1779,7 @@ void CChildView::mxClear(int x, int y)
 /// <returns></returns>
 int CChildView::mxPut(int x, int y)
 {
-	int mx_X_max = m_Table2.NumberOfColumns;
-	int index = (y - 1) * mx_X_max + x;
-	m_pnMainMatrix[index] += 1;
+	m_matrix.increment(x, y);
 	return 0;
 }
 
@@ -1797,9 +1793,7 @@ int CChildView::mxPut(int x, int y)
 /// <returns></returns>
 int CChildView::mxGet(int x, int y)
 {
-	int mx_X_max = m_Table2.NumberOfColumns;
-	int index = (y - 1) * mx_X_max + x;
-	return m_pnMainMatrix[index];
+	return m_matrix.get(x, y);
 }
 
 
@@ -1812,9 +1806,7 @@ int CChildView::mxGet(int x, int y)
 /// <returns></returns>
 bool CChildView::mxMarkedGet(int x, int y)
 {
-	int mx_X_max = m_Table2.NumberOfColumns;
-	int index = (y - 1) * mx_X_max + x;
-	return m_pbMarkedMatrix[index];
+	return m_matrix.isMarked(x, y);
 }
 
 
