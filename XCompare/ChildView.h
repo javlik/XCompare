@@ -17,14 +17,7 @@
 #include "Constants.h"
 #include "TableData.h"
 #include "ComparisonMatrix.h"
-#include "CApplication.h"
-#include "CWorkbooks.h"
-#include "CWorkbook.h"
-#include "CWorksheets.h"
-#include "CWorksheet.h"
-#include "CRange.h"
-#include "CCellFormat.h"
-#include "Cnterior.h"
+#include "ExcelConnector.h"
 #include <vector>
 #include <map>
 
@@ -68,9 +61,7 @@ public:
 	afx_msg void OnUpdateProgress1(CCmdUI *pCmdUI);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
-	afx_msg
-		CWorksheets GetWorksheets1(CString TempBookName);
-	CWorksheets GetWorksheets2(CString TempBookName);
+
 	void OnPickFirstSheet();
 	afx_msg void OnSpin1Names();
 	afx_msg void OnUpdateSpin1Names(CCmdUI *pCmdUI);
@@ -310,29 +301,12 @@ private:
 	Table m_Table1;
 	Table m_Table2;
 
-	// OLE / Excel connection objects
-	COleSafeArray m_saRet1;
-	COleSafeArray m_saRet2;
-	COleSafeArray m_saTmpRet1;
-	COleSafeArray m_saTmpRet2;
-	CString       m_szFilename1;
-	CString       m_szFilename2;
-	CWorkbooks    m_Books1;
-	CWorkbook     m_Book1;
-	CWorksheets   m_Sheets1;
-	CWorksheet    m_Sheet1;
-	CRange        m_oRange1;
-	CWorkbooks    m_Books2;
-	CWorkbook     m_Book2;
-	CWorksheets   m_Sheets2;
-	CWorksheet    m_Sheet2;
-	CRange        m_oRange2;
-	CCellFormat   m_CellFormat;
-	Cnterior      m_Interior;
-	COleVariant   covTrue;
-	COleVariant   covFalse;
-	COleVariant   covOptional;
-	CApplication  m_App;
+	// Excel connections (one per compared table) + shared application object
+	ExcelConnector m_excel1;
+	ExcelConnector m_excel2;
+	CApplication   m_App;
+	CString        m_szFilename1;
+	CString        m_szFilename2;
 	CMap<CString, LPCTSTR, long, long> m_Map1;
 	CMap<CString, LPCTSTR, long, long> m_Map2;
 	std::map<CString, long> m_mapTmpMap1;

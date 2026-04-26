@@ -72,10 +72,7 @@ CChildView::CChildView()
 	m_fZoom = 100;
 	m_nPrgval1 = 100; // just for test
 				   //CMFCRibbonBar* pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar(); // in the constructor is too early
-	// OLE constants (were global, now class members)
-	covTrue    = COleVariant((short)TRUE);
-	covFalse   = COleVariant((short)FALSE);
-	covOptional = COleVariant((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
+	// ExcelConnector instances (m_excel1, m_excel2) initialise themselves in their own constructors
 	// Checked-key buffers (converted from fixed-size globals to vectors)
 	m_nCheckedKeys1.assign(MAX_ATTEMPTS + 1, 0ULL);
 	m_nCheckedKeys2.assign(MAX_ATTEMPTS + 1, 0ULL);
@@ -798,27 +795,20 @@ void CChildView::OnPickFirstFile()
 			fileCount++;
 		}
 	}
-	if (m_Book1)
-	{
-		try {
-			m_Book1.Close(covOptional, covOptional, covOptional);
-		}
-		catch (COleException* e)
-		{
-		}
-	}
+	m_excel1.closeBook();
 	if (!(CString(fileName) == L""))
 	{
 		for (int i = 0; i < 255; i++)
 		{
 			m_Table1.Columns[i] = "";
 		}
-		if (m_Sheets1 = GetWorksheets1(fileName))
+		if (m_excel1.openFile(fileName, m_App))
 		{
 			m_pSheetCombo1->RemoveAllItems();
-			for (int i = 1; i <= m_Sheets1.get_Count(); i++)
+			CWorksheets& sheets = m_excel1.getSheets();
+			for (int i = 1; i <= sheets.get_Count(); i++)
 			{
-				if (CWorksheet tempSheet = m_Sheets1.get_Item(COleVariant((short)i)))
+				if (CWorksheet tempSheet = sheets.get_Item(COleVariant((short)i)))
 				{
 					m_pSheetCombo1->AddItem(tempSheet.get_Name());
 				}
@@ -882,27 +872,20 @@ void CChildView::OnPickSecondFile()
 			fileCount++;
 		}
 	}
-	if (m_Book2)
-	{
-		try {
-			m_Book2.Close(covOptional, covOptional, covOptional);
-		}
-		catch (COleException* e)
-		{
-		}
-	}
+	m_excel2.closeBook();
 	if (!(CString(fileName) == L""))
 	{
 		for (int i = 0; i < 255; i++)
 		{
 			m_Table2.Columns[i] = "";
 		}
-		if (m_Sheets2 = GetWorksheets2(fileName))
+		if (m_excel2.openFile(fileName, m_App))
 		{
 			m_pSheetCombo2->RemoveAllItems();
-			for (int i = 1; i <= m_Sheets2.get_Count(); i++)
+			CWorksheets& sheets = m_excel2.getSheets();
+			for (int i = 1; i <= sheets.get_Count(); i++)
 			{
-				if (CWorksheet tempSheet = m_Sheets2.get_Item(COleVariant((short)i)))
+				if (CWorksheet tempSheet = sheets.get_Item(COleVariant((short)i)))
 				{
 					m_pSheetCombo2->AddItem(tempSheet.get_Name());
 				}
@@ -1235,53 +1218,7 @@ void CChildView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 
 
-/// <summary>
-/// Gets the worksheets1.
-/// </summary>
-/// <param name="TempBookName">Name of the temporary book.</param>
-/// <returns></returns>
-CWorksheets CChildView::GetWorksheets1(CString TempBookName)
-{
-	if (!m_App)
-	{
-		if (!m_App.CreateDispatch(TEXT("Excel.Application")))
-		{
-			AfxMessageBox(CMsg(IDS_EXCEL_CANNOT_RUN)); // CMsg(IDS_EXCEL_CANNOT_RUN)
-			return NULL;
-		}
-	}
-	m_Books1 = m_App.get_Workbooks();
-	m_Book1 = m_Books1.Open(TempBookName, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional,
-		covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional);
-	m_App.put_Visible(TRUE);
-	m_App.put_UserControl(TRUE);
-	return m_Book1.get_Worksheets();
-}
 
-
-
-/// <summary>
-/// Gets the worksheets2.
-/// </summary>
-/// <param name="TempBookName">Name of the temporary book.</param>
-/// <returns></returns>
-CWorksheets CChildView::GetWorksheets2(CString TempBookName)
-{
-	if (!m_App)
-	{
-		if (!m_App.CreateDispatch(TEXT("Excel.Application")))
-		{
-			AfxMessageBox(CMsg(IDS_EXCEL_CANNOT_RUN)); // CMsg(IDS_EXCEL_CANNOT_RUN)
-			return NULL;
-		}
-	}
-	m_Books2 = m_App.get_Workbooks();
-	m_Book2 = m_Books2.Open(TempBookName, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional,
-		covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional);
-	m_App.put_Visible(TRUE);
-	m_App.put_UserControl(TRUE);
-	return m_Book2.get_Worksheets();
-}
 
 
 
@@ -1295,24 +1232,15 @@ void CChildView::OnPickFirstSheet()
 	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_PRELIM_CHK)); // CMsg(IDS_WAIT_PRELIM_CHK)
 	if (tmpWSN > 0)
 	{
-		m_saRet1.Destroy();
 		m_Table1.WorkSheetNumber = tmpWSN;
-		m_Sheet1 = m_Sheets1.get_Item(COleVariant(tmpWSS));
-		m_oRange1 = m_Sheet1.get_UsedRange();
-		m_saRet1 = m_oRange1.get_Value(covOptional);
 		long iRows;
 		long iCols;
-		m_saRet1.GetUBound(1, &iRows);
-		m_saRet1.GetUBound(2, &iCols);
+		m_excel1.selectSheet(tmpWSS, iRows, iCols);
 		m_Table1.MaxNumberOfRows = iRows;
 		m_Table1.MaxNumberOfCols = iCols;
 		m_Table1.NumberOfColumns = iCols;
 		m_Table1.NumberOfRows = iRows;
 		m_Table1.RowWithNames = 1;
-		m_saTmpRet1.Destroy();
-		m_saTmpRet1 = m_oRange1.get_Value(covOptional);
-		m_saTmpRet1.GetUBound(1, &iRows);
-		m_saTmpRet1.GetUBound(2, &iCols);
 		CString tmps;
 		tmps.Format(_T("%d"), 1);
 		m_pSpinner1_Names->SetEditText(tmps);
@@ -1429,17 +1357,8 @@ void CChildView::updateCombos1()
 	for (int i = 1; i <= m_Table1.NumberOfColumns; i++)
 	{
 		// Loop through the data and report the contents.
-		index[0] = m_Table1.RowWithNames;
-		index[1] = i;
-		try {
-			m_saRet1.GetElement(index, vData); vData = (CString)vData;
-		}
-		catch (COleException* e)
-		{
-			vData = L"";
-		}
-		szdata = vData;
-		if (szdata == "") szdata = CMsg(IDS_NO_NAME); // CMsg(IDS_NO_NAME)
+		szdata = getCellValue1(i, m_Table1.RowWithNames);
+		if (szdata == "") szdata = CMsg(IDS_NO_NAME);
 		for (int i1 = 1; i1 < i; i1++)
 		{
 			if (szdata == m_Table1.Columns[i1])
@@ -1466,24 +1385,15 @@ void CChildView::OnPickSecondSheet()
 	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)); // CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)
 	if (tmpWSN > 0)
 	{
-		m_saRet2.Destroy();
 		m_Table2.WorkSheetNumber = tmpWSN;
-		m_Sheet2 = m_Sheets2.get_Item(COleVariant(tmpWSS));
-		m_oRange2 = m_Sheet2.get_UsedRange();
-		m_saRet2 = m_oRange2.get_Value(covOptional);
 		long iRows;
 		long iCols;
-		m_saRet2.GetUBound(1, &iRows);
-		m_saRet2.GetUBound(2, &iCols);
+		m_excel2.selectSheet(tmpWSS, iRows, iCols);
 		m_Table2.MaxNumberOfRows = iRows;
 		m_Table2.MaxNumberOfCols = iCols;
 		m_Table2.NumberOfColumns = iCols;
 		m_Table2.NumberOfRows = iRows;
 		m_Table2.RowWithNames = 1;
-		m_saTmpRet2.Destroy();
-		m_saTmpRet2 = m_oRange2.get_Value(covOptional);
-		m_saTmpRet2.GetUBound(1, &iRows);
-		m_saTmpRet2.GetUBound(2, &iCols);
 		CString tmps;
 		tmps.Format(_T("%d"), 1);
 		m_pSpinner2_Names->SetEditText(tmps);
@@ -1538,17 +1448,8 @@ void CChildView::updateCombos2()
 	COleVariant vData;
 	for (int i = 1; i <= m_Table2.NumberOfColumns; i++)
 	{
-		index[0] = m_Table2.RowWithNames;
-		index[1] = i;
-		try {
-			m_saRet2.GetElement(index, vData); vData = (CString)vData;
-		}
-		catch (COleException* e)
-		{
-			vData = L"";
-		}
-		szdata = vData;
-		if (szdata == "") szdata = CMsg(IDS_NO_NAME); // CMsg(IDS_NO_NAME)
+		szdata = getCellValue2(i, m_Table2.RowWithNames);
+		if (szdata == "") szdata = CMsg(IDS_NO_NAME);
 		for (int i1 = 1; i1 < i; i1++)
 		{
 			if (szdata == m_Table2.Columns[i1])
@@ -1652,16 +1553,7 @@ void CChildView::makeCharArr1()
 			}
 			for (int i_r = 1; i_r <= m_Table1.NumberOfRows; i_r++)
 			{
-				index[0] = i_r;
-				index[1] = i_c;
-				try {
-					m_saRet1.GetElement(index, vData); vData = (CString)vData;
-					szdata = vData;
-				}
-				catch (COleException* e)
-				{
-					szdata = "";
-				}
+				szdata = getCellValue1(i_c, i_r);
 				if (szdata == "")
 				{
 					chr = 0;
@@ -1706,16 +1598,7 @@ void CChildView::makeCharArr2()
 			for (int i_r = 1; i_r <= m_Table2.NumberOfRows; i_r++)
 			{
 				//TRACE("i_r: %i, i_c: %i\n", i_r, i_c);
-				index[0] = i_r;
-				index[1] = i_c;
-				try {
-					m_saRet2.GetElement(index, vData); vData = (CString)vData;
-					szdata = vData;
-				}
-				catch (COleException* e)
-				{
-					szdata = "";
-				}
+				szdata = getCellValue2(i_c, i_r);
 				if (szdata == "")
 				{
 					chr = 0;
@@ -2150,16 +2033,7 @@ int CChildView::createKeyArrays1()
 			if (nthKey)
 			{
 				// Loop through the data and report the contents.
-				index[0] = i_i;
-				index[1] = nthKey;
-				try {
-					m_saRet1.GetElement(index, vData); vData = (CString)vData;
-				}
-				catch (COleException* e)
-				{
-					vData = L"";
-				}
-				szdata += vData;
+				szdata += getCellValue1(nthKey, i_i);
 			}
 		}
 		m_pbKeyMissing1[i_i] = false;
@@ -2226,16 +2100,7 @@ int CChildView::createKeyArrays2()
 			if (nthKey)
 			{
 				// Loop through the data and report the contents.
-				index[0] = i_i;
-				index[1] = nthKey;
-				try {
-					m_saRet2.GetElement(index, vData); vData = (CString)vData;
-				}
-				catch (COleException* e)
-				{
-					vData = L"";
-				}
-				szdata += vData;
+				szdata += getCellValue2(nthKey, i_i);
 			}
 		}
 		m_pbKeyMissing2[i_i] = false;
@@ -2274,20 +2139,7 @@ int CChildView::createKeyArrays2()
 /// <returns></returns>
 CString CChildView::getCellValue1(int column, int row)
 {
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	index[0] = row;
-	index[1] = column;
-	try {
-		m_saRet1.GetElement(index, vData); vData = (CString)vData;
-	}
-	catch (COleException* e)
-	{
-		vData = L"";
-	}
-	szdata = vData;
-	return szdata;
+	return m_excel1.getCellValue(column, row);
 }
 
 
@@ -2300,20 +2152,7 @@ CString CChildView::getCellValue1(int column, int row)
 /// <returns></returns>
 CString CChildView::getCellValue2(int column, int row)
 {
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	index[0] = row;
-	index[1] = column;
-	try {
-		m_saRet2.GetElement(index, vData); vData = (CString)vData;
-	}
-	catch (COleException* e)
-	{
-		vData = L"";
-	}
-	szdata = vData;
-	return szdata;
+	return m_excel2.getCellValue(column, row);
 }
 
 
@@ -2561,10 +2400,7 @@ CString CChildView::convertR1C1(int row, int clm)
 void CChildView::markIn1(int row, int clm)
 {
 	CString cnv = convertR1C1(row, clm);
-	CRange range = m_Sheet1.get_Range(COleVariant(cnv), COleVariant(cnv));
-	m_Interior = range.get_Interior();
-	m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue))));
-	return;
+	m_excel1.markCellRange(cnv, cnv, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
 }
 
 
@@ -2577,10 +2413,7 @@ void CChildView::markIn1(int row, int clm)
 void CChildView::markIn2(int row, int clm)
 {
 	CString cnv = convertR1C1(row, clm);
-	CRange range = m_Sheet2.get_Range(COleVariant(cnv), COleVariant(cnv));
-	m_Interior = range.get_Interior();
-	m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue))));
-	return;
+	m_excel2.markCellRange(cnv, cnv, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
 }
 
 
@@ -2730,7 +2563,7 @@ void CChildView::OnCheck2()
 /// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateButton2(CCmdUI* pCmdUI)
 {
-	if (!&m_App) pCmdUI->Enable(false); else pCmdUI->Enable(true);
+	pCmdUI->Enable(true);
 	//pCmdUI->SetText(m_bUseIndexes ? L"Sestavit klíč" : L"Najít klíč");
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pButton2 = DYNAMIC_DOWNCAST(CMFCRibbonButton, m_pRibbon->FindByID(ID_BUTTON2));
@@ -2996,9 +2829,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 					{
 						if (!(starts == L"") && !(ends == L""))
 						{
-							CRange range = m_Sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-							m_Interior = range.get_Interior();
-							m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue))));
+							m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
 							starts = L"";
 							ends = L"";
 						}
@@ -3007,9 +2838,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 			}
 			if (m_bIn1file && !(starts == L"") && !(ends == L""))
 			{
-				CRange range = m_Sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-				m_Interior = range.get_Interior();
-				m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue))));
+				m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
 				starts = L"";
 				ends = L"";
 			}
@@ -3040,9 +2869,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 				{
 					if (!(starts == L"") && !(ends == L""))
 					{
-						CRange range = m_Sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-						m_Interior = range.get_Interior();
-						m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue))));
+						m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
 						starts = L"";
 						ends = L"";
 					}
@@ -3050,9 +2877,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 			}
 			if (!(starts == L"") && !(ends == L""))
 			{
-				CRange range = m_Sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-				m_Interior = range.get_Interior();
-				m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue))));
+				m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
 				starts = L"";
 				ends = L"";
 			}
@@ -3415,9 +3240,7 @@ void CChildView::resolveAutoMark()
 						{
 							if (!(starts == L"") && !(ends == L""))
 							{
-								CRange range = m_Sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-								m_Interior = range.get_Interior();
-								m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue))));
+								m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
 								starts = L"";
 								ends = L"";
 							}
@@ -3425,9 +3248,7 @@ void CChildView::resolveAutoMark()
 					}
 					if (!(starts == L"") && !(ends == L""))
 					{
-						CRange range = m_Sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-						m_Interior = range.get_Interior();
-						m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue))));
+						m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
 						starts = L"";
 						ends = L"";
 					}
@@ -3458,9 +3279,7 @@ void CChildView::resolveAutoMark()
 						{
 							if (!(starts == L"") && !(ends == L""))
 							{
-								CRange range = m_Sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-								m_Interior = range.get_Interior();
-								m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue))));
+								m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
 								starts = L"";
 								ends = L"";
 							}
@@ -3468,9 +3287,7 @@ void CChildView::resolveAutoMark()
 					}
 					if (!(starts == L"") && !(ends == L""))
 					{
-						CRange range = m_Sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-						m_Interior = range.get_Interior();
-						m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue))));
+						m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
 						starts = L"";
 						ends = L"";
 					}
@@ -3484,9 +3301,7 @@ void CChildView::resolveAutoMark()
 		{
 			starts = convertR1C1(r1, 1);
 			ends = convertR1C1(r1, m_Table1.NumberOfColumns);
-			CRange range = m_Sheet1.get_Range(COleVariant(starts), COleVariant(ends));
-			m_Interior = range.get_Interior();
-			m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue))));
+			m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
 		}
 	}
 	for (long r2 = m_Table2.FirstRowWithData; r2 <= m_Table2.NumberOfRows; r2++)
@@ -3495,9 +3310,7 @@ void CChildView::resolveAutoMark()
 		{
 			starts = convertR1C1(r2, 1);
 			ends = convertR1C1(r2, m_Table2.NumberOfColumns);
-			CRange range = m_Sheet2.get_Range(COleVariant(starts), COleVariant(ends));
-			m_Interior = range.get_Interior();
-			m_Interior.put_Color(COleVariant(long(RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue))));
+			m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
 		}
 	}
 	PostMessage(CM_UPDATE_PROGRESS, 0, 100);
@@ -3554,9 +3367,7 @@ void CChildView::OnSel1()
 	{
 		column = m_nOldy;
 		CString cnv = convertR1C1(row, column);
-		CRange range = m_Sheet1.get_Range(COleVariant(cnv), COleVariant(cnv));
-		m_Sheet1.Activate();
-		range.Select();
+		m_excel1.selectAndActivateCell(cnv);
 		if (m_bToFront)
 		{
 			m_App.put_Interactive(true);
@@ -3606,9 +3417,7 @@ void CChildView::OnButton6()
 		row = m_pnFoundDifferences[row];
 		column = m_nOldx;
 		CString cnv = convertR1C1(row, column);
-		CRange range = m_Sheet2.get_Range(COleVariant(cnv), COleVariant(cnv));
-		m_Sheet2.Activate();
-		range.Select();
+		m_excel2.selectAndActivateCell(cnv);
 		if (m_bToFront)
 		{
 			m_App.put_Interactive(true);
@@ -3678,18 +3487,8 @@ void CChildView::suggestKeys1()
 		{
 			szdata = "";
 			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = i_h;
-			try {
-				m_saRet1.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata += vData;
+			szdata += getCellValue1(i_h, i_i);
 			if ((m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
-			{
 				m_mapTmpMap1[szdata] = i_i;
 				m_nInvEntropy1[i_h]++;
 			}
@@ -3790,16 +3589,7 @@ int CChildView::createTempKeyArrays1()
 				if (m_nExaminedKeys1[k_i])
 				{
 					// Loop through the data and report the contents.
-					index[0] = i_i;
-					index[1] = getNthEntropy(1, m_nExaminedKeys1[k_i]);
-					try {
-						m_saRet1.GetElement(index, vData); vData = (CString)vData;
-					}
-					catch (COleException* e)
-					{
-						vData = L"";
-					}
-					szdata += vData;
+					szdata += getCellValue1(getNthEntropy(1, m_nExaminedKeys1[k_i]), i_i);
 				}
 			}
 			if (!(m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
@@ -3859,18 +3649,8 @@ void CChildView::suggestKeys2()
 		{
 			szdata = "";
 			// Loop through the data and report the contents.
-			index[0] = i_i;
-			index[1] = i_h;
-			try {
-				m_saRet2.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata += vData;
+			szdata += getCellValue2(i_h, i_i);
 			if ((m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end()))
-			{
 				m_mapTmpMap2[szdata] = i_i;
 				m_nInvEntropy2[i_h]++;
 			}
@@ -3965,16 +3745,7 @@ int CChildView::createTempKeyArrays2()
 				if (m_nExaminedKeys2[k_i])
 				{
 					// Loop through the data and report the contents.
-					index[0] = i_i;
-					index[1] = getNthEntropy(2, m_nExaminedKeys2[k_i]);;
-					try {
-						m_saRet2.GetElement(index, vData); vData = (CString)vData;
-					}
-					catch (COleException* e)
-					{
-						vData = L"";
-					}
-					szdata += vData;
+					szdata += getCellValue2(getNthEntropy(2, m_nExaminedKeys2[k_i]), i_i);
 				}
 			}
 			if (!(m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end()))
@@ -4249,16 +4020,7 @@ int CChildView::checkKeys(int tab1)
 				if (m_PossibleKeys1[tab1].k[i_j])
 				{
 					// Loop through the data and report the contents.
-					index[0] = i_i;
-					index[1] = m_PossibleKeys1[tab1].k[i_j];
-					try {
-						m_saRet1.GetElement(index, vData); vData = (CString)vData;
-					}
-					catch (COleException* e)
-					{
-						vData = L"";
-					}
-					szdata += vData;
+					szdata += getCellValue1(m_PossibleKeys1[tab1].k[i_j], i_i);
 				}
 			}
 			m_mapTmpMap1[szdata] = i_i;
@@ -4292,16 +4054,7 @@ int CChildView::checkKeys(int tab1)
 				if (m_PossibleKeys2[tab2].k[i_k])
 				{
 					// Loop through the data and report the contents.
-					index[0] = i_i;
-					index[1] = m_PossibleKeys2[tab2].k[i_k];
-					try {
-						m_saRet2.GetElement(index, vData); vData = (CString)vData;
-					}
-					catch (COleException* e)
-					{
-						vData = L"";
-					}
-					szdata += vData;
+					szdata += getCellValue2(m_PossibleKeys2[tab2].k[i_k], i_i);
 				}
 			}
 			if (m_mapTmpMap1.count(szdata))
@@ -4999,16 +4752,7 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 		m_mapTmpMap1.clear();
 		for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
 		{
-			index[0] = r_i1;
-			index[1] = c_i1;
-			try {
-				m_saRet1.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata = vData;
+			szdata = getCellValue1(c_i1, r_i1);
 			if ((szdata != L"") && (m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
 			{
 				m_mapTmpMap1[szdata] = r_i1;
@@ -5020,16 +4764,7 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 			m_mapTmpMap2.clear();
 			for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
 			{
-				index[0] = r_i2;
-				index[1] = c_i2;
-				try {
-					m_saRet2.GetElement(index, vData); vData = (CString)vData;
-				}
-				catch (COleException* e)
-				{
-					vData = L"";
-				}
-				szdata = vData;
+				szdata = getCellValue2(c_i2, r_i2);
 				if ((szdata != L"") && (m_mapTmpMap1.find(szdata) != m_mapTmpMap1.end()))
 				{		
 					if (m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end())
@@ -5129,16 +4864,7 @@ void CChildView::findSims1()
 		thdSafe_tmpMap1.clear();
 		for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
 		{
-			index[0] = r_i1;
-			index[1] = c_i1;
-			try {
-				m_saRet1.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata = vData;
+			szdata = getCellValue1(c_i1, r_i1);
 			if (szdata != L"")
 			{
 				if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
@@ -5156,16 +4882,7 @@ void CChildView::findSims1()
 			thdSafe_tmpMap2.clear();
 			for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
 			{
-				index[0] = r_i2;
-				index[1] = c_i2;
-				try {
-					m_saRet2.GetElement(index, vData); vData = (CString)vData;
-				}
-				catch (COleException* e)
-				{
-					vData = L"";
-				}
-				szdata = vData;
+				szdata = getCellValue2(c_i2, r_i2);
 				if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
 				{
 					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
@@ -5275,16 +4992,7 @@ void CChildView::findSims2()
 		thdSafe_tmpMap1.clear();
 		for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
 		{
-			index[0] = r_i1;
-			index[1] = c_i1;
-			try {
-				m_saTmpRet1.GetElement(index, vData); vData = (CString)vData;
-			}
-			catch (COleException* e)
-			{
-				vData = L"";
-			}
-			szdata = vData;
+			szdata = m_excel1.getTmpCellValue(c_i1, r_i1);
 			if (szdata != L"")
 			{
 				if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
@@ -5302,16 +5010,7 @@ void CChildView::findSims2()
 			thdSafe_tmpMap2.clear();
 			for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
 			{
-				index[0] = r_i2;
-				index[1] = c_i2;
-				try {
-					m_saTmpRet2.GetElement(index, vData); vData = (CString)vData;
-				}
-				catch (COleException* e)
-				{
-					vData = L"";
-				}
-				szdata = vData;
+				szdata = m_excel2.getTmpCellValue(c_i2, r_i2);
 				if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
 				{
 					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
