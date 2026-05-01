@@ -304,28 +304,50 @@ void CChildView::OnPaint()
 	font2B.CreateFontW(16, 0, 900, 900, FW_EXTRABOLD, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 	font1C.CreateFontW(12, 0, 0, 0, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
 	font2C.CreateFontW(12, 0, 900, 900, 400, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
-	int bnd_X_min = 1;
-	int bnd_X_max = m_Table2.NumberOfColumns;
-	int bnd_Y_min = 1;
-	int bnd_Y_max = m_Table1.NumberOfColumns; // ?????
-											//visTopLeft.left = 3;
-	bool cursor = false;
-	// Info area redrawing
-	dc.SelectObject(&font4);
+PaintCtx ctx;
+ctx.pen1 = &pen1;   ctx.pen2 = &pen2;   ctx.pen3 = &pen3;   ctx.pen4 = &pen4;
+ctx.pen5 = &pen5;   ctx.pen6 = &pen6;   ctx.pen7 = &pen7;   ctx.pen8 = &pen8;
+ctx.pen9 = &pen9;   ctx.pen10 = &pen10; ctx.pen11 = &pen11; ctx.pen12 = &pen12;
+ctx.brush0 = &brush0; ctx.brush1 = &brush1; ctx.brush2 = &brush2; ctx.brush3 = &brush3;
+ctx.brush4 = &brush4; ctx.brush5 = &brush5; ctx.brush6 = &brush6; ctx.brush7 = &brush7;
+ctx.font1 = &font1;   ctx.font2 = &font2;   ctx.font3 = &font3;   ctx.font4 = &font4;
+ctx.font1B = &font1B; ctx.font2B = &font2B; ctx.font1C = &font1C; ctx.font2C = &font2C;
+ctx.bnd_X_min = 1;
+ctx.bnd_X_max = m_Table2.NumberOfColumns;
+ctx.bnd_Y_min = 1;
+ctx.bnd_Y_max = m_Table1.NumberOfColumns;
+	paintInfoArea(dc, ctx);
+	paintGridLines(dc, ctx);
+	paintRowHeaders(dc, ctx);
+	paintColumnHeaders(dc, ctx);
+	paintMatrixCells(dc, ctx);
+	paintSimilarityLines(dc, ctx);
+	dc.SelectObject(&pen4);
+	dc.MoveTo(0, OFFSET_Y + STEP_Y);
+	dc.LineTo(m_Clnt.w, OFFSET_Y + STEP_Y);
+	dc.MoveTo(OFFSET_X + STEP_X, 0);
+	dc.LineTo(OFFSET_X + STEP_X, m_Clnt.h);
+	m_bOnlyPcnt = false;
+}
+
+
+
+void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
+{
+	dc.SelectObject(ctx.font4);
 	CString prcnt;
 	prcnt = L"";
 	if (!m_bToDisplaySimilarClms && M_CCell.x * M_CCell.y && m_nNatrixDone)
 	{
 		dc.SetBkMode(TRANSPARENT);
-		if (M_CCell.x <= bnd_X_max && M_CCell.y <= bnd_Y_max)
+		if (M_CCell.x <= ctx.bnd_X_max && M_CCell.y <= ctx.bnd_Y_max)
 		{
 			long sameness = mxGet(M_CCell.x, M_CCell.y);
-			//dc.SelectObject(&pen8);
 			if (m_Table1.Columns[M_CCell.y] == m_Table2.Columns[M_CCell.x] && sameness < m_nEffMax)
 				dc.SetTextColor(RGB(255, 0, 0));
 			else
 				dc.SetTextColor(RGB(0, 0, 0));
-			prcnt.Format(L"Δ:%i", m_nEffMax - sameness);
+			prcnt.Format(L"\u0394:%i", m_nEffMax - sameness);
 			dc.TextOutW(5, 20, prcnt);
 			dc.SetTextColor(RGB(0, 255, 0));
 			prcnt.Format(L"=:%i", sameness);
@@ -333,7 +355,7 @@ void CChildView::OnPaint()
 			if (m_engine.isEmptyCol1(M_CCell.y) && m_engine.isEmptyCol2(M_CCell.x))
 			{
 				dc.SetTextColor(RGB(0, 0, 0));
-				dc.TextOutW(5, 80, CMsg(IDS_EMPTY)); // CMsg(IDS_EMPTY)
+				dc.TextOutW(5, 80, CMsg(IDS_EMPTY));
 			}
 		}
 	}
@@ -343,7 +365,7 @@ void CChildView::OnPaint()
 		{
 			dc.SetTextColor(RGB(120, 0, 130));
 			dc.SetBkMode(TRANSPARENT);
-			dc.SelectObject(&font1C);
+			dc.SelectObject(ctx.font1C);
 			int index = ReverseFind(m_szFilename1, L"\\", -1) + 1;
 			dc.TextOutW(2, 114, m_szFilename1.Mid(index, 22));
 		}
@@ -351,30 +373,33 @@ void CChildView::OnPaint()
 		{
 			dc.SetTextColor(RGB(120, 0, 130));
 			dc.SetBkMode(TRANSPARENT);
-			dc.SelectObject(&font2C);
+			dc.SelectObject(ctx.font2C);
 			int index = ReverseFind(m_szFilename2, L"\\", -1) + 1;
 			dc.TextOutW(112, 118, m_szFilename2.Mid(index, 22));
 		}
 	}
 	if (M_CCell.x * M_CCell.y && m_bToDisplaySimilarClms)
 	{
-		if (M_CCell.x <= bnd_X_max && M_CCell.y <= bnd_Y_max)
+		if (M_CCell.x <= ctx.bnd_X_max && M_CCell.y <= ctx.bnd_Y_max)
 		{
 			dc.SetTextColor(RGB(50, 100, 250));
 			dc.SetBkMode(TRANSPARENT);
-			dc.SelectObject(&font1C);
-			dc.TextOutW(5, 30, CMsg(IDS_KEY_SUITABILITY));// IDS_KEY_SUITABILITY
-			dc.SelectObject(&font4);
+			dc.SelectObject(ctx.font1C);
+			dc.TextOutW(5, 30, CMsg(IDS_KEY_SUITABILITY));
+			dc.SelectObject(ctx.font4);
 			prcnt.Format(L"~ %i%%", 100 * m_vecSimilaritiesAcrossTables[M_CCell.y].similarity / min(m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1, m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1));
 			dc.TextOutW(15, 60, prcnt);
 		}
 	}
-	// /Info area redrawing
-											//dc.TextOutW(100, 100, L"+ěščřžýá"); // test of the ability to make an output in czech lang.
-	dc.SelectObject(&brush0);
-	int mx_x_adj, mx_y_adj; // for access to data
-	dc.SelectObject(&pen2);
-	dc.SelectObject(&brush1);
+}
+
+
+
+void CChildView::paintGridLines(CDC& dc, PaintCtx& ctx)
+{
+	dc.SelectObject(ctx.brush0);
+	dc.SelectObject(ctx.pen2);
+	dc.SelectObject(ctx.brush1);
 	if (!m_bToDisplaySimilarClms)
 	{
 		for (int i_0 = OFFSET_X + STEP_X; i_0 < m_Clnt.w; i_0 += STEP_X)
@@ -388,19 +413,25 @@ void CChildView::OnPaint()
 			dc.LineTo(m_Clnt.w, i_0);
 		}
 	}
-	dc.SelectObject(&pen2);
-	dc.SelectObject(&brush1);
-	//dc.SelectObject(&font1);
-	for (int mx_y = bnd_Y_min; mx_y <= bnd_Y_max; mx_y++)
+	dc.SelectObject(ctx.pen2);
+	dc.SelectObject(ctx.brush1);
+}
+
+
+
+void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
+{
+	int mx_y_adj;
+	for (int mx_y = ctx.bnd_Y_min; mx_y <= ctx.bnd_Y_max; mx_y++)
 	{
-		cursor = false;
+		bool cursor = false;
 		mx_y_adj = mx_y + m_VisTopLeft.top;
 		dc.SetBkMode(OPAQUE);
 		if (isThisAKey(1, mx_y_adj))
 		{
 			if (mx_y_adj == m_OldCell.y)
 			{
-				dc.SelectObject(&brush6);
+				dc.SelectObject(ctx.brush6);
 			}
 			else
 			{
@@ -412,18 +443,18 @@ void CChildView::OnPaint()
 					}
 					else
 					{
-						dc.SelectObject(&brush0);
+						dc.SelectObject(ctx.brush0);
 					}
 				}
 				else
 				{
-					dc.SelectObject(&brush6);
+					dc.SelectObject(ctx.brush6);
 				}
 			}
 		}
 		else
 		{
-			dc.SelectObject(&brush0);
+			dc.SelectObject(ctx.brush0);
 		}
 		if (mx_y_adj == M_CCell.y)
 		{
@@ -435,66 +466,72 @@ void CChildView::OnPaint()
 			{
 				if (isThisAKey(1, mx_y_adj))
 				{
-					dc.SelectObject(&brush6);
+					dc.SelectObject(ctx.brush6);
 				}
 				else
 				{
-					dc.SelectObject(&brush0);
+					dc.SelectObject(ctx.brush0);
 				}
 			}
 		}
-		dc.SelectObject(&pen2);
+		dc.SelectObject(ctx.pen2);
 		//else
 			dc.Rectangle(0, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X, 1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
 		if (cursor)
 		{
 			dc.SetBkMode(TRANSPARENT);
-			dc.SelectObject(&brush0);
-			if (m_bToDisplaySimilarClms) dc.SelectObject(&pen12); else dc.SelectObject(&pen11);
+			dc.SelectObject(ctx.brush0);
+			if (m_bToDisplaySimilarClms) dc.SelectObject(ctx.pen12); else dc.SelectObject(ctx.pen11);
 			dc.Rectangle(2, 2 + OFFSET_Y + mx_y * STEP_Y, OFFSET_X + STEP_X - 1, -1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
 			dc.SetBkMode(OPAQUE);
-			dc.SelectObject(&brush0);
-			dc.SelectObject(&pen4);
+			dc.SelectObject(ctx.brush0);
+			dc.SelectObject(ctx.pen4);
 		}
 		if (m_nNatrixDone && !m_bOnlyPcnt && ((mx_y - m_VisTopLeft.top) > 0))
 		{
 			if (m_pbGreenClms1[mx_y])
 			{
-				dc.SelectObject(&pen5);
-				dc.SelectObject(&brush1);
+				dc.SelectObject(ctx.pen5);
+				dc.SelectObject(ctx.brush1);
 				dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - m_VisTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - m_VisTopLeft.top) * STEP_Y);
 			}
 			if (m_engine.isEmptyCol1(mx_y))
 			{
-				dc.SelectObject(&pen6);
-				dc.SelectObject(&brush2);
+				dc.SelectObject(ctx.pen6);
+				dc.SelectObject(ctx.brush2);
 				dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - m_VisTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1, OFFSET_Y + STEP_Y + (mx_y - m_VisTopLeft.top) * STEP_Y);
 			}
 		}
 		dc.SetBkMode(TRANSPARENT);
 		if (isThisAKey(1, mx_y_adj))
 		{
-			dc.SelectObject(&font1B);
+			dc.SelectObject(ctx.font1B);
 			dc.SetTextColor(RGB(0, 0, 170));
 		}
 		else
 		{
-			dc.SelectObject(&font1);
+			dc.SelectObject(ctx.font1);
 			dc.SetTextColor(RGB(0, 0, 0));
 		}
 		dc.TextOutW(2, OFFSET_Y + 5 + mx_y * STEP_Y, m_Table1.Columns[mx_y_adj]);
 	}
-	//dc.SelectObject(&font2);
-	for (int mx_x = bnd_X_min; mx_x <= bnd_X_max; mx_x++)
+}
+
+
+
+void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
+{
+	int mx_x_adj;
+	for (int mx_x = ctx.bnd_X_min; mx_x <= ctx.bnd_X_max; mx_x++)
 	{
-		cursor = false;
+		bool cursor = false;
 		mx_x_adj = mx_x + m_VisTopLeft.left;
 		dc.SetBkMode(OPAQUE);
 		if (isThisAKey(2, mx_x_adj))
 		{
 			if (mx_x_adj == m_OldCell.x)
 			{
-				dc.SelectObject(&brush6);
+				dc.SelectObject(ctx.brush6);
 			}
 			else
 			{
@@ -506,18 +543,18 @@ void CChildView::OnPaint()
 					}
 					else
 					{
-						dc.SelectObject(&brush0);
+						dc.SelectObject(ctx.brush0);
 					}
 				}
 				else
 				{
-					dc.SelectObject(&brush6);
+					dc.SelectObject(ctx.brush6);
 				}
 			}
 		}
 		else
 		{
-			dc.SelectObject(&brush0);
+			dc.SelectObject(ctx.brush0);
 		}
 		if (mx_x_adj == M_CCell.x)
 		{
@@ -529,69 +566,76 @@ void CChildView::OnPaint()
 			{
 				if (isThisAKey(2, mx_x_adj))
 				{
-					dc.SelectObject(&brush6);
+					dc.SelectObject(ctx.brush6);
 				}
 				else
 				{
-					dc.SelectObject(&brush0);
+					dc.SelectObject(ctx.brush0);
 				}
 			}
 		}
-		dc.SelectObject(&pen2);
+		dc.SelectObject(ctx.pen2);
 		//else
 			dc.Rectangle(OFFSET_X + mx_x * STEP_X, 0, 1 + OFFSET_X + mx_x * STEP_X + STEP_X, 1 + OFFSET_Y + STEP_Y);
 		if (cursor)
 		{
 			dc.SetBkMode(TRANSPARENT);
-			dc.SelectObject(&brush0);
-			if (m_bToDisplaySimilarClms) dc.SelectObject(&pen12); else dc.SelectObject(&pen11);
+			dc.SelectObject(ctx.brush0);
+			if (m_bToDisplaySimilarClms) dc.SelectObject(ctx.pen12); else dc.SelectObject(ctx.pen11);
 			dc.Rectangle(2 + OFFSET_X + mx_x * STEP_X, 2, -1 + OFFSET_X + mx_x * STEP_X + STEP_X, OFFSET_Y + STEP_Y - 1);
 			dc.SetBkMode(OPAQUE);
-			dc.SelectObject(&brush0);
-			dc.SelectObject(&pen4);
+			dc.SelectObject(ctx.brush0);
+			dc.SelectObject(ctx.pen4);
 		}
 		if (m_nNatrixDone && !m_bOnlyPcnt && ((mx_x - m_VisTopLeft.left) > 0))
 		{
 			if (m_pbGreenClms2[mx_x])
 			{
-				dc.SelectObject(&pen5);
-				dc.SelectObject(&brush1);
+				dc.SelectObject(ctx.pen5);
+				dc.SelectObject(ctx.brush1);
 				dc.Ellipse(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y, OFFSET_X + STEP_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
 			}
 			if (m_engine.isEmptyCol2(mx_x))
 			{
-				dc.SelectObject(&pen6);
-				dc.SelectObject(&brush2);
+				dc.SelectObject(ctx.pen6);
+				dc.SelectObject(ctx.brush2);
 				dc.Ellipse(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y, OFFSET_X + STEP_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
 			}
 		}
 		dc.SetBkMode(TRANSPARENT);
 		if (isThisAKey(2, mx_x_adj))
 		{
-			dc.SelectObject(&font2B);
+			dc.SelectObject(ctx.font2B);
 			dc.SetTextColor(RGB(0, 0, 170));
 		}
 		else
 		{
-			dc.SelectObject(&font2);
+			dc.SelectObject(ctx.font2);
 			dc.SetTextColor(RGB(0, 0, 0));
 		}
 		dc.TextOutW(OFFSET_X + 5 + mx_x * STEP_X, -2 + OFFSET_Y + STEP_Y, m_Table2.Columns[mx_x_adj]);
 	}
-	dc.SelectObject(&pen2);
+}
+
+
+
+void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
+{
+	dc.SelectObject(ctx.pen2);
 	if (m_nNatrixDone && !m_bOnlyPcnt)
 	{
 		dc.SetBkMode(OPAQUE);
-		dc.SelectObject(&font3);
+		dc.SelectObject(ctx.font3);
 		int valSimil;
 		CString strSimil;
+		int mx_y_adj, mx_x_adj;
 		if (m_nEffMax)
 		{
-			for (int mx_y = bnd_Y_min; mx_y <= bnd_Y_max - m_VisTopLeft.top; mx_y++)
+			for (int mx_y = ctx.bnd_Y_min; mx_y <= ctx.bnd_Y_max - m_VisTopLeft.top; mx_y++)
 			{
-				for (int mx_x = bnd_X_min; mx_x <= bnd_X_max - m_VisTopLeft.left; mx_x++)
+				for (int mx_x = ctx.bnd_X_min; mx_x <= ctx.bnd_X_max - m_VisTopLeft.left; mx_x++)
 				{
-					dc.SelectObject(&pen2);
+					dc.SelectObject(ctx.pen2);
 					mx_y_adj = mx_y + m_VisTopLeft.top;
 					mx_x_adj = mx_x + m_VisTopLeft.left;
 					valSimil = mxGet(mx_x_adj, mx_y_adj) * 100 / m_nEffMax;
@@ -604,28 +648,28 @@ void CChildView::OnPaint()
 						{
 							if (m_engine.isEmptyCol1(mx_y_adj) || m_engine.isEmptyCol2(mx_x_adj))
 							{
-								dc.SelectObject(&brush2);
+								dc.SelectObject(ctx.brush2);
 							}
 							else
 							{
-								dc.SelectObject(&brush1);
+								dc.SelectObject(ctx.brush1);
 							}
 						}
 						if (valSimil < 100)
 						{
 							if (valSimil > m_nSldr)
 							{
-								dc.SelectObject(&brush4);
+								dc.SelectObject(ctx.brush4);
 							}
 							else
 							{
 								if (isThisAKey(1, mx_y_adj) || isThisAKey(2, mx_x_adj))
 								{
-									dc.SelectObject(&brush6);
+									dc.SelectObject(ctx.brush6);
 								}
 								else
 								{
-									dc.SelectObject(&brush0);
+									dc.SelectObject(ctx.brush0);
 								}
 							}
 						}
@@ -634,33 +678,33 @@ void CChildView::OnPaint()
 					{
 						if (isThisAKey(1, mx_y_adj) || isThisAKey(2, mx_x_adj))
 						{
-							dc.SelectObject(&brush6);
+							dc.SelectObject(ctx.brush6);
 						}
 						else
 						{
-							dc.SelectObject(&brush0);
+							dc.SelectObject(ctx.brush0);
 						}
 					}
 					if (mx_y_adj == m_CClickedCell.y && mx_x_adj == m_CClickedCell.x)
 					{
-						dc.SelectObject(&brush6);
+						dc.SelectObject(ctx.brush6);
 					}
 					dc.Rectangle(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y);
 					dc.SetBkMode(TRANSPARENT);
 					if (mxMarkedGet(mx_x_adj, mx_y_adj))
 					{
-						dc.SelectObject(&pen4);
+						dc.SelectObject(ctx.pen4);
 						dc.MoveTo(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y);
 						dc.LineTo(OFFSET_X + STEP_X + mx_x * STEP_X, OFFSET_Y + STEP_Y + mx_y * STEP_Y);
 						dc.MoveTo(OFFSET_X + STEP_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y);
 						dc.LineTo(OFFSET_X + mx_x * STEP_X, OFFSET_Y + STEP_Y + mx_y * STEP_Y);
-						dc.SelectObject(&pen2);
+						dc.SelectObject(ctx.pen2);
 					}
 					if (m_bToDisplaySimilarClms && m_vecSimilaritiesAcrossTables[mx_y_adj].clm2 == mx_x_adj)
 					{
 						dc.SetBkMode(TRANSPARENT);
 						dc.SelectObject(&m_KeyCurvePen);
-						dc.SelectObject(&brush7);
+						dc.SelectObject(ctx.brush7);
 						dc.Rectangle(OFFSET_X + (mx_x)* STEP_X + 1, OFFSET_Y + (mx_y)* STEP_Y + 1, OFFSET_X + STEP_X + (mx_x)* STEP_X, OFFSET_Y + STEP_Y + (mx_y)* STEP_Y);
 					}
 					dc.SetTextColor(RGB(0, 0, 0));
@@ -669,10 +713,10 @@ void CChildView::OnPaint()
 			}
 			dc.SetBkMode(TRANSPARENT);
 			dc.SelectObject(GetStockObject(NULL_BRUSH));
-			dc.SelectObject(&pen3);
-			for (int mx_y = bnd_Y_min; mx_y <= bnd_Y_max - m_VisTopLeft.top; mx_y++)
+			dc.SelectObject(ctx.pen3);
+			for (int mx_y = ctx.bnd_Y_min; mx_y <= ctx.bnd_Y_max - m_VisTopLeft.top; mx_y++)
 			{
-				for (int mx_x = bnd_X_min; mx_x <= bnd_X_max - m_VisTopLeft.left; mx_x++)
+				for (int mx_x = ctx.bnd_X_min; mx_x <= ctx.bnd_X_max - m_VisTopLeft.left; mx_x++)
 				{
 					mx_y_adj = mx_y + m_VisTopLeft.top;
 					mx_x_adj = mx_x + m_VisTopLeft.left;
@@ -682,24 +726,28 @@ void CChildView::OnPaint()
 					}
 					if (mx_y_adj == m_nOldy && mx_x_adj == m_nOldx)
 					{
-						dc.SelectObject(&pen9);
+						dc.SelectObject(ctx.pen9);
 						dc.Rectangle(OFFSET_X + mx_x * STEP_X + 3, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 4, 1 + OFFSET_X + STEP_X + mx_x * STEP_X - 2, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 2);
-						dc.SelectObject(&pen3);
+						dc.SelectObject(ctx.pen3);
 					}
 				}
 			}
-			dc.SelectObject(&pen2);
+			dc.SelectObject(ctx.pen2);
 		}
 		m_bOnlyPcnt = false;
 	}
+}
+
+
+
+void CChildView::paintSimilarityLines(CDC& dc, PaintCtx& ctx)
+{
 	if (m_bToDisplaySimilarClms)
 	{
 		int mx_x, mx_y = 0;
-		//long maxHit = min(table1.NumberOfRows - table1.FirstRowWithData + 1, table2.NumberOfRows - table2.FirstRowWithData + 1);
 		long maxHit = m_vecSimilaritiesAcrossTablesSorted[1].similarity;
 		for (int s_i = m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder; s_i >= 0; s_i--)
 		{
-			//ASSERT(s_i != 1);
 			mx_y = m_vecSimilaritiesAcrossTablesSorted[s_i].clm1;
 			mx_x = m_vecSimilaritiesAcrossTablesSorted[s_i].clm2;
 			if ((mx_y * mx_x > 0) && ((mx_y - m_VisTopLeft.top) * (mx_x - m_VisTopLeft.left) > 0))
@@ -716,7 +764,6 @@ void CChildView::OnPaint()
 		}
 		for (int s_i = m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder; s_i >= 0; s_i--)
 		{
-			//ASSERT(mx_y != 9);
 			mx_y = m_vecSimilaritiesAcrossTablesSorted[s_i].clm1;
 			mx_x = m_vecSimilaritiesAcrossTablesSorted[s_i].clm2;
 			if ((mx_y * mx_x  > 0) && ((mx_y - m_VisTopLeft.top) * (mx_x - m_VisTopLeft.left) > 0))
@@ -736,12 +783,6 @@ void CChildView::OnPaint()
 			}
 		}
 	}
-	dc.SelectObject(&pen4);
-	dc.MoveTo(0, OFFSET_Y + STEP_Y);
-	dc.LineTo(m_Clnt.w, OFFSET_Y + STEP_Y);
-	dc.MoveTo(OFFSET_X + STEP_X, 0);
-	dc.LineTo(OFFSET_X + STEP_X, m_Clnt.h);
-	m_bOnlyPcnt = false;
 }
 
 

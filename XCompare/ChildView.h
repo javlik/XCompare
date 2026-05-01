@@ -49,6 +49,26 @@ public:
 protected:
 	afx_msg void OnPaint();
 	DECLARE_MESSAGE_MAP()
+
+	// OnPaint helper context: groups all temporary GDI objects and bounds
+	struct PaintCtx
+	{
+		CPen   *pen1, *pen2, *pen3, *pen4, *pen5, *pen6,
+		       *pen7, *pen8, *pen9, *pen10, *pen11, *pen12;
+		CBrush *brush0, *brush1, *brush2, *brush3,
+		       *brush4, *brush5, *brush6, *brush7;
+		CFont  *font1, *font2, *font3, *font4,
+		       *font1B, *font2B, *font1C, *font2C;
+		int    bnd_X_min, bnd_X_max, bnd_Y_min, bnd_Y_max;
+	};
+
+	void paintInfoArea      (CDC& dc, PaintCtx& ctx);
+	void paintGridLines     (CDC& dc, PaintCtx& ctx);
+	void paintRowHeaders    (CDC& dc, PaintCtx& ctx);
+	void paintColumnHeaders (CDC& dc, PaintCtx& ctx);
+	void paintMatrixCells   (CDC& dc, PaintCtx& ctx);
+	void paintSimilarityLines(CDC& dc, PaintCtx& ctx);
+
 public:
 	afx_msg void OnPickFirstFile();
 	afx_msg void OnPickSecondFile();
