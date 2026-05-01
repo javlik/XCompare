@@ -931,9 +931,8 @@ void CChildView::OnCreateMatrix()
 	m_bWaitingForKeys = true;
 	m_bKeys1done = false;
 	m_bKeys2done = false;
-	HWND hWnd0 = this->GetSafeHwnd();
-	AfxBeginThread(CreateKeys1ThreadProc, hWnd0);
-	AfxBeginThread(CreateKeys2ThreadProc, hWnd0);
+	AfxBeginThread(CreateKeys1ThreadProc, this);
+	AfxBeginThread(CreateKeys2ThreadProc, this);
 	this->Invalidate();
 	m_App.put_Visible(true);
 	m_App.put_UserControl(TRUE);
@@ -1550,11 +1549,10 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 	{
 		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
 		m_bLockPrg2 = true;
-		HWND hWnd0 = this->GetSafeHwnd();
 		int mx_X_max = m_Table2.NumberOfColumns;
 		m_matrix.setMarked(M_CCell.x, M_CCell.y);
 		this->Invalidate();
-		AfxBeginThread(MyThreadProc3, hWnd0);
+		AfxBeginThread(MyThreadProc3, this);
 	}
 	CWnd::OnLButtonDblClk(nFlags, point);
 }
@@ -1922,9 +1920,8 @@ void CChildView::OnButton2()
 		m_bKeysGathering1done = false;
 		m_bKeysGathering2done = false;
 		clearPossibleKeys();
-		HWND hWnd0 = this->GetSafeHwnd();
-		AfxBeginThread(SuggestKeys1ThreadProc, hWnd0);
-		AfxBeginThread(SuggestKeys2ThreadProc, hWnd0);
+		AfxBeginThread(SuggestKeys1ThreadProc, this);
+		AfxBeginThread(SuggestKeys2ThreadProc, this);
 	}
 	else
 	{
@@ -2176,8 +2173,7 @@ void CChildView::OnUpdateCheck7(CCmdUI* pCmdUI)
 /// <returns></returns>
 UINT MyThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->firstPass();
 	AfxEndThread(0);
 	return 0;
@@ -2211,11 +2207,10 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 				m_bKeys1done = true;
 				if (m_bKeys2done)
 				{
-					HWND hWnd0 = this->GetSafeHwnd();
 					m_bWaitingForKeys = false;
 					m_bKeys1done = false;
 					m_bKeys2done = false;
-					AfxBeginThread(MyThreadProc, hWnd0);
+					AfxBeginThread(MyThreadProc, this);
 					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
 				}
 			}
@@ -2235,11 +2230,10 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 				m_bKeysGathering1done = true;
 				if (m_bKeysGathering2done)
 				{
-					HWND hWnd0 = this->GetSafeHwnd();
 					m_bWaitingForKeys = false;
 					m_bKeysGathering1done = false;
 					m_bKeysGathering2done = false;
-					AfxBeginThread(MutualCheckThreadProc, hWnd0);
+					AfxBeginThread(MutualCheckThreadProc, this);
 					BeginWaitCursor();
 					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));
 				}
@@ -2290,11 +2284,10 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 				m_bKeys2done = true;
 				if (m_bKeys1done)
 				{
-					HWND hWnd0 = this->GetSafeHwnd();
 					m_bWaitingForKeys = false;
 					m_bKeys1done = false;
 					m_bKeys2done = false;
-					AfxBeginThread(MyThreadProc, hWnd0);
+					AfxBeginThread(MyThreadProc, this);
 					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
 				}
 			}
@@ -2306,11 +2299,10 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 				m_bKeysGathering2done = true;
 				if (m_bKeysGathering1done)
 				{
-					HWND hWnd0 = this->GetSafeHwnd();
 					m_bWaitingForKeys = false;
 					m_bKeysGathering1done = false;
 					m_bKeysGathering2done = false;
-					AfxBeginThread(MutualCheckThreadProc, hWnd0);
+					AfxBeginThread(MutualCheckThreadProc, this);
 					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
 				}
 			}
@@ -2470,8 +2462,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 /// <returns></returns>
 UINT MyThreadProc2(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->m_bUniqueKeys1 = false;
 	pWnd->m_bUniqueKeys2 = false;
 	int rslt;
@@ -2501,8 +2492,7 @@ UINT MyThreadProc2(LPVOID pParam)
 /// <returns></returns>
 UINT CreateKeys1ThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->m_bUniqueKeys1 = false;
 	int rslt;
 	rslt = pWnd->createKeyArrays1();
@@ -2529,8 +2519,7 @@ UINT CreateKeys1ThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT CreateKeys2ThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->m_bUniqueKeys2 = false;
 	int rslt;
 	rslt = pWnd->createKeyArrays2();
@@ -2587,8 +2576,7 @@ UINT makePrereq2ThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT MyThreadProc3(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->markInFiles();
 	AfxEndThread(0);
 	return 0;
@@ -3368,8 +3356,7 @@ inline void CChildView::sort3(int& a, int& b, int& c)
 /// <returns></returns>
 UINT SuggestKeys1ThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->suggestKeys1();
 	AfxEndThread(0);
 	return 0;
@@ -3384,8 +3371,7 @@ UINT SuggestKeys1ThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT SuggestKeys2ThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->suggestKeys2();
 	AfxEndThread(0);
 	return 0;
@@ -3400,8 +3386,7 @@ UINT SuggestKeys2ThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT MutualCheckThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->mutualCheck();
 	AfxEndThread(0);
 	return 0;
@@ -3416,8 +3401,7 @@ UINT MutualCheckThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT FindSimsThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->findSims();
 	AfxEndThread(0);
 	return 0;
@@ -3432,8 +3416,7 @@ UINT FindSimsThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT FindSimsThreadProc1(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->findSims1();
 	AfxEndThread(0);
 	return 0;
@@ -3448,8 +3431,7 @@ UINT FindSimsThreadProc1(LPVOID pParam)
 /// <returns></returns>
 UINT FindSimsThreadProc2(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->findSims2();
 	AfxEndThread(0);
 	return 0;
@@ -4627,10 +4609,9 @@ void CChildView::OnFindrelBtn()
 	// </Preparation for actual-relations check>
 	m_bToDisplaySimilarClms = false;
 	m_bXSimilarityComputed = false;
-	HWND hWnd0 = this->GetSafeHwnd();
-	//AfxBeginThread(FindSimsThreadProc, hWnd0);
-	AfxBeginThread(FindSimsThreadProc1, hWnd0);
-	AfxBeginThread(FindSimsThreadProc2, hWnd0);
+	//AfxBeginThread(FindSimsThreadProc, this);
+	AfxBeginThread(FindSimsThreadProc1, this);
+	AfxBeginThread(FindSimsThreadProc2, this);
 	m_bLockPrg1 = true;
 	m_bLockPrg2 = true;
 }
