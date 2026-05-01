@@ -1279,6 +1279,7 @@ void CChildView::OnPickFirstSheet()
 		}
 		HWND hWnd0 = this->GetSafeHwnd();
 		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
+		m_engine.setTables(m_Table1, m_Table2);
 		AfxBeginThread(makePrereq1ThreadProc, hWnd0);
 	}
 }
@@ -1432,6 +1433,7 @@ void CChildView::OnPickSecondSheet()
 		m_nNatrixDone = false;
 		HWND hWnd0 = this->GetSafeHwnd();
 		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
+		m_engine.setTables(m_Table1, m_Table2);
 		AfxBeginThread(makePrereq2ThreadProc, hWnd0);
 	}
 }
@@ -2729,7 +2731,6 @@ void CChildView::OnUpdateCheck3(CCmdUI* pCmdUI)
 /// </summary>
 void CChildView::makePrereq1()
 {
-	m_engine.setTables(m_Table1, m_Table2);
 	m_engine.makePrereq1();
 }
 
@@ -2740,7 +2741,6 @@ void CChildView::makePrereq1()
 /// </summary>
 void CChildView::makePrereq2()
 {
-	m_engine.setTables(m_Table1, m_Table2);
 	m_engine.makePrereq2();
 }
 
