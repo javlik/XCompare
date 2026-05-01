@@ -19,6 +19,7 @@
 #include "ComparisonMatrix.h"
 #include "ExcelConnector.h"
 #include "ComparisonEngine.h"
+#include "KeyFinder.h"
 #include <vector>
 #include <map>
 
@@ -145,8 +146,8 @@ private:
 	
 	
 
-	int createTempKeyArrays1();
-	int createTempKeyArrays2();
+	int createTempKeyArrays1(); // kept as shell (body moved to KeyFinder)
+	int createTempKeyArrays2(); // kept as shell (body moved to KeyFinder)
 	void clearPossibleKeys();
 	void sort3(int & a, int & b, int & c);
 public:
@@ -165,13 +166,8 @@ public:
 	void pushKey(int col1, int col2);
 	bool usePossibleKeys();
 	int getNumberOfPossibleKeys();
-	void sortExaminedKeys(int table);
-	int sumExaminedKeys(int table, int nmax);
-	bool is2BExaminedOnce(int table, int max);
-	bool getSimilarKeyProbability(int table, int max);
-	int getNthEntropy(int table, int n);
-	int CalculateEntropyRank(int table);
-	bool isEntropyStored(int table, int clm, int max);
+	// sortExaminedKeys, sumExaminedKeys, is2BExaminedOnce, getSimilarKeyProbability,
+	// getNthEntropy, CalculateEntropyRank, isEntropyStored -- moved to KeyFinder (private)
 	afx_msg void OnUpdateCombo2(CCmdUI *pCmdUI);
 	afx_msg void OnCombo2();
 	int getNumberOfPossibleKeys(int table, int order, int item);
@@ -212,6 +208,7 @@ public:
 	bool         m_bLockPrg2;    // thread 2 is running
 	// m_NotUniqueKeys1/2 are now in m_engine.m_NotUniqueKeys1/2
 	ComparisonEngine m_engine;
+	KeyFinder        m_keyFinder;
 
 private:
 	// Synchronisation between threads
@@ -222,30 +219,10 @@ private:
 	bool m_bKeysGathering2done;
 
 	// Algorithm parameters
-	int     m_nComplexity;
 	CString m_szRsltTxt;
-
-	// Large checked-key buffers (one entry per attempted key combination)
-	std::vector<unsigned long long> m_nCheckedKeys1;
-	std::vector<unsigned long long> m_nCheckedKeys2;
-	int m_nCheckedKeysCounter1;
-	int m_nCheckedKeysCounter2;
 
 	// Colour palette (20 user-selectable highlight colours)
 	Palette m_Palette[20];
-
-	// Key-suggestion data structures
-	PossibleKeys m_PossibleKeys1[256];
-	PossibleKeys m_PossibleKeys2[256];
-	KeyPair      m_KeyPair[256];
-	int          m_nKeyPairCounter;
-	BestKeyComb  m_BestKeyComb;
-	int          m_nPossibleKeyCounter1;
-	int          m_nPossibleKeyCounter2;
-	long         m_nInvEntropy1[256];
-	long         m_nInvEntropy2[256];
-	int          m_nSortedEntropy1[256];
-	int          m_nSortedEntropy2[256];
 
 	// Prerequisite validity is now tracked inside m_engine
 	int  m_nOldx;
@@ -268,12 +245,7 @@ private:
 	std::vector<bool>    m_pbGreenClms2;    // fully-matched column flags, table 2
 	std::vector<long>    m_pnFoundDifferences; // difference row indices per column
 	// Arrays now owned by m_engine: m_pchMainArr1/2, m_pszKeyArr11/21, m_pbKeyMissing1/2, m_pbEmptyClms1/2
-
-	// Entropy tracking for key suggestion
-	int m_nExaminedKeys1[SUGKEYS + 4];
-	int m_nExaminedKeys2[SUGKEYS + 4];
-	int m_nTmpKeys1[SUGKEYS + 4];
-	int m_nTmpKeys2[SUGKEYS + 4];
+	// Entropy tracking (now inside m_keyFinder): m_nExaminedKeys1/2, m_nInvEntropy1/2, m_nSortedEntropy1/2
 
 	// Cross-table similarity results
 	std::vector<SimilaritiesAcrossTables> m_vecSimilaritiesAcrossTables;
@@ -294,10 +266,11 @@ private:
 	CString        m_szFilename1;
 	CString        m_szFilename2;
 	// m_Map1/m_Map2 are now inside m_engine
+	// m_mapTmpMap1/2 are now inside m_keyFinder; CChildView also keeps its own copies for findSims
 	std::map<CString, long> m_mapTmpMap1;
 	std::map<CString, long> m_mapTmpMap2;
 
-	// m_engine is now public (accessed by thread procs)
+	// m_engine and m_keyFinder are now public (accessed by thread procs)
 
 	// UI state
 	int   m_nUiToBeRefreshed;

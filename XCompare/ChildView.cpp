@@ -72,20 +72,14 @@ CChildView::CChildView()
 	m_nPrgval1 = 100; // just for test
 				   //CMFCRibbonBar* pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar(); // in the constructor is too early
 	// ExcelConnector instances (m_excel1, m_excel2) initialise themselves in their own constructors
-	// Checked-key buffers (converted from fixed-size globals to vectors)
-	m_nCheckedKeys1.assign(MAX_ATTEMPTS + 1, 0ULL);
-	m_nCheckedKeys2.assign(MAX_ATTEMPTS + 1, 0ULL);
+	// m_nCheckedKeys1/2, entropy and possible-keys state are now inside m_keyFinder
 	// Members that were zero-initialised as globals but not yet in constructor
 	m_bWaitingForKeys    = false;
 	m_bKeys1done         = false;
 	m_bKeys2done         = false;
 	m_bKeysGathering1done = false;
 	m_bKeysGathering2done = false;
-	m_nCheckedKeysCounter1 = 0;
-	m_nCheckedKeysCounter2 = 0;
 	// m_nKeyPairCounter is now inside m_engine
-	m_nPossibleKeyCounter1 = 0;
-	m_nPossibleKeyCounter2 = 0;
 	m_nOldx = 0; m_nOldy = 0;
 	m_Clnt.w = 0; m_Clnt.h = 0;
 	m_nNatrixDone  = 0;
@@ -118,12 +112,7 @@ CChildView::CChildView()
 	m_pUseIndices     = nullptr;
 	m_pRows1 = nullptr; m_pCols1 = nullptr;
 	m_pRows2 = nullptr; m_pCols2 = nullptr;
-	for (int i = 0; i < 256; i++) { m_nInvEntropy1[i] = 0; m_nInvEntropy2[i] = 0; }
-	for (int i = 0; i < 256; i++) { m_nSortedEntropy1[i] = 0; m_nSortedEntropy2[i] = 0; }
-	for (int i = 0; i < SUGKEYS + 4; i++) {
-		m_nExaminedKeys1[i] = 0; m_nExaminedKeys2[i] = 0;
-		m_nTmpKeys1[i] = 0;      m_nTmpKeys2[i] = 0;
-	}
+	// entropy, possible-keys, examined-keys arrays are now inside m_keyFinder
 	m_bIn1file = false;
 	m_bIn2file = false;
 	m_bSameNames = false;
@@ -131,9 +120,7 @@ CChildView::CChildView()
 	m_bToInitSB = true;
 	m_VisTopLeft.left = 0;
 	m_VisTopLeft.top = 0;
-	m_BestKeyComb.pk1 = 0;
-	m_BestKeyComb.pk2 = 0;
-	m_BestKeyComb.rating = 0;
+	// m_BestKeyComb is now inside m_keyFinder
 	m_nSldr = 90;
 	m_nEffMax = 0;
 	M_CCell.x = 0; M_CCell.y = 0;
@@ -149,7 +136,7 @@ CChildView::CChildView()
 	m_engine.m_bUseIndexes = false;
 	m_bNewFile1 = false;
 	m_bNewFile2 = false;
-	m_nComplexity = 100000;
+	// m_nComplexity is now inside m_keyFinder (default 100000)
 }
 
 
@@ -1920,6 +1907,7 @@ void CChildView::OnButton2()
 		m_bKeysGathering1done = false;
 		m_bKeysGathering2done = false;
 		clearPossibleKeys();
+		m_keyFinder.setTables(m_Table1, m_Table2);
 		AfxBeginThread(SuggestKeys1ThreadProc, this);
 		AfxBeginThread(SuggestKeys2ThreadProc, this);
 	}
@@ -2077,6 +2065,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (m_Table1.NumberOfColumns + 1);
 	m_nSldr = 90;
 	m_engine.init(GetSafeHwnd(), m_excel1, m_excel2, m_Table1, m_Table2);
+	m_keyFinder.init(GetSafeHwnd(), m_excel1, m_excel2, m_Table1, m_Table2);
 	return 0; 
 }
 
@@ -2244,7 +2233,7 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 			m_bWaitingForKeys = false;
 			usePossibleKeys();	
 			CString tmpS;
-			tmpS.Format(CMsg(IDS_KEY_COMB_FOUND), m_BestKeyComb.cnt); // CMsg(IDS_KEY_COMB_FOUND)
+			tmpS.Format(CMsg(IDS_KEY_COMB_FOUND), m_keyFinder.getBestKeyComb().cnt); // CMsg(IDS_KEY_COMB_FOUND)
 			MessageBox(tmpS);
 			EndWaitCursor();
 		}
@@ -3000,162 +2989,19 @@ void CChildView::OnUpdatePut2front(CCmdUI* pCmdUI)
 /// </summary>
 void CChildView::suggestKeys1()
 {
-	int nPhase = 0;
-	int attempts = 0;
-	bool alreadyChecked = false;
-	m_nCheckedKeysCounter1 = 0;
-	for (int i = 0; i < SUGKEYS; i++)
-	{
-		m_nCheckedKeys1[i] = 0;
-	}
 	m_bLockPrg1 = true;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	m_nPossibleKeyCounter1 = 0;
-	for (int i = 0; i < 255; i++)
-	{
-		m_nInvEntropy1[i] = 0;
-	}
-	for (int i = 0; i <= SUGKEYS + 1; i++)
-	{
-		m_nExaminedKeys1[i] = 0;
-	}
-	int	e_i;
-	//////*********************
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	for (int i_h = 1; i_h <= m_Table1.NumberOfColumns; i_h++)
-	{
-		m_mapTmpMap1.clear();
-		for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
-		{
-			szdata = "";
-			// Loop through the data and report the contents.
-			szdata += getCellValue1(i_h, i_i);
-			if ((m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
-			{
-				m_mapTmpMap1[szdata] = i_i;
-				m_nInvEntropy1[i_h]++;
-			}
-		}
-	}
-	CalculateEntropyRank(1);
-///////////********************
-	if (m_Table1.NumberOfRows > 0)
-	{
-		int foundKeysSet1 = 10;
-		while (true)
-		{
-			prgHlpr0 = attempts % 97; // only 3 keys
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-				PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
-			}
-			if (is2BExaminedOnce(1, SUGKEYS - 1))  // TODO: allow some zeros
-			{
-				alreadyChecked = getSimilarKeyProbability(1, SUGKEYS);
-				if (!alreadyChecked)
-				{
-					foundKeysSet1 = createTempKeyArrays1();
-					//CString tracestring = L"";
-					//tracestring.Format(L"\n%i, %i, %i, %i, %i, %i, %i, %i, %i, %i : %i\n", examinedKeys1[0], examinedKeys1[1], examinedKeys1[2], examinedKeys1[3], examinedKeys1[4], examinedKeys1[5], examinedKeys1[6], examinedKeys1[7], examinedKeys1[8], examinedKeys1[9], foundKeysSet1);
-					//TRACE(tracestring);
-				}
-			}
-			else
-			{
-				foundKeysSet1 = 4; // Low entropy of key indexes
-			}
-			if (foundKeysSet1 == 0)
-			{
-				for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
-				{
-					m_PossibleKeys1[m_nPossibleKeyCounter1].k[tmp_i] = getNthEntropy(1, m_nExaminedKeys1[tmp_i]);
-				}
-				sortExaminedKeys(1);
-				m_nPossibleKeyCounter1++;
-			}
-			if (attempts++ > m_nComplexity || m_nPossibleKeyCounter1 > m_Table1.NumberOfColumns /*  ( .....3 - sgn(table1.keys[0]) - sgn(table1.keys[1]) - sgn(table1.keys[2]))  */)
-			{
-				break; // quit in any case
-			}
-			e_i = SUGKEYS - 1;
-			while (e_i >= 0)
-			{
-				/*if (table1.keys[e_i])
-				{
-					--e_i;
-				}
-				else */
-				{
-					if (m_nExaminedKeys1[e_i] >= m_Table1.NumberOfColumns)
-					{
-						m_nExaminedKeys1[e_i] = 0;
-						--e_i; // decrement to the previous slot for key-column
-					}
-					else
-					{
-						++m_nExaminedKeys1[e_i];
-						break;
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		MessageBox(CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_FRST)
-	}
-	PostMessage(CM_UPDATE_PROGRESS, 0, 10000);
-	return;
+	m_keyFinder.suggestKeys1();
 }
+
+// (OLD suggestKeys1 body moved to KeyFinder::suggestKeys1)
 
 
 
 /// <summary>
-/// Creates the temporary key arrays1.
+/// Creates the temporary key arrays1. (Moved to KeyFinder)
 /// </summary>
 /// <returns></returns>
-int CChildView::createTempKeyArrays1()
-{
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	m_mapTmpMap1.clear();
-	if (sumExaminedKeys(1, SUGKEYS - 1) > 0)
-	{
-		for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
-		{
-			szdata = "";
-			for (int k_i = 0; k_i < SUGKEYS; k_i++)
-			{
-				if (m_nExaminedKeys1[k_i])
-				{
-					// Loop through the data and report the contents.
-					szdata += getCellValue1(getNthEntropy(1, m_nExaminedKeys1[k_i]), i_i);
-				}
-			}
-			if (!(m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
-			{
-				m_mapTmpMap1.clear();
-				return 2;
-			}
-			else
-			{
-				m_mapTmpMap1[szdata] = i_i;
-			}
-		}
-	}
-	else
-	{
-		return 1;
-	}
-	return 0;
-	//search for the next available set of not-examined-yet columns
-}
-
+// int CChildView::createTempKeyArrays1() -- moved to KeyFinder::createTempKeyArrays1()
 
 
 /// <summary>
@@ -3163,156 +3009,18 @@ int CChildView::createTempKeyArrays1()
 /// </summary>
 void CChildView::suggestKeys2()
 {
-	int nPhase = 0;
-	int attempts = 0;
-	bool alreadyChecked = false;
-	m_nCheckedKeysCounter2 = 0;
-	for (int i = 0; i < SUGKEYS; i++)
-	{
-		m_nCheckedKeys2[i] = 0;
-	}
 	m_bLockPrg2 = true;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	m_nPossibleKeyCounter2 = 0;
-	for (int i = 0; i < 255; i++)
-	{
-		m_nInvEntropy2[i] = 0;
-	}
-	for (int i = 0; i <= SUGKEYS + 1; i++)
-	{
-		m_nExaminedKeys2[i] = 0;
-	} 
-	int	e_i;
-	//////*********************
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	for (int i_h = 1; i_h <= m_Table2.NumberOfColumns; i_h++)
-	{
-		m_mapTmpMap2.clear();
-		for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
-		{
-			szdata = "";
-			// Loop through the data and report the contents.
-			szdata += getCellValue2(i_h, i_i);
-			if ((m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end()))
-			{
-				m_mapTmpMap2[szdata] = i_i;
-				m_nInvEntropy2[i_h]++;
-			}
-		}
-	}
-	CalculateEntropyRank(2);
-	///////////********************
-	if (m_Table2.NumberOfRows > 0)
-	{
-		int foundKeysSet2 = 10;
-		while (true)
-		{
-			prgHlpr0 = attempts % 97;
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-				PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
-			}
-			if (is2BExaminedOnce(2, SUGKEYS - 1))  // TODO: allow some zeros
-			{
-				alreadyChecked = getSimilarKeyProbability(2, SUGKEYS);
-				if (!alreadyChecked) foundKeysSet2 = createTempKeyArrays2();
-			}
-			else
-			{
-				foundKeysSet2 = 4; // Low entropy of key indexes
-			}
-			if (foundKeysSet2 == 0)
-			{
-				for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
-				{
-					m_PossibleKeys2[m_nPossibleKeyCounter2].k[tmp_i] = getNthEntropy(2, m_nExaminedKeys2[tmp_i]);
-				}
-				sortExaminedKeys(2);
-				m_nPossibleKeyCounter2++;
-			}
-			if (attempts++ > m_nComplexity || m_nPossibleKeyCounter2 > m_Table2.NumberOfColumns /*( ... 3 - sgn(table2.keys[0]) - sgn(table2.keys[1]) - sgn(table2.keys[2])) */)
-			{
-				break; // quit in any case
-			}
-			e_i = SUGKEYS - 1;
-			while (e_i >= 0)
-			{
-				/* if (table2.keys[e_i])
-				{
-					--e_i;
-				}
-				else */
-				{
-					if (m_nExaminedKeys2[e_i] >= m_Table2.NumberOfColumns)
-					{
-						m_nExaminedKeys2[e_i] = 0;
-						--e_i; // decrement to the previous slot for key-column
-					}
-					else
-					{
-						++m_nExaminedKeys2[e_i];
-						break;
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		MessageBox(CMsg(IDS_NO_SHEET_SELCTD_IN_SCND)); // TODO: CMsg(IDS_NO_SHEET_SELCTD_IN_SCND)
-	}
-	PostMessage(CM_UPDATE_PROGRESS2, 0, 20000);
-	return;
+	m_keyFinder.suggestKeys2();
 }
 
+// (OLD suggestKeys2 body moved to KeyFinder::suggestKeys2)
 
 
 /// <summary>
-/// Creates the temporary key arrays2.
+/// Creates the temporary key arrays2. (Moved to KeyFinder)
 /// </summary>
 /// <returns></returns>
-int CChildView::createTempKeyArrays2()
-{
-	long index[2];
-	COleVariant vData;
-	CString szdata;
-	m_mapTmpMap2.clear();
-	if (sumExaminedKeys(2, SUGKEYS - 1) > 0)
-	{
-		for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
-		{
-			szdata = "";
-			for (int k_i = 0; k_i < SUGKEYS; k_i++)
-			{
-				if (m_nExaminedKeys2[k_i])
-				{
-					// Loop through the data and report the contents.
-					szdata += getCellValue2(getNthEntropy(2, m_nExaminedKeys2[k_i]), i_i);
-				}
-			}
-			if (!(m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end()))
-			{
-				m_mapTmpMap2.clear();
-				return 2;
-			}
-			else
-			{
-				m_mapTmpMap2[szdata] = i_i;
-			}
-		}
-	}
-	else
-	{
-		return 1;
-	}
-	return 0;
-	//search for the next available set of not-examined-yet columns
-}
-
+// int CChildView::createTempKeyArrays2() -- moved to KeyFinder::createTempKeyArrays2()
 
 
 /// <summary>
@@ -3320,16 +3028,7 @@ int CChildView::createTempKeyArrays2()
 /// </summary>
 void CChildView::clearPossibleKeys()
 {
-	for (int i = 0; i < 255; i++)
-	{
-		for (int ii = 0; ii < SUGKEYS; ii++)
-		{
-			m_PossibleKeys1[i].k[ii] = 0;
-			m_PossibleKeys2[i].k[ii] = 0;
-		}
-	}
-	m_nPossibleKeyCounter1 = 0;
-	m_nPossibleKeyCounter2 = 0;
+	m_keyFinder.clearPossibleKeys();
 }
 
 
@@ -3445,9 +3144,7 @@ UINT FindSimsThreadProc2(LPVOID pParam)
 /// <returns></returns>
 bool CChildView::mutualCheck()
 {
-	m_BestKeyComb.pk1 = 0;
-	m_BestKeyComb.pk2 = 0;
-	m_BestKeyComb.rating = 0;
+	m_keyFinder.resetBestKeyComb();
 	int tmpRslt = 0;
 	// Cascade check
 	if (m_pKeyProgressBar1 && m_pKeyProgressBar2)
@@ -3455,17 +3152,17 @@ bool CChildView::mutualCheck()
 		PostMessage(CM_UPDATE_KEYPROGRESS1, 0, 0);
 		PostMessage(CM_UPDATE_KEYPROGRESS2, 0, 0);
 	}
-	if (getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0  && getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
+	if (m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0  && m_keyFinder.getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
 	{
 		MessageBox(CMsg(IDS_NTHR_TBL_KEY_FND)); // CMsg(IDS_NTHR_TBL_KEY_FND)
 		return false;
 	}
-	if (getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0)
+	if (m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0)
 	{
 		MessageBox(CMsg(IDS_NO_KEY_FND_IN_FRST)); // CMsg(IDS_NO_KEY_FND_IN_FRST)
 		return false;
 	}
-	if (getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
+	if (m_keyFinder.getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
 	{
 		MessageBox(CMsg(IDS_NO_KEY_FND_IN_SCND)); // CMsg(IDS_NO_KEY_FND_IN_SCND)
 		return false;
@@ -3474,18 +3171,19 @@ bool CChildView::mutualCheck()
 	m_bLockPrg1 = true;
 	int prgHlpr = 0, prgHlpr0 = 0;
 	int order = 1;
-	while (m_i <= m_nPossibleKeyCounter1 && tmpRslt < 100)
+	int pkCnt1 = m_keyFinder.getPossibleKeyCounter1();
+	while (m_i <= pkCnt1 && tmpRslt < 100)
 	{
-		prgHlpr0 = 100 * m_i / m_nPossibleKeyCounter1;
+		prgHlpr0 = 100 * m_i / (pkCnt1 > 0 ? pkCnt1 : 1);
 		if (prgHlpr0 > prgHlpr)
 		{
 			prgHlpr = prgHlpr0;
 			PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
 			PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
 		}
-		if (getNumberOfPossibleKeys(1, SUGKEYS, m_i) == order)
+		if (m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, m_i) == order)
 		{
-			tmpRslt = checkKeys(m_i);
+			tmpRslt = m_keyFinder.checkKeys(m_i);
 		}
 		else
 		{
@@ -3494,21 +3192,21 @@ bool CChildView::mutualCheck()
 		m_i++;
 	}
 	order++;
-	int maxOrder = getNumberOfPossibleKeys(1, SUGKEYS, (m_nPossibleKeyCounter1 - 1 >= 0 ? m_nPossibleKeyCounter1 - 1 : 0));
+	int maxOrder = m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, (pkCnt1 - 1 >= 0 ? pkCnt1 - 1 : 0));
 	while (tmpRslt < 90 && order <= maxOrder)
 	{
-		while (m_i <= m_nPossibleKeyCounter1 && tmpRslt < 90)
+		while (m_i <= pkCnt1 && tmpRslt < 90)
 		{
-			prgHlpr0 = 100 * m_i / m_nPossibleKeyCounter1;
+			prgHlpr0 = 100 * m_i / (pkCnt1 > 0 ? pkCnt1 : 1);
 			if (prgHlpr0 > prgHlpr)
 			{
 				prgHlpr = prgHlpr0;
 				PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
 				PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
 			}
-			if (getNumberOfPossibleKeys(1, order, m_i) == order)
+			if (m_keyFinder.getNumberOfPossibleKeys(1, order, m_i) == order)
 			{
-				tmpRslt = checkKeys(m_i);
+				tmpRslt = m_keyFinder.checkKeys(m_i);
 			}
 			else
 			{
@@ -3536,89 +3234,11 @@ bool CChildView::mutualCheck()
 /// <returns></returns>
 int CChildView::checkKeys(int tab1)
 {
-	long index[2];
-	COleVariant vData;
-	CString szdata;
 	m_bLockPrg1 = true;
-	int prgHlpr = 0, prgHlpr0 = 0;
-	m_mapTmpMap1.clear();
-	int order1 = getNumberOfPossibleKeys(1, SUGKEYS, tab1);
-	if (order1 > 0)
-	{
-		for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
-		{
-			prgHlpr0 = 100 * i_i / m_Table1.NumberOfRows;
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr );
-				PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
-			}
-			szdata = "";
-			for (int i_j = 0; i_j <= order1; i_j++)
-			{
-				if (m_PossibleKeys1[tab1].k[i_j])
-				{
-					// Loop through the data and report the contents.
-					szdata += getCellValue1(m_PossibleKeys1[tab1].k[i_j], i_i);
-				}
-			}
-			m_mapTmpMap1[szdata] = i_i;
-		}
-	}
-	else
-	{ 
-		return -1;  
-	}
-	int tab2 = 0;
-	while (getNumberOfPossibleKeys(2, SUGKEYS, tab2) < order1)
-	{
-		tab2++;
-	}
-	long rslt = 0;
-	while (getNumberOfPossibleKeys(2, SUGKEYS, tab2) == order1)
-	{
-		long found = 0;
-		for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
-		{
-			prgHlpr0 = 100 * i_i / m_Table2.NumberOfRows;
-			if (prgHlpr0 > prgHlpr)
-			{
-				prgHlpr = prgHlpr0;
-				PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr );
-				PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
-			}
-			szdata = "";
-			for (int i_k = 0; i_k <= order1; i_k++)
-			{
-				if (m_PossibleKeys2[tab2].k[i_k])
-				{
-					// Loop through the data and report the contents.
-					szdata += getCellValue2(m_PossibleKeys2[tab2].k[i_k], i_i);
-				}
-			}
-			if (m_mapTmpMap1.count(szdata))
-			{
-				found++;
-			}
-		}
-		rslt = 100 * found / min(m_Table2.NumberOfRows - m_Table2.FirstRowWithData, m_Table1.NumberOfRows - m_Table1.FirstRowWithData);
-		if (rslt > m_BestKeyComb.rating)
-		{
-			m_BestKeyComb.pk1 = tab1;
-			m_BestKeyComb.pk2 = tab2;
-			m_BestKeyComb.rating = rslt;
-			m_BestKeyComb.cnt = found;
-		}
-		tab2++;
-	}
-	if (m_pKeyProgressBar1 && m_pKeyProgressBar2)
-	{
-		PostMessage(CM_UPDATE_KEYPROGRESS1, 0, 0);
-		PostMessage(CM_UPDATE_KEYPROGRESS2, 0, 0);
-	}
-	return m_BestKeyComb.rating;
+	return m_keyFinder.checkKeys(tab1);
 }
+
+// (OLD checkKeys body moved to KeyFinder::checkKeys)
 
 
 
@@ -3779,12 +3399,15 @@ void CChildView::pushKey(int col1, int col2)
 bool CChildView::usePossibleKeys()
 {
 	deleteAllKeys();
-	int numberOfPossibleKeys = getNumberOfPossibleKeys();
-	for (int tmp_i = 0; tmp_i <= numberOfPossibleKeys; tmp_i++)
+	BestKeyComb best = m_keyFinder.getBestKeyComb();
+	int n = m_keyFinder.getNumberOfPossibleKeys();
+	for (int tmp_i = 0; tmp_i <= n; tmp_i++)
 	{
-		if (m_PossibleKeys1[m_BestKeyComb.pk1].k[tmp_i] + m_PossibleKeys2[m_BestKeyComb.pk2].k[tmp_i])
+		int k1 = m_keyFinder.getPossibleKey1(best.pk1, tmp_i);
+		int k2 = m_keyFinder.getPossibleKey2(best.pk2, tmp_i);
+		if (k1 + k2)
 		{
-			pushKey(m_PossibleKeys1[m_BestKeyComb.pk1].k[tmp_i], m_PossibleKeys2[m_BestKeyComb.pk2].k[tmp_i]);
+			pushKey(k1, k2);
 		}
 	}
 	return false;
@@ -3798,14 +3421,7 @@ bool CChildView::usePossibleKeys()
 /// <returns></returns>
 int CChildView::getNumberOfPossibleKeys()
 {
-	for (int tmp_i = 1; tmp_i < 255; tmp_i++)
-	{
-		if (m_PossibleKeys1[m_BestKeyComb.pk1].k[tmp_i] == 0 && m_PossibleKeys2[m_BestKeyComb.pk2].k[tmp_i] == 0)
-		{
-			return tmp_i;
-		}
-	}
-	return 0;
+	return m_keyFinder.getNumberOfPossibleKeys();
 }
 
 
@@ -3814,302 +3430,13 @@ int CChildView::getNumberOfPossibleKeys()
 /// Sorts the examined keys.
 /// </summary>
 /// <param name="table">The table.</param>
-void CChildView::sortExaminedKeys(int table)
-{
-	int nonzerosNr = 0;
-	if (table == 1)
-	{
-		for (int i_i = 0; i_i < SUGKEYS; i_i++)
-		{
-			if (m_PossibleKeys1[m_nPossibleKeyCounter1].k[i_i] > 0 && nonzerosNr < i_i)
-			{
-				m_PossibleKeys1[m_nPossibleKeyCounter1].k[nonzerosNr] = m_PossibleKeys1[m_nPossibleKeyCounter1].k[i_i];
-				m_PossibleKeys1[m_nPossibleKeyCounter1].k[i_i] = 0;
-				nonzerosNr++;
-			}
-		}
-	}
-	else
-	{
-		for (int i_i = 0; i_i < SUGKEYS; i_i++)
-		{
-			if (m_PossibleKeys2[m_nPossibleKeyCounter2].k[i_i] > 0 && nonzerosNr < i_i)
-			{
-				m_PossibleKeys2[m_nPossibleKeyCounter2].k[nonzerosNr] = m_PossibleKeys2[m_nPossibleKeyCounter2].k[i_i];
-				m_PossibleKeys2[m_nPossibleKeyCounter2].k[i_i] = 0;
-				nonzerosNr++;
-			}
-		}
-	}
-// return nonzerosNr;
-}
-
-
-
-/// <summary>
-/// Sums the examined keys.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="nmax">The nmax.</param>
-/// <returns></returns>
-int CChildView::sumExaminedKeys(int table, int nmax)
-{
-	int rslt = 0;
-	if (table == 1)
-	{
-		for (int tmp_i = 0; tmp_i <= nmax; tmp_i++)
-		{
-			rslt += m_nExaminedKeys1[tmp_i];
-		}
-	}
-	else
-	{
-		for (int tmp_i = 0; tmp_i <= nmax; tmp_i++)
-		{
-			rslt += m_nExaminedKeys2[tmp_i];
-		}
-	}
-	return rslt;
-}
-
-
-
-/// <summary>
-/// Is2s the b examined once.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="max">The maximum.</param>
-/// <returns></returns>
-bool CChildView::is2BExaminedOnce(int table, int max)
-{
-	if (table == 1)
-	{
-		for (int tmp_i0 = 0; tmp_i0 <= max; tmp_i0++)
-		{
-			if (m_nExaminedKeys1[tmp_i0] > 0)
-			{
-				for (int tmp_i1 = tmp_i0 + 1; tmp_i1 <= max; tmp_i1++)
-				{
-					if (m_nExaminedKeys1[tmp_i0] == m_nExaminedKeys1[tmp_i1])
-					{
-						return false;
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		for (int tmp_i0 = 0; tmp_i0 <= max; tmp_i0++)
-		{
-			if (m_nExaminedKeys2[tmp_i0] > 0)
-			{
-				for (int tmp_i1 = tmp_i0 + 1; tmp_i1 <= max; tmp_i1++)
-				{
-					if (m_nExaminedKeys2[tmp_i0] == m_nExaminedKeys2[tmp_i1])
-					{
-						return false;
-					}
-				}
-			}
-		}
-	}
-	return true;
-}
-
-
-
-/// <summary>
-/// Gets the similar key probability.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="max">The maximum.</param>
-/// <returns></returns>
-bool CChildView::getSimilarKeyProbability(int table, int max)
-{
-	int similarKeyProbab = 0;
-	int tmpa[SUGKEYS];
-	unsigned long long ullTest = 0;
-	if (table == 1)
-	{
-		for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
-		{
-			if (m_nExaminedKeys1[tmp_i])
-			{
-				ullTest += pow(2, m_nExaminedKeys1[tmp_i]);
-			}
-		}
-		for (int tmp_i0 = 0; tmp_i0 <= m_nCheckedKeysCounter1; tmp_i0++)
-		{
-			if (m_nCheckedKeys1[tmp_i0] == ullTest)
-			{
-				return true;
-			}
-		}
-		if (m_nCheckedKeysCounter1 < m_nComplexity)
-		{
-			m_nCheckedKeys1[m_nCheckedKeysCounter1] = ullTest;
-			m_nCheckedKeysCounter1++;
-		}
-		else
-		{
-			return true;
-		}
-	}
-	else
-	{
-		for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
-		{
-			if (m_nExaminedKeys2[tmp_i])
-			{
-				ullTest += pow(2, m_nExaminedKeys2[tmp_i]);
-			}
-		}
-		for (int tmp_i0 = 0; tmp_i0 <= m_nCheckedKeysCounter2; tmp_i0++)
-		{
-			if (m_nCheckedKeys2[tmp_i0] == ullTest)
-			{
-				return true;
-			}
-		}
-		if (m_nCheckedKeysCounter2 < m_nComplexity)
-		{
-			m_nCheckedKeys2[m_nCheckedKeysCounter2] = ullTest;
-			m_nCheckedKeysCounter2++;
-		}
-		else
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-
-
-/// <summary>
-/// Gets the entropy.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="n">The n.</param>
-/// <returns></returns>
-int CChildView::getNthEntropy(int table, int n)
-{
-	if (table == 1)
-	{
-		return m_nSortedEntropy1[n];
-	}
-	else
-	{
-		return m_nSortedEntropy2[n];
-	}
-	return 0;
-}
-
-
-
-/// <summary>
-/// Calculates the entropy rank.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <returns></returns>
-int CChildView::CalculateEntropyRank(int table)
-{
-	int hlpr_index;
-	int hlpr_value;
-	int lasthlpr_value = 0;
-	int stored = 0;
-	int i2 = 0;
-	i2 = 1;
-	if (table == 1)
-	{
-		for (int i0 = 0; i0 < 255; i0++)
-		{
-			m_nSortedEntropy1[i0] = 0;
-		}
-		while (stored < m_Table1.NumberOfColumns)
-		{
-			hlpr_index = 0;
-			hlpr_value = 0;
-			for (int i1 = 1; i1 <= m_Table1.NumberOfColumns; i1++)
-			{
-				if (m_nInvEntropy1[i1] >= hlpr_value && !isEntropyStored(1, i1, stored))
-				{
-					hlpr_value = m_nInvEntropy1[i1];
-					hlpr_index = i1;
-				}
-			}
-			if (hlpr_index > 0)
-			{
-				stored++;
-				m_nSortedEntropy1[stored] = hlpr_index;
-			}
-		}
-	}
-	else
-	{
-		for (int i0 = 0; i0 < 255; i0++)
-		{
-			m_nSortedEntropy2[i0] = 0;
-		}
-		while (stored < m_Table2.NumberOfColumns)
-		{
-			hlpr_index = 0;
-			hlpr_value = 0;
-			for (int i2 = 1; i2 <= m_Table2.NumberOfColumns; i2++)
-			{
-				if (m_nInvEntropy2[i2] >= hlpr_value && !isEntropyStored(2, i2, stored))
-				{
-					hlpr_value = m_nInvEntropy2[i2];
-					hlpr_index = i2;
-				}
-			}
-			if (hlpr_index > 0)
-			{
-				stored++;
-				m_nSortedEntropy2[stored] = hlpr_index;
-			}
-		}
-	}
-	return 0;
-}
-
-
-
-/// <summary>
-/// Determines whether [is entropy stored] [the specified table].
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="clm">The CLM.</param>
-/// <param name="max">The maximum.</param>
-/// <returns>
-///   <c>true</c> if [is entropy stored] [the specified table]; otherwise, <c>false</c>.
-/// </returns>
-bool CChildView::isEntropyStored(int table, int clm, int max)
-{
-	if (table == 1)
-	{
-		for (int i = 1; i <= max; i++)
-		{
-			if (m_nSortedEntropy1[i] == clm)
-			{
-				return true;
-			}
-		}
-	}
-	else
-	{
-		for (int i = 1; i <= max; i++)
-		{
-			if (m_nSortedEntropy2[i] == clm)
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
+// void CChildView::sortExaminedKeys() -- moved to KeyFinder
+// int  CChildView::sumExaminedKeys()  -- moved to KeyFinder
+// bool CChildView::is2BExaminedOnce() -- moved to KeyFinder
+// bool CChildView::getSimilarKeyProbability() -- moved to KeyFinder
+// int  CChildView::getNthEntropy()    -- moved to KeyFinder
+// int  CChildView::CalculateEntropyRank() -- moved to KeyFinder
+// bool CChildView::isEntropyStored()  -- moved to KeyFinder
 
 
 /// <summary>
@@ -4137,9 +3464,11 @@ void CChildView::OnUpdateCombo2(CCmdUI* pCmdUI)
 /// </summary>
 void CChildView::OnCombo2()
 {
-	if (m_pCombo2->GetCurSel() == 0) m_nComplexity = 10000;
-	if (m_pCombo2->GetCurSel() == 1) m_nComplexity = 100000;
-	if (m_pCombo2->GetCurSel() == 2) m_nComplexity = 1000000;
+	int complexity = 100000;
+	if (m_pCombo2->GetCurSel() == 0) complexity = 10000;
+	if (m_pCombo2->GetCurSel() == 1) complexity = 100000;
+	if (m_pCombo2->GetCurSel() == 2) complexity = 1000000;
+	m_keyFinder.setComplexity(complexity);
 }
 
 
@@ -4161,22 +3490,7 @@ void CChildView::OnCombo2()
 /// <returns></returns>
 int CChildView::getNumberOfPossibleKeys(int table, int order, int item)
 {
-	int cnt = 0;
-	if (table == 1)
-	{
-		for (int i = 0; i < order; i++)
-		{
-			cnt += sgn(m_PossibleKeys1[item].k[i]);
-		}
-	}
-	else
-	{
-		for (int i = 0; i < order; i++)
-		{
-			cnt += sgn(m_PossibleKeys2[item].k[i]);
-		}
-	}
-	return cnt;
+	return m_keyFinder.getNumberOfPossibleKeys(table, order, item);
 }
 
 
