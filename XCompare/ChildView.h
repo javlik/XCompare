@@ -102,12 +102,6 @@ public:
 	int createKeyArrays2();
 	bool checkKeysUniqueness1();
 	bool checkKeysUniqueness2();
-	int mxGet(int x, int y);
-	void mxClear(int x, int y);
-	int mxPut(int x, int y);
-	bool mxMarkedGet(int x, int y);
-	CString getCellValue1(int column, int row);
-	CString getCellValue2(int column, int row);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnSlider2();
 	afx_msg void OnUpdateSlider2(CCmdUI *pCmdUI);
@@ -148,8 +142,6 @@ public:
 	afx_msg void OnUpdateButton3(CCmdUI *pCmdUI);
 	afx_msg void OnCheck3();
 	afx_msg void OnUpdateCheck3(CCmdUI *pCmdUI);
-	void makePrereq1(); // delegates to m_engine
-	void makePrereq2(); // delegates to m_engine
 	void resolveAutoMark();
 	void DrainMsgQueue(void);
 	afx_msg void OnDiffslist();

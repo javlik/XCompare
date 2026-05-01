@@ -342,7 +342,7 @@ void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
 		dc.SetBkMode(TRANSPARENT);
 		if (M_CCell.x <= ctx.bnd_X_max && M_CCell.y <= ctx.bnd_Y_max)
 		{
-			long sameness = mxGet(M_CCell.x, M_CCell.y);
+			long sameness = m_matrix.get(M_CCell.x, M_CCell.y);
 			if (m_Table1.Columns[M_CCell.y] == m_Table2.Columns[M_CCell.x] && sameness < m_nEffMax)
 				dc.SetTextColor(RGB(255, 0, 0));
 			else
@@ -638,7 +638,7 @@ void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
 					dc.SelectObject(ctx.pen2);
 					mx_y_adj = mx_y + m_VisTopLeft.top;
 					mx_x_adj = mx_x + m_VisTopLeft.left;
-					valSimil = mxGet(mx_x_adj, mx_y_adj) * 100 / m_nEffMax;
+					valSimil = m_matrix.get(mx_x_adj, mx_y_adj) * 100 / m_nEffMax;
 					strSimil.Format(L"%i", valSimil);
 					strSimil += L"%";
 					dc.SetBkMode(OPAQUE);
@@ -691,7 +691,7 @@ void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
 					}
 					dc.Rectangle(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y);
 					dc.SetBkMode(TRANSPARENT);
-					if (mxMarkedGet(mx_x_adj, mx_y_adj))
+					if (m_matrix.isMarked(mx_x_adj, mx_y_adj))
 					{
 						dc.SelectObject(ctx.pen4);
 						dc.MoveTo(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y);
@@ -852,7 +852,7 @@ void CChildView::OnPickFirstFile()
 	m_nUiToBeRefreshed = 3;
 	if (m_nNatrixDone > 0)
 	{
-		mxClear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
+		m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
 		m_nNatrixDone = 0;
 		m_OldCell.x = 0;
 		m_OldCell.y = 0;
@@ -929,7 +929,7 @@ void CChildView::OnPickSecondFile()
 	m_nUiToBeRefreshed = 3;
 	if (m_nNatrixDone > 0)
 	{
-		mxClear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
+		m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
 		m_nNatrixDone = 0;
 	}
 	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED)); // CMsg(IDS_FILE_SUCCESFULLY_LOADED)
@@ -1297,7 +1297,7 @@ void CChildView::OnPickFirstSheet()
 		deleteAllKeys();
 		if (m_nNatrixDone > 0)
 		{
-			mxClear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
+			m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
 			m_nNatrixDone = 0;
 			m_OldCell.x = 0;
 			m_OldCell.y = 0;
@@ -1384,7 +1384,7 @@ void CChildView::updateCombos1()
 	for (int i = 1; i <= m_Table1.NumberOfColumns; i++)
 	{
 		// Loop through the data and report the contents.
-		szdata = getCellValue1(i, m_Table1.RowWithNames);
+		szdata = m_excel1.getCellValue(i, m_Table1.RowWithNames);
 		if (szdata == "") szdata = CMsg(IDS_NO_NAME);
 		for (int i1 = 1; i1 < i; i1++)
 		{
@@ -1447,7 +1447,7 @@ void CChildView::OnPickSecondSheet()
 		deleteAllKeys();
 		if (m_nNatrixDone > 0)
 		{
-			mxClear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
+			m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
 			m_nNatrixDone = 0;
 			m_OldCell.x = 0;
 			m_OldCell.y = 0;
@@ -1475,7 +1475,7 @@ void CChildView::updateCombos2()
 	COleVariant vData;
 	for (int i = 1; i <= m_Table2.NumberOfColumns; i++)
 	{
-		szdata = getCellValue2(i, m_Table2.RowWithNames);
+		szdata = m_excel2.getCellValue(i, m_Table2.RowWithNames);
 		if (szdata == "") szdata = CMsg(IDS_NO_NAME);
 		for (int i1 = 1; i1 < i; i1++)
 		{
@@ -1587,57 +1587,6 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 
 
-/// <summary>
-/// Clears a value in the main matrix.
-/// </summary>
-/// <param name="x">The x.</param>
-/// <param name="y">The y.</param>
-void CChildView::mxClear(int x, int y)
-{
-	m_matrix.clear(x, y);
-}
-
-
-
-/// <summary>
-/// Puts a value in the main matrix.
-/// </summary>
-/// <param name="x">The x.</param>
-/// <param name="y">The y.</param>
-/// <returns></returns>
-int CChildView::mxPut(int x, int y)
-{
-	m_matrix.increment(x, y);
-	return 0;
-}
-
-
-
-/// <summary>
-/// Gets a value from main matrix.
-/// </summary>
-/// <param name="x">The x.</param>
-/// <param name="y">The y.</param>
-/// <returns></returns>
-int CChildView::mxGet(int x, int y)
-{
-	return m_matrix.get(x, y);
-}
-
-
-
-/// <summary>
-/// Gets marked cells in main matrix.
-/// </summary>
-/// <param name="x">The x.</param>
-/// <param name="y">The y.</param>
-/// <returns></returns>
-bool CChildView::mxMarkedGet(int x, int y)
-{
-	return m_matrix.isMarked(x, y);
-}
-
-
 
 /// <summary>
 /// Checks the emptiness1.
@@ -1718,32 +1667,6 @@ int CChildView::createKeyArrays2()
 	int result = m_engine.createKeyArrays2();
 	m_bLockPrg2 = false;
 	return result;
-}
-
-
-
-/// <summary>
-/// Gets the cell value1.
-/// </summary>
-/// <param name="column">The column.</param>
-/// <param name="row">The row.</param>
-/// <returns></returns>
-CString CChildView::getCellValue1(int column, int row)
-{
-	return m_excel1.getCellValue(column, row);
-}
-
-
-
-/// <summary>
-/// Gets the cell value2.
-/// </summary>
-/// <param name="column">The column.</param>
-/// <param name="row">The row.</param>
-/// <returns></returns>
-CString CChildView::getCellValue2(int column, int row)
-{
-	return m_excel2.getCellValue(column, row);
 }
 
 
@@ -1939,7 +1862,7 @@ void CChildView::OnButton2()
 	}
 /*	if (bestKeyComb.rating)
 	{
-		MessageBox(L"Vhodná kombinace klíčů již byla nalezena"); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
+		MessageBox(L"Vhodn� kombinace kl��� ji� byla nalezena"); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
 		return;
 	}  */
 	if (m_Table1.NumberOfColumns * m_Table2.NumberOfColumns)
@@ -2157,7 +2080,7 @@ void CChildView::OnCheck2()
 void CChildView::OnUpdateButton2(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
-	//pCmdUI->SetText(m_bUseIndexes ? L"Sestavit klíč" : L"Najít klíč");
+	//pCmdUI->SetText(m_bUseIndexes ? L"Sestavit kl��" : L"Naj�t kl��");
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pButton2 = DYNAMIC_DOWNCAST(CMFCRibbonButton, m_pRibbon->FindByID(ID_BUTTON2));
 }
@@ -2390,11 +2313,11 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 					{
 						fndDfrnc1 = L"";
 						fndDfrnc1.Format(L"(1r%i):", i1);
-						fndDfrnc1 += getCellValue1(m_nOldy, i1);
+						fndDfrnc1 += m_excel1.getCellValue(m_nOldy, i1);
 						fndDfrnc1 = fndDfrnc1.Left(26);
 						fndDfrnc2 = L"";
 						fndDfrnc2.Format(L"   (2r%i):", dfrncRow2);
-						fndDfrnc2 += getCellValue2(m_nOldx, dfrncRow2);
+						fndDfrnc2 += m_excel2.getCellValue(m_nOldx, dfrncRow2);
 						fndDfrnc2 = fndDfrnc2.Left(26);
 						selKey = L"";
 						selKey.Format(L"%s%s   (key): %s", fndDfrnc1, fndDfrnc2, m_engine.getKeyStr1(i1));
@@ -2577,7 +2500,7 @@ UINT CreateKeys2ThreadProc(LPVOID pParam)
 UINT makePrereq1ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
-	pWnd->makePrereq1();
+	pWnd->m_engine.makePrereq1();
 	AfxEndThread(0);
 	return 0;
 }
@@ -2592,7 +2515,7 @@ UINT makePrereq1ThreadProc(LPVOID pParam)
 UINT makePrereq2ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
-	pWnd->makePrereq2();
+	pWnd->m_engine.makePrereq2();
 	AfxEndThread(0);
 	return 0;
 }
@@ -2656,7 +2579,7 @@ void CChildView::markInFiles()
 		m_engine.getMap1().GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
 		if (m_engine.getMap2().Lookup(concatenatedKey1, (long&)keyRow2))
 		{
-			if (!(getCellValue1(cy, keyRow1) == getCellValue2(cx, keyRow2)))
+			if (!(m_excel1.getCellValue(cy, keyRow1) == m_excel2.getCellValue(cx, keyRow2)))
 			{
 				m_pnFoundDifferences[keyRow1] = keyRow2;
 				if (m_bIn1file) m_pbMarkIn1Arr[keyRow1] = true; //markIn1(i1, cy);
@@ -2736,26 +2659,6 @@ void CChildView::OnUpdateCheck3(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
 	pCmdUI->SetCheck(m_bAutoMark);
-}
-
-
-
-/// <summary>
-/// Makes the prereq1.
-/// </summary>
-void CChildView::makePrereq1()
-{
-	m_engine.makePrereq1();
-}
-
-
-
-/// <summary>
-/// Makes the prereq2.
-/// </summary>
-void CChildView::makePrereq2()
-{
-	m_engine.makePrereq2();
 }
 
 
@@ -3570,7 +3473,7 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 		m_mapTmpMap1.clear();
 		for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
 		{
-			szdata = getCellValue1(c_i1, r_i1);
+			szdata = m_excel1.getCellValue(c_i1, r_i1);
 			if ((szdata != L"") && (m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
 			{
 				m_mapTmpMap1[szdata] = r_i1;
@@ -3582,7 +3485,7 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 			m_mapTmpMap2.clear();
 			for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
 			{
-				szdata = getCellValue2(c_i2, r_i2);
+				szdata = m_excel2.getCellValue(c_i2, r_i2);
 				if ((szdata != L"") && (m_mapTmpMap1.find(szdata) != m_mapTmpMap1.end()))
 				{		
 					if (m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end())
@@ -3682,7 +3585,7 @@ void CChildView::findSims1()
 		thdSafe_tmpMap1.clear();
 		for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
 		{
-			szdata = getCellValue1(c_i1, r_i1);
+			szdata = m_excel1.getCellValue(c_i1, r_i1);
 			if (szdata != L"")
 			{
 				if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
@@ -3700,7 +3603,7 @@ void CChildView::findSims1()
 			thdSafe_tmpMap2.clear();
 			for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
 			{
-				szdata = getCellValue2(c_i2, r_i2);
+				szdata = m_excel2.getCellValue(c_i2, r_i2);
 				if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
 				{
 					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
