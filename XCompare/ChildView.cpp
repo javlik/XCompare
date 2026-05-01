@@ -1277,10 +1277,9 @@ void CChildView::OnPickFirstSheet()
 			M_CCell.x = 0;
 			M_CCell.y = 0;
 		}
-		HWND hWnd0 = this->GetSafeHwnd();
 		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
 		m_engine.setTables(m_Table1, m_Table2);
-		AfxBeginThread(makePrereq1ThreadProc, hWnd0);
+		AfxBeginThread(makePrereq1ThreadProc, this);
 	}
 }
 
@@ -1431,10 +1430,9 @@ void CChildView::OnPickSecondSheet()
 		updateCombos2();
 		this->Invalidate();
 		m_nNatrixDone = false;
-		HWND hWnd0 = this->GetSafeHwnd();
 		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
 		m_engine.setTables(m_Table1, m_Table2);
-		AfxBeginThread(makePrereq2ThreadProc, hWnd0);
+		AfxBeginThread(makePrereq2ThreadProc, this);
 	}
 }
 
@@ -2559,8 +2557,7 @@ UINT CreateKeys2ThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT makePrereq1ThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->makePrereq1();
 	AfxEndThread(0);
 	return 0;
@@ -2575,8 +2572,7 @@ UINT makePrereq1ThreadProc(LPVOID pParam)
 /// <returns></returns>
 UINT makePrereq2ThreadProc(LPVOID pParam)
 {
-	HWND hWnd1 = (HWND)pParam;
-	CChildView* pWnd = (CChildView*)CWnd::FromHandle(hWnd1);
+	CChildView* pWnd = static_cast<CChildView*>(pParam);
 	pWnd->makePrereq2();
 	AfxEndThread(0);
 	return 0;
