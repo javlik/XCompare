@@ -1,14 +1,4 @@
-// This MFC Samples source code demonstrates using MFC Microsoft Office Fluent User Interface 
-// (the "Fluent UI") and is provided only as referential material to supplement the 
-// Microsoft Foundation Classes Reference and related electronic documentation 
-// included with the MFC C++ library software.  
-// License terms to copy, use or distribute the Fluent UI are available separately.  
-// To learn more about our Fluent UI licensing program, please visit 
-// http://go.microsoft.com/fwlink/?LinkId=238214.
-//
-// Copyright (C) Microsoft Corporation
-// All rights reserved.
-
+// This file declares the CChildView class, which is responsible for the main application window's client area.
 // ChildView.h : interface of the CChildView class
 //
 
@@ -287,7 +277,6 @@ private:
 	// UI state
 	int   m_nUiToBeRefreshed;
 	float m_fZoom;
-	int   m_nPrgval1;
 
 	// Ribbon UI element pointers
 	CMFCRibbonProgressBar* m_pProgressBar1;

@@ -69,8 +69,6 @@ CChildView::CChildView()
 	m_szFilename2 = "";
 	m_nUiToBeRefreshed = 3;
 	m_fZoom = 100;
-	m_nPrgval1 = 100; // just for test
-				   //CMFCRibbonBar* pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar(); // in the constructor is too early
 	// ExcelConnector instances (m_excel1, m_excel2) initialise themselves in their own constructors
 	// m_nCheckedKeys1/2, entropy and possible-keys state are now inside m_keyFinder
 	// Members that were zero-initialised as globals but not yet in constructor
@@ -129,7 +127,10 @@ CChildView::CChildView()
 	m_Table2.NumberOfColumns = 0;
 	for (int i = 0; i < 256; i++)
 	{
-		m_SimsPens[i].CreatePen(PS_ENDCAP_FLAT, (i) / 32 + 0.5,  RGB((255 - i) / 1.5 + 40, (255 - i) / 1.5 + 40, (255 - i) / 1.5 + 40));
+		m_SimsPens[i].CreatePen(PS_ENDCAP_FLAT, static_cast<int>(i / 32 + 0.5),
+			RGB(static_cast<int>((255 - i) / 1.5 + 40), 
+				static_cast<int>((255 - i) / 1.5 + 40), 
+				static_cast<int>((255 - i) / 1.5 + 40)));
 	}
 	m_KeyCurvePen.CreatePen(PS_ENDCAP_FLAT, 2, RGB(100, 150, 250));
 	m_bUseIndexes = false;
@@ -140,7 +141,6 @@ CChildView::CChildView()
 }
 
 
-
 /// <summary>
 /// Finalizes an instance of the <see cref="CChildView"/> class.
 /// </summary>
@@ -148,7 +148,6 @@ CChildView::~CChildView()
 {
 	// Dynamic arrays (std::vector) release memory automatically.
 }
-
 
 
 BEGIN_MESSAGE_MAP(CChildView, CWnd)
@@ -235,7 +234,6 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 END_MESSAGE_MAP()
 
 
-
 // CChildView message handlers
 /// <summary>
 /// Pre-creates window.
@@ -256,7 +254,6 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 	GetSystemInfo(&sysinfo);
 	return TRUE;
 }
-
 
 
 /// <summary>
@@ -331,7 +328,6 @@ ctx.bnd_Y_max = m_Table1.NumberOfColumns;
 }
 
 
-
 void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
 {
 	dc.SelectObject(ctx.font4);
@@ -394,7 +390,6 @@ void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
 }
 
 
-
 void CChildView::paintGridLines(CDC& dc, PaintCtx& ctx)
 {
 	dc.SelectObject(ctx.brush0);
@@ -416,7 +411,6 @@ void CChildView::paintGridLines(CDC& dc, PaintCtx& ctx)
 	dc.SelectObject(ctx.pen2);
 	dc.SelectObject(ctx.brush1);
 }
-
 
 
 void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
@@ -518,7 +512,6 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
 }
 
 
-
 void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 {
 	int mx_x_adj;
@@ -616,7 +609,6 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 		dc.TextOutW(OFFSET_X + 5 + mx_x * STEP_X, -2 + OFFSET_Y + STEP_Y, m_Table2.Columns[mx_x_adj]);
 	}
 }
-
 
 
 void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
@@ -739,7 +731,6 @@ void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
 }
 
 
-
 void CChildView::paintSimilarityLines(CDC& dc, PaintCtx& ctx)
 {
 	if (m_bToDisplaySimilarClms)
@@ -784,7 +775,6 @@ void CChildView::paintSimilarityLines(CDC& dc, PaintCtx& ctx)
 		}
 	}
 }
-
 
 
 /// <summary>
@@ -863,7 +853,6 @@ void CChildView::OnPickFirstFile()
 }
 
 
-
 /// <summary>
 /// Called when [pick second file].
 /// </summary>
@@ -938,7 +927,6 @@ void CChildView::OnPickSecondFile()
 }
 
 
-
 /// <summary>
 /// Called when [create matrix].
 /// </summary>
@@ -967,7 +955,6 @@ void CChildView::OnCreateMatrix()
 }
 
 
-
 /// <summary>
 /// Called when [update pick first sheet].
 /// </summary>
@@ -978,7 +965,6 @@ void CChildView::OnUpdatePickFirstSheet(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pSheetCombo1 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, m_pRibbon->FindByID(ID_PICK_FIRST_SHEET));
 }
-
 
 
 /// <summary>
@@ -1005,7 +991,6 @@ void CChildView::OnUpdateCreateMatrix(CCmdUI* pCmdUI)
 		if (m_nUiToBeRefreshed > 0) m_nUiToBeRefreshed -= 1;
 	}
 }
-
 
 
 /// <summary>
@@ -1035,7 +1020,6 @@ void CChildView::OnUpdateFilename1(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [update filename2].
 /// </summary>
@@ -1061,7 +1045,6 @@ void CChildView::OnUpdateFilename2(CCmdUI* pCmdUI)
 		if (m_nUiToBeRefreshed > 0) m_nUiToBeRefreshed -= 1;
 	}
 }
-
 
 
 /// <summary>
@@ -1103,7 +1086,6 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 }
 
 
-
 /// <summary>
 /// Called when [update pick second sheet].
 /// </summary>
@@ -1116,7 +1098,6 @@ void CChildView::OnUpdatePickSecondSheet(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [update progress1].
 /// </summary>
@@ -1126,7 +1107,6 @@ void CChildView::OnUpdateProgress1(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pProgressBar1 = DYNAMIC_DOWNCAST(CMFCRibbonProgressBar, m_pRibbon->FindByID(ID_PROGRESS2));
 }
-
 
 
 /// <summary>
@@ -1187,7 +1167,6 @@ void CChildView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 }
 
 
-
 /// <summary>
 /// Called when [h scroll].
 /// </summary>
@@ -1242,11 +1221,6 @@ void CChildView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		this->Invalidate();
 	}
 }
-
-
-
-
-
 
 
 /// <summary>
@@ -1311,7 +1285,6 @@ void CChildView::OnPickFirstSheet()
 }
 
 
-
 /// <summary>
 /// Called when [spin1 names].
 /// </summary>
@@ -1329,7 +1302,6 @@ void CChildView::OnSpin1Names()
 }
 
 
-
 /// <summary>
 /// Called when [update spin1 names].
 /// </summary>
@@ -1342,7 +1314,6 @@ void CChildView::OnUpdateSpin1Names(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [update spin1 fdata].
 /// </summary>
@@ -1353,7 +1324,6 @@ void CChildView::OnUpdateSpin1Fdata(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pSpinner1_Fdata = DYNAMIC_DOWNCAST(CMFCRibbonEdit, m_pRibbon->FindByID(ID_SPIN1_FDATA));
 }
-
 
 
 /// <summary>
@@ -1372,13 +1342,11 @@ void CChildView::OnSpin1Fdata()
 }
 
 
-
 /// <summary>
 /// Updates the combos1.
 /// </summary>
 void CChildView::updateCombos1()
 {
-	long index[2];
 	CString szdata;
 	COleVariant vData;
 	for (int i = 1; i <= m_Table1.NumberOfColumns; i++)
@@ -1399,7 +1367,6 @@ void CChildView::updateCombos1()
 		m_Table1.Columns[i] = szdata;
 	}
 }
-
 
 
 /// <summary>
@@ -1464,13 +1431,11 @@ void CChildView::OnPickSecondSheet()
 }
 
 
-
 /// <summary>
 /// Updates the combos2.
 /// </summary>
 void CChildView::updateCombos2()
 {
-	long index[2];
 	CString szdata;
 	COleVariant vData;
 	for (int i = 1; i <= m_Table2.NumberOfColumns; i++)
@@ -1492,7 +1457,6 @@ void CChildView::updateCombos2()
 }
 
 
-
 /// <summary>
 /// Called when [update spin2 fdata].
 /// </summary>
@@ -1503,7 +1467,6 @@ void CChildView::OnUpdateSpin2Fdata(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pSpinner2_Fdata = DYNAMIC_DOWNCAST(CMFCRibbonEdit, m_pRibbon->FindByID(ID_SPIN2_FDATA));
 }
-
 
 
 /// <summary>
@@ -1522,8 +1485,6 @@ void CChildView::OnSpin2Fdata()
 }
 
 
-
-
 /// <summary>
 /// Called when [update spin2 names].
 /// </summary>
@@ -1534,7 +1495,6 @@ void CChildView::OnUpdateSpin2Names(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pSpinner2_Names = DYNAMIC_DOWNCAST(CMFCRibbonEdit, m_pRibbon->FindByID(ID_SPIN2_NAMES));
 }
-
 
 
 /// <summary>
@@ -1552,14 +1512,6 @@ void CChildView::OnSpin2Names()
 	updateCombos2();
 	this->Invalidate();
 }
-
-
-
-/// <summary>
-/// Makes the character arr1.
-/// </summary>
-
-
 
 
 /// <summary>
@@ -1586,15 +1538,6 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 }
 
 
-
-
-/// <summary>
-/// Checks the emptiness1.
-/// </summary>
-
-
-
-
 /// <summary>
 /// Checks the keys uniqueness1.
 /// </summary>
@@ -1608,7 +1551,6 @@ bool CChildView::checkKeysUniqueness1()
 }
 
 
-
 /// <summary>
 /// Checks the keys uniqueness2.
 /// </summary>
@@ -1620,7 +1562,6 @@ bool CChildView::checkKeysUniqueness2()
 	m_bLockPrg2 = false;
 	return result;
 }
-
 
 
 /// <summary>
@@ -1638,7 +1579,6 @@ void CChildView::firstPass()
 }
 
 
-
 /// <summary>
 /// Creates the key arrays1.
 /// </summary>
@@ -1654,7 +1594,6 @@ int CChildView::createKeyArrays1()
 }
 
 
-
 /// <summary>
 /// Creates the key arrays2.
 /// </summary>
@@ -1668,7 +1607,6 @@ int CChildView::createKeyArrays2()
 	m_bLockPrg2 = false;
 	return result;
 }
-
 
 
 /// <summary>
@@ -1771,7 +1709,6 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 }
 
 
-
 /// <summary>
 /// Called when [slider2].
 /// </summary>
@@ -1788,7 +1725,6 @@ void CChildView::OnSlider2()
 }
 
 
-
 /// <summary>
 /// Called when [update slider2].
 /// </summary>
@@ -1802,7 +1738,6 @@ void CChildView::OnUpdateSlider2(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [check4].
 /// </summary>
@@ -1810,7 +1745,6 @@ void CChildView::OnCheck4()
 {
 	m_bIn1file = !m_bIn1file;
 }
-
 
 
 /// <summary>
@@ -1826,7 +1760,6 @@ void CChildView::OnUpdateCheck4(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [check5].
 /// </summary>
@@ -1834,7 +1767,6 @@ void CChildView::OnCheck5()
 {
 	m_bIn2file = !m_bIn2file;
 }
-
 
 
 /// <summary>
@@ -1848,7 +1780,6 @@ void CChildView::OnUpdateCheck5(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pMarkIn2 = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_CHECK5));
 }
-
 
 
 /// <summary>
@@ -1882,7 +1813,6 @@ void CChildView::OnButton2()
 }
 
 
-
 /// <summary>
 /// Converts the r1 c1.
 /// </summary>
@@ -1905,7 +1835,6 @@ CString CChildView::convertR1C1(int row, int clm)
 }
 
 
-
 /// <summary>
 /// Marks a difference in the XLS(X) file.
 /// </summary>
@@ -1918,7 +1847,6 @@ void CChildView::markIn1(int row, int clm)
 }
 
 
-
 /// <summary>
 /// Marks a difference in the XLS(X) file.
 /// </summary>
@@ -1929,7 +1857,6 @@ void CChildView::markIn2(int row, int clm)
 	CString cnv = convertR1C1(row, clm);
 	m_excel2.markCellRange(cnv, cnv, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
 }
-
 
 
 /// <summary>
@@ -1948,7 +1875,6 @@ void CChildView::initScrollBars()
 	//ScrollInfo.nTrackPos = 0;                   // immediate position of a scroll box
 	this->SetScrollInfo(SB_HORZ, &ScrollInfo);
 }
-
 
 
 /// <summary>
@@ -2011,7 +1937,6 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 }
 
 
-
 /// <summary>
 /// Called when [create].
 /// </summary>
@@ -2034,7 +1959,6 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 }
 
 
-
 /// <summary>
 /// Called when [update progress2].
 /// </summary>
@@ -2049,7 +1973,6 @@ void CChildView::OnUpdateProgress2(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [update check2].
 /// </summary>
@@ -2062,7 +1985,6 @@ void CChildView::OnUpdateCheck2(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [check2].
 /// </summary>
@@ -2070,7 +1992,6 @@ void CChildView::OnCheck2()
 {
 	m_bVerifyKeys = !m_bVerifyKeys;
 }
-
 
 
 /// <summary>
@@ -2084,7 +2005,6 @@ void CChildView::OnUpdateButton2(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pButton2 = DYNAMIC_DOWNCAST(CMFCRibbonButton, m_pRibbon->FindByID(ID_BUTTON2));
 }
-
 
 
 /// <summary>
@@ -2105,7 +2025,6 @@ void CChildView::OnCheck7()
 }
 
 
-
 /// <summary>
 /// Called when [update check7].
 /// </summary>
@@ -2116,7 +2035,6 @@ void CChildView::OnUpdateCheck7(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pSameNames = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_CHECK7));
 }
-
 
 
 /// <summary>
@@ -2131,7 +2049,6 @@ UINT MyThreadProc(LPVOID pParam)
 	AfxEndThread(0);
 	return 0;
 }
-
 
 
 /// <summary>
@@ -2216,7 +2133,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 }
 
 
-
 /// <summary>
 /// Called when [cm update progress2].
 /// </summary>
@@ -2267,7 +2183,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
-
 
 
 /// <summary>
@@ -2407,7 +2322,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 }
 
 
-
 /// <summary>
 /// Mies the thread proc2.
 /// </summary>
@@ -2437,7 +2351,6 @@ UINT MyThreadProc2(LPVOID pParam)
 }
 
 
-
 /// <summary>
 /// Creates the keys1 thread proc.
 /// </summary>
@@ -2462,7 +2375,6 @@ UINT CreateKeys1ThreadProc(LPVOID pParam)
 	AfxEndThread(0);
 	return 0;
 }
-
 
 
 /// <summary>
@@ -2491,7 +2403,6 @@ UINT CreateKeys2ThreadProc(LPVOID pParam)
 }
 
 
-
 /// <summary>
 /// Makes the prereq1 thread proc.
 /// </summary>
@@ -2504,7 +2415,6 @@ UINT makePrereq1ThreadProc(LPVOID pParam)
 	AfxEndThread(0);
 	return 0;
 }
-
 
 
 /// <summary>
@@ -2521,7 +2431,6 @@ UINT makePrereq2ThreadProc(LPVOID pParam)
 }
 
 
-
 /// <summary>
 /// Mies the thread proc3.
 /// </summary>
@@ -2534,7 +2443,6 @@ UINT MyThreadProc3(LPVOID pParam)
 	AfxEndThread(0);
 	return 0;
 }
-
 
 
 /// <summary>
@@ -2592,7 +2500,6 @@ void CChildView::markInFiles()
 }
 
 
-
 /// <summary>
 /// Called when [button5].
 /// </summary>
@@ -2601,7 +2508,6 @@ void CChildView::OnButton5()
 	COLORREF i = (int)m_pColorPicker1->GetSelectedItem();
 	m_nChosenColor1 = i;
 }
-
 
 
 /// <summary>
@@ -2616,7 +2522,6 @@ void CChildView::OnUpdateButton5(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [button3].
 /// </summary>
@@ -2625,7 +2530,6 @@ void CChildView::OnButton3()
 	COLORREF i = (int)m_pColorPicker2->GetSelectedItem();
 	m_nChosenColor2 = i;
 }
-
 
 
 /// <summary>
@@ -2640,7 +2544,6 @@ void CChildView::OnUpdateButton3(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [check3].
 /// </summary>
@@ -2648,7 +2551,6 @@ void CChildView::OnCheck3()
 {
 	m_bAutoMark = !m_bAutoMark;
 }
-
 
 
 /// <summary>
@@ -2660,7 +2562,6 @@ void CChildView::OnUpdateCheck3(CCmdUI* pCmdUI)
 	pCmdUI->Enable(true);
 	pCmdUI->SetCheck(m_bAutoMark);
 }
-
 
 
 /// <summary>
@@ -2799,7 +2700,6 @@ void CChildView::resolveAutoMark()
 }
 
 
-
 /// <summary>
 /// Drain the MSG queue. // TODO explain
 /// </summary>
@@ -2809,7 +2709,6 @@ void CChildView::DrainMsgQueue(void)
 	HWND hWnd = this->GetSafeHwnd();
 	while (PeekMessage(&msg, hWnd, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE));
 }
-
 
 
 /// <summary>
@@ -2829,7 +2728,6 @@ void CChildView::OnUpdateDiffslist(CCmdUI* pCmdUI)
 {
 	// there is no required answer for this event - at least for now
 }
-
 
 
 /// <summary>
@@ -2856,7 +2754,6 @@ void CChildView::OnSel1()
 }
 
 
-
 /// <summary>
 /// gets row from combo.
 /// </summary>
@@ -2878,7 +2775,6 @@ int CChildView::rowFromCombo()
 	}
 	return 0;
 }
-
 
 
 /// <summary>
@@ -2906,7 +2802,6 @@ void CChildView::OnButton6()
 }
 
 
-
 /// <summary>
 /// Called when [put2front].
 /// </summary>
@@ -2914,7 +2809,6 @@ void CChildView::OnPut2front()
 {
 	m_bToFront = !m_bToFront;
 }
-
 
 
 /// <summary>
@@ -2927,7 +2821,6 @@ void CChildView::OnUpdatePut2front(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Suggests the keys1.
 /// </summary>
@@ -2936,16 +2829,6 @@ void CChildView::suggestKeys1()
 	m_bLockPrg1 = true;
 	m_keyFinder.suggestKeys1();
 }
-
-// (OLD suggestKeys1 body moved to KeyFinder::suggestKeys1)
-
-
-
-/// <summary>
-/// Creates the temporary key arrays1. (Moved to KeyFinder)
-/// </summary>
-/// <returns></returns>
-// int CChildView::createTempKeyArrays1() -- moved to KeyFinder::createTempKeyArrays1()
 
 
 /// <summary>
@@ -2957,15 +2840,6 @@ void CChildView::suggestKeys2()
 	m_keyFinder.suggestKeys2();
 }
 
-// (OLD suggestKeys2 body moved to KeyFinder::suggestKeys2)
-
-
-/// <summary>
-/// Creates the temporary key arrays2. (Moved to KeyFinder)
-/// </summary>
-/// <returns></returns>
-// int CChildView::createTempKeyArrays2() -- moved to KeyFinder::createTempKeyArrays2()
-
 
 /// <summary>
 /// Clears the possible keys.
@@ -2974,7 +2848,6 @@ void CChildView::clearPossibleKeys()
 {
 	m_keyFinder.clearPossibleKeys();
 }
-
 
 
 /// <summary>
@@ -2991,7 +2864,6 @@ inline void CChildView::sort3(int& a, int& b, int& c)
 }
 
 
-
 /// <summary>
 /// Suggests the keys1 thread proc.
 /// </summary>
@@ -3004,7 +2876,6 @@ UINT SuggestKeys1ThreadProc(LPVOID pParam)
 	AfxEndThread(0);
 	return 0;
 }
-
 
 
 /// <summary>
@@ -3021,7 +2892,6 @@ UINT SuggestKeys2ThreadProc(LPVOID pParam)
 }
 
 
-
 /// <summary>
 /// Mutuals the check thread proc.
 /// </summary>
@@ -3034,7 +2904,6 @@ UINT MutualCheckThreadProc(LPVOID pParam)
 	AfxEndThread(0);
 	return 0;
 }
-
 
 
 /// <summary>
@@ -3051,7 +2920,6 @@ UINT FindSimsThreadProc(LPVOID pParam)
 }
 
 
-
 /// <summary>
 /// Finds the sims thread proc1.
 /// </summary>
@@ -3066,7 +2934,6 @@ UINT FindSimsThreadProc1(LPVOID pParam)
 }
 
 
-
 /// <summary>
 /// Finds the sims thread proc2.
 /// </summary>
@@ -3079,7 +2946,6 @@ UINT FindSimsThreadProc2(LPVOID pParam)
 	AfxEndThread(0);
 	return 0;
 }
-
 
 
 /// <summary>
@@ -3162,13 +3028,12 @@ bool CChildView::mutualCheck()
 	}
 	if (tmpRslt)
 	{
-		PostMessage(CM_UPDATE_PROGRESS, 0, 1e5);
+		PostMessage(CM_UPDATE_PROGRESS, 0, static_cast<LPARAM>(1e5));
 		return true;
 	}
-	PostMessage(CM_UPDATE_PROGRESS, 0, 2e5);
+	PostMessage(CM_UPDATE_PROGRESS, 0, static_cast<LPARAM>(2e5));
 	return false;
 }
-
 
 
 /// <summary>
@@ -3181,9 +3046,6 @@ int CChildView::checkKeys(int tab1)
 	m_bLockPrg1 = true;
 	return m_keyFinder.checkKeys(tab1);
 }
-
-// (OLD checkKeys body moved to KeyFinder::checkKeys)
-
 
 
 /// <summary>
@@ -3198,7 +3060,6 @@ int CChildView::deleteKey(int table, int column)
 }
 
 
-
 /// <summary>
 /// Sets the key.
 /// </summary>
@@ -3208,7 +3069,6 @@ void CChildView::setKey(int table, int column)
 {
 	m_engine.setNthKey(m_engine.getKeyPairCounter(), table == 1 ? column : 0, table == 2 ? column : 0);
 }
-
 
 
 /// <summary>
@@ -3224,7 +3084,6 @@ void CChildView::deleteAllKeys()
 }
 
 
-
 /// <summary>
 /// Determines whether there any keys.
 /// </summary>
@@ -3233,7 +3092,6 @@ bool CChildView::areThereAnyKeys()
 {
 	return m_engine.areThereAnyKeys();
 }
-
 
 
 /// <summary>
@@ -3250,7 +3108,6 @@ bool CChildView::isThisAKey(int table, int column)
 }
 
 
-
 /// <summary>
 /// Gets the key.
 /// </summary>
@@ -3261,7 +3118,6 @@ int CChildView::getNthKey(int table, int key)
 {
 	return m_engine.getNthKey(table, key);
 }
-
 
 
 /// <summary>
@@ -3286,7 +3142,6 @@ void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 }
 
 
-
 /// <summary>
 /// Sets the NTH key.
 /// </summary>
@@ -3297,7 +3152,6 @@ void CChildView::setNthKey(int n, int col1, int col2)
 {
 	m_engine.setNthKey(n, col1, col2);
 }
-
 
 
 /// <summary>
@@ -3312,7 +3166,6 @@ void CChildView::insertKeyAt(int n, int col1, int col2)
 }
 
 
-
 /// <summary>
 /// Deletes the key at position.
 /// </summary>
@@ -3321,7 +3174,6 @@ void CChildView::deleteKeyAt(int n)
 {
 	m_engine.deleteKeyAt(n);
 }
-
 
 
 /// <summary>
@@ -3333,7 +3185,6 @@ void CChildView::pushKey(int col1, int col2)
 {
 	m_engine.pushKey(col1, col2);
 }
-
 
 
 /// <summary>
@@ -3358,7 +3209,6 @@ bool CChildView::usePossibleKeys()
 }
 
 
-
 /// <summary>
 /// Gets the number of possible keys.
 /// </summary>
@@ -3367,20 +3217,6 @@ int CChildView::getNumberOfPossibleKeys()
 {
 	return m_keyFinder.getNumberOfPossibleKeys();
 }
-
-
-
-/// <summary>
-/// Sorts the examined keys.
-/// </summary>
-/// <param name="table">The table.</param>
-// void CChildView::sortExaminedKeys() -- moved to KeyFinder
-// int  CChildView::sumExaminedKeys()  -- moved to KeyFinder
-// bool CChildView::is2BExaminedOnce() -- moved to KeyFinder
-// bool CChildView::getSimilarKeyProbability() -- moved to KeyFinder
-// int  CChildView::getNthEntropy()    -- moved to KeyFinder
-// int  CChildView::CalculateEntropyRank() -- moved to KeyFinder
-// bool CChildView::isEntropyStored()  -- moved to KeyFinder
 
 
 /// <summary>
@@ -3402,7 +3238,6 @@ void CChildView::OnUpdateCombo2(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [combo2].
 /// </summary>
@@ -3414,15 +3249,6 @@ void CChildView::OnCombo2()
 	if (m_pCombo2->GetCurSel() == 2) complexity = 1000000;
 	m_keyFinder.setComplexity(complexity);
 }
-
-
-
-//int CChildView::getPossibleKeyReadiness(int table, int order)
-//{
-//
-//	return 0;
-//}
-
 
 
 /// <summary>
@@ -3438,13 +3264,11 @@ int CChildView::getNumberOfPossibleKeys(int table, int order, int item)
 }
 
 
-
 /// <summary>
 /// Finds the sims.
 /// </summary>
 void CChildView::findSims() // do not use in case there is a sufficient RAM capacity
 {
-	long index[2];
 	COleVariant vData;
 	CString szdata;
 	long tmpSim;
@@ -3545,13 +3369,11 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 }
 
 
-
 /// <summary>
 /// Finds the sims1.
 /// </summary>
 void CChildView::findSims1()
 {
-	long index[2];
 	COleVariant vData;
 	CString szdata;
 	long long tmpSim;
@@ -3673,13 +3495,11 @@ void CChildView::findSims1()
 }
 
 
-
 /// <summary>
 /// Finds the sims2.
 /// </summary>
 void CChildView::findSims2()
 {
-	long index[2];
 	COleVariant vData;
 	CString szdata;
 	long long tmpSim;
@@ -3800,7 +3620,6 @@ void CChildView::findSims2()
 }
 
 
-
 /// <summary>
 /// Called when [similarpaircheckbox].
 /// </summary>
@@ -3819,7 +3638,6 @@ void CChildView::OnSimilarpaircheckbox()
 }
 
 
-
 /// <summary>
 /// Called when [update similarpaircheckbox].
 /// </summary>
@@ -3831,7 +3649,6 @@ void CChildView::OnUpdateSimilarpaircheckbox(CCmdUI* pCmdUI)
 	m_pShowSims = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_SIMILARPAIRCHECKBOX));
 	pCmdUI->SetCheck(m_bToDisplaySimilarClms);
 }
-
 
 
 /// <summary>
@@ -3875,14 +3692,12 @@ void CChildView::OnFindrelBtn()
 }
 
 
-
 /// <summary>
 /// Called when [idxcrt BTN].
 /// </summary>
 void CChildView::OnIdxcrtBtn()
 {
 }
-
 
 
 /// <summary>
@@ -3913,7 +3728,6 @@ afx_msg LRESULT CChildView::OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam)
 }
 
 
-
 /// <summary>
 /// Called when [cm update key progress2].
 /// </summary>
@@ -3942,7 +3756,6 @@ afx_msg LRESULT CChildView::OnCmUpdateKeyProgress2(WPARAM wParam, LPARAM lParam)
 }
 
 
-
 /// <summary>
 /// Called when [update key progress1].
 /// </summary>
@@ -3954,7 +3767,6 @@ void CChildView::OnUpdateKeyProgress1(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [update key progress2].
 /// </summary>
@@ -3964,7 +3776,6 @@ void CChildView::OnUpdateKeyProgress2(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pKeyProgressBar2 = DYNAMIC_DOWNCAST(CMFCRibbonProgressBar, m_pRibbon->FindByID(ID_KEY_PROGRESS2));
 }
-
 
 
 /// <summary>
@@ -4017,7 +3828,6 @@ void CChildView::finishFindRelations()
 }
 
 
-
 /// <summary>
 /// Called when [update index checkbox].
 /// </summary>
@@ -4028,7 +3838,6 @@ void CChildView::OnUpdateIdxCheckbox(CCmdUI* pCmdUI)
 	m_pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_IDX_CHECKBOX));
 	pCmdUI->SetCheck(m_bUseIndexes);
 }
-
 
 
 /// <summary>
@@ -4054,7 +3863,6 @@ int CChildView::ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos)
 }
 
 
-
 /// <summary>
 /// Called when [check index].
 /// </summary>
@@ -4063,7 +3871,6 @@ void CChildView::OnCheckIdx()
 	m_bUseIndexes = !m_bUseIndexes;
 	m_engine.m_bUseIndexes = m_bUseIndexes;
 }
-
 
 
 /// <summary>
@@ -4078,7 +3885,6 @@ void CChildView::OnUpdateCheckIdx(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [usidx check].
 /// </summary>
@@ -4088,7 +3894,6 @@ void CChildView::OnUsidxCheck()
 	m_engine.m_bUseIndexes = m_bUseIndexes;
 	if (m_bUseIndexes) MessageBox(CMsg(IDS_IDXING_WARNING)); // CMsg(IDS_IDXING_WARNING)
 }
-
 
 
 /// <summary>
@@ -4103,7 +3908,6 @@ void CChildView::OnUpdateUsidxCheck(CCmdUI* pCmdUI)
 }
 
 
-
 /// <summary>
 /// Called when [update rows1].
 /// </summary>
@@ -4114,7 +3918,6 @@ void CChildView::OnUpdateRows1(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pRows1 = DYNAMIC_DOWNCAST(CMFCRibbonEdit, m_pRibbon->FindByID(ID_ROWS1));
 }
-
 
 
 /// <summary>
@@ -4137,7 +3940,6 @@ void CChildView::OnRows1()
 }
 
 
-
 /// <summary>
 /// Called when [update cols1].
 /// </summary>
@@ -4148,7 +3950,6 @@ void CChildView::OnUpdateCols1(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pCols1 = DYNAMIC_DOWNCAST(CMFCRibbonEdit, m_pRibbon->FindByID(ID_COLS1));
 }
-
 
 
 /// <summary>
@@ -4171,7 +3972,6 @@ void CChildView::OnCols1()
 }
 
 
-
 /// <summary>
 /// Called when [update rows2].
 /// </summary>
@@ -4182,7 +3982,6 @@ void CChildView::OnUpdateRows2(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pRows2 = DYNAMIC_DOWNCAST(CMFCRibbonEdit, m_pRibbon->FindByID(ID_ROWS2));
 }
-
 
 
 /// <summary>
@@ -4205,7 +4004,6 @@ void CChildView::OnRows2()
 }
 
 
-
 /// <summary>
 /// Called when [update cols2].
 /// </summary>
@@ -4216,7 +4014,6 @@ void CChildView::OnUpdateCols2(CCmdUI* pCmdUI)
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	m_pCols2 = DYNAMIC_DOWNCAST(CMFCRibbonEdit, m_pRibbon->FindByID(ID_COLS2));
 }
-
 
 
 /// <summary>

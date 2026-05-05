@@ -13,9 +13,9 @@
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
-#[Rr]elease/
+[Rr]elease/
 [Rr]eleases/
-#[Xx]64/
+[Xx]64/
 [Xx]86/
 #[Bb]uild/
 bld/
@@ -243,3 +243,27 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# build files
+*.tlog
+*.iobj
+*.ipdb
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+*.exe
