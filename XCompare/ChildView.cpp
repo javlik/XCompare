@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <cstring>
 #include <map>
 #include <vector>
@@ -3152,137 +3152,16 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 
 
 /// <summary>
-/// Finds the sims1.
+/// Shared similarity computation for a range of table-1 columns.
+/// Called by findSims1 (first half) and findSims2 (second half, uses cached values).
 /// </summary>
-void CChildView::findSims1()
+void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, LPARAM doneValue, bool useTmp)
 {
-	long index[2];
-	COleVariant vData;
 	CString szdata;
 	long long tmpSim;
 	int prgHlpr0, prgHlpr;
 	prgHlpr = prgHlpr0 = 0;
-	std::map<CString, long> thdSafe_tmpMap1; // searching for appropriate keys
-	std::map<CString, long> thdSafe_tmpMap2;
-	//typedef	std::map<CString, long>::iterator Iterator;
-	CString what = L"";
-	long occurence1 = 0;
-	long occurence2 = 0;
-	long size1 = 0;
-	long size2 = 0;
-	long minsize = 0;
-	long maxsize = 0;
-	double tmpUnitSim = 0.f;
-	long tmp_varRat = 0;
-	long sim = 0;
-	long sumOccurence1 = 0;
-	long sumOccurence2 = 0;
-	long pureSim;
-	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
-	for (int c_i1 = 1; c_i1 <= tmp_bnd_hlf; c_i1++)
-	{
-		prgHlpr0 = 100 * c_i1 / tmp_bnd_hlf; // only 3 keys
-		if (prgHlpr0 > prgHlpr)
-		{
-			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
-		}
-		thdSafe_tmpMap1.clear();
-		for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
-		{
-			szdata = m_excel1.getCellValue(c_i1, r_i1);
-			if (szdata != L"")
-			{
-				if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
-				{
-					thdSafe_tmpMap1[szdata] = 1;
-				}
-				else
-				{
-					thdSafe_tmpMap1[szdata] = thdSafe_tmpMap1[szdata] + 1;
-				}
-			}
-		}
-		for (int c_i2 = 1; c_i2 <= m_Table2.NumberOfColumns; c_i2++)
-		{
-			thdSafe_tmpMap2.clear();
-			for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
-			{
-				szdata = m_excel2.getCellValue(c_i2, r_i2);
-				if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
-				{
-					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
-					{
-						thdSafe_tmpMap2[szdata] = 1;
-						//tmpSim++;
-					}
-					else
-					{
-						thdSafe_tmpMap2[szdata] = thdSafe_tmpMap2[szdata] + 1;
-					}
-				}
-			}
-			sumOccurence1 = sumOccurence2 = 0;
-			tmpSim = 0;
-			for (auto iterator: thdSafe_tmpMap1)
-			{
-				what = iterator.first;
-				occurence1 = iterator.second;
-				sumOccurence1 += occurence1;
-				occurence2 = 0;
-				if (thdSafe_tmpMap2.find(what) != thdSafe_tmpMap2.end())
-				{
-					occurence2 = thdSafe_tmpMap2[what];
-					sumOccurence2 += occurence2;
-					tmpUnitSim = max(occurence1, occurence2) - min(occurence1, occurence2);
-					tmpSim += (tmpUnitSim);
-				}
-			}
-			sim = tmpSim;
-			size1 = m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1; //size1 = thdSafe_tmpMap1.size();
-			size2 = m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1; //size2 = thdSafe_tmpMap2.size();
-			minsize = min(size1, size2);
-			minsize = minsize ? minsize : 1;
-			maxsize = max(size1, size2);
-			{
-				tmp_varRat = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
-				if (tmp_varRat)
-				{
-					tmp_varRat = tmp_varRat ? tmp_varRat : 1;
-					tmp_varRat = (minsize < tmp_varRat ? 1 : minsize / tmp_varRat);
-					sim = (minsize - sim) / tmp_varRat + 1;
-				}
-				if (sim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
-				{
-					sim = 1;
-				}
-			}
-			pureSim = (maxsize - abs(sumOccurence2 - sumOccurence1)) - tmpSim;
-			if (pureSim > m_vecSimilaritiesAcrossTables[c_i1].pureSim && sim > 0)
-			{
-				m_vecSimilaritiesAcrossTables[c_i1].similarity = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
-				m_vecSimilaritiesAcrossTables[c_i1].clm1 = c_i1;
-				m_vecSimilaritiesAcrossTables[c_i1].clm2 = c_i2;
-				m_vecSimilaritiesAcrossTables[c_i1].pureSim = pureSim;
-			}
-		}
-	}
-	PostMessage(CM_UPDATE_KEYPROGRESS1, 0, 1000);
-	return;
-}
-
-
-/// <summary>
-/// Finds the sims2.
-/// </summary>
-void CChildView::findSims2()
-{
-	COleVariant vData;
-	CString szdata;
-	long long tmpSim;
-	int prgHlpr0, prgHlpr;
-	prgHlpr = prgHlpr0 = 0;
-	std::map<CString, long> thdSafe_tmpMap1; // searching for appropriate keys
+	std::map<CString, long> thdSafe_tmpMap1;
 	std::map<CString, long> thdSafe_tmpMap2;
 	CString what = L"";
 	long occurence1 = 0;
@@ -3297,29 +3176,26 @@ void CChildView::findSims2()
 	long sumOccurence1 = 0;
 	long sumOccurence2 = 0;
 	long pureSim;
-	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
-	for (int c_i1 = m_Table1.NumberOfColumns - tmp_bnd_hlf; c_i1 <= m_Table1.NumberOfColumns; c_i1++)
+	int rangeSize = c_i1_end - c_i1_start;
+	rangeSize = rangeSize ? rangeSize : 1;
+	for (int c_i1 = c_i1_start; c_i1 <= c_i1_end; c_i1++)
 	{
-		prgHlpr0 = 100 * (c_i1 - tmp_bnd_hlf) / (m_Table1.NumberOfColumns - tmp_bnd_hlf); // only 3 keys
+		prgHlpr0 = 100 * (c_i1 - c_i1_start) / rangeSize;
 		if (prgHlpr0 > prgHlpr)
 		{
 			prgHlpr = prgHlpr0;
-			PostMessage(CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
+			PostMessage(progressMsg, 0, prgHlpr);
 		}
 		thdSafe_tmpMap1.clear();
 		for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
 		{
-			szdata = m_excel1.getTmpCellValue(c_i1, r_i1);
+			szdata = useTmp ? m_excel1.getTmpCellValue(c_i1, r_i1) : m_excel1.getCellValue(c_i1, r_i1);
 			if (szdata != L"")
 			{
 				if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
-				{
 					thdSafe_tmpMap1[szdata] = 1;
-				}
 				else
-				{
 					thdSafe_tmpMap1[szdata] = thdSafe_tmpMap1[szdata] + 1;
-				}
 			}
 		}
 		for (int c_i2 = 1; c_i2 <= m_Table2.NumberOfColumns; c_i2++)
@@ -3327,22 +3203,18 @@ void CChildView::findSims2()
 			thdSafe_tmpMap2.clear();
 			for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
 			{
-				szdata = m_excel2.getTmpCellValue(c_i2, r_i2);
+				szdata = useTmp ? m_excel2.getTmpCellValue(c_i2, r_i2) : m_excel2.getCellValue(c_i2, r_i2);
 				if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
 				{
 					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
-					{
 						thdSafe_tmpMap2[szdata] = 1;
-					}
 					else
-					{
 						thdSafe_tmpMap2[szdata] = thdSafe_tmpMap2[szdata] + 1;
-					}
 				}
 			}
 			sumOccurence1 = sumOccurence2 = 0;
 			tmpSim = 0;
-			for (auto iterator: thdSafe_tmpMap1)
+			for (auto iterator : thdSafe_tmpMap1)
 			{
 				what = iterator.first;
 				occurence1 = iterator.second;
@@ -3385,8 +3257,28 @@ void CChildView::findSims2()
 			}
 		}
 	}
-	PostMessage(CM_UPDATE_KEYPROGRESS2, 0, 2000);
-	return;
+	PostMessage(progressMsg, 0, doneValue);
+}
+
+
+/// <summary>
+/// Finds the sims1 (first half of table-1 columns, live Excel values).
+/// </summary>
+void CChildView::findSims1()
+{
+	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
+	findSimsRange(1, tmp_bnd_hlf, CM_UPDATE_KEYPROGRESS1, 1000, false);
+}
+
+
+/// <summary>
+/// Finds the sims2 (second half of table-1 columns, cached Excel values).
+/// </summary>
+void CChildView::findSims2()
+{
+	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
+	findSimsRange(m_Table1.NumberOfColumns - tmp_bnd_hlf, m_Table1.NumberOfColumns,
+	              CM_UPDATE_KEYPROGRESS2, 2000, true);
 }
 
 

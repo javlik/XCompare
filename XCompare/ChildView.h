@@ -156,6 +156,7 @@ private:
 	int createTempKeyArrays2(); // kept as shell (body moved to KeyFinder)
 	void clearPossibleKeys();
 	void sort3(int & a, int & b, int & c);
+	void findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, LPARAM doneValue, bool useTmp);
 public:
 	bool mutualCheck();
 	void deleteAllKeys();
