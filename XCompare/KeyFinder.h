@@ -127,7 +127,7 @@ public:
         {
             ::MessageBox(m_hWnd, CMsg(IDS_NO_SHEET_SELCTD_IN_FRST), nullptr, MB_OK);
         }
-        ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, 10000);
+        ::PostMessage(m_hWnd, CM_GATHERING1_DONE, 0, 0);
     }
 
     void suggestKeys2()
@@ -211,7 +211,7 @@ public:
         {
             ::MessageBox(m_hWnd, CMsg(IDS_NO_SHEET_SELCTD_IN_SCND), nullptr, MB_OK);
         }
-        ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, 20000);
+        ::PostMessage(m_hWnd, CM_GATHERING2_DONE, 0, 0);
     }
 
     // --- Support methods called from CChildView ---

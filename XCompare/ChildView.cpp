@@ -197,6 +197,16 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_MESSAGE(CM_UPDATE_PROGRESS3, &CChildView::OnCmUpdateProgress3)
 	ON_MESSAGE(CM_UPDATE_KEYPROGRESS1, &CChildView::OnCmUpdateKeyProgress1)
 	ON_MESSAGE(CM_UPDATE_KEYPROGRESS2, &CChildView::OnCmUpdateKeyProgress2)
+	ON_MESSAGE(CM_KEYS1_DONE, &CChildView::OnCmKeys1Done)
+	ON_MESSAGE(CM_KEYS2_DONE, &CChildView::OnCmKeys2Done)
+	ON_MESSAGE(CM_GATHERING1_DONE, &CChildView::OnCmGathering1Done)
+	ON_MESSAGE(CM_GATHERING2_DONE, &CChildView::OnCmGathering2Done)
+	ON_MESSAGE(CM_KEYS_FOUND, &CChildView::OnCmKeysFound)
+	ON_MESSAGE(CM_KEYS_NOT_FOUND, &CChildView::OnCmKeysNotFound)
+	ON_MESSAGE(CM_MARKING_READY, &CChildView::OnCmMarkingReady)
+	ON_MESSAGE(CM_SIMS1_DONE, &CChildView::OnCmSims1Done)
+	ON_MESSAGE(CM_SIMS2_DONE, &CChildView::OnCmSims2Done)
+	ON_MESSAGE(CM_FIRSTPASS_DONE, &CChildView::OnCmFirstPassDone)
 	//ON_COMMAND(ID_PROGRESS2, &CChildView::OnProgress2)
 	ON_COMMAND(ID_BUTTON5, &CChildView::OnButton5)
 	ON_UPDATE_COMMAND_UI(ID_BUTTON5, &CChildView::OnUpdateButton5)
@@ -1968,60 +1978,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 			resolveAutoMark();
 			if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
 		}
-		if ((UINT)lParam == 1000)
-		{
-			if (m_bWaitingForKeys)
-			{
-				m_bKeys1done = true;
-				if (m_bKeys2done)
-				{
-					m_bWaitingForKeys = false;
-					m_bKeys1done = false;
-					m_bKeys2done = false;
-					AfxBeginThread(MyThreadProc, this);
-					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
-				}
-			}
-			else
-			{
-				if (m_nEffMax)
-				{
-					m_szRsltTxt.Format(CMsg(IDS_FOUND_KEYS_FROM_TOTAL), m_nEffMax, (m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1), (m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1)); // CMsg(IDS_FOUND_KEYS_FROM_TOTAL)
-					if (g_pMainFrame) g_pMainFrame->updateStatusBar(m_szRsltTxt);
-				}
-			}
-		}
-		if ((UINT)lParam == 10000)
-		{
-			if (m_bWaitingForKeys)
-			{
-				m_bKeysGathering1done = true;
-				if (m_bKeysGathering2done)
-				{
-					m_bWaitingForKeys = false;
-					m_bKeysGathering1done = false;
-					m_bKeysGathering2done = false;
-					AfxBeginThread(MutualCheckThreadProc, this);
-					BeginWaitCursor();
-					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));
-				}
-			}
-		}
-		if ((UINT)lParam == 100000)
-		{
-			m_bWaitingForKeys = false;
-			usePossibleKeys();	
-			CString tmpS;
-			tmpS.Format(CMsg(IDS_KEY_COMB_FOUND), m_keyFinder.getBestKeyComb().cnt); // CMsg(IDS_KEY_COMB_FOUND)
-			MessageBox(tmpS);
-			EndWaitCursor();
-		}
-		if ((UINT)lParam == 200000)
-		{
-			m_bWaitingForKeys = false;
-			MessageBox(CMsg(IDS_INCOMPATBL_KEY_FOUND)); // CMsg(IDS_INCOMPATBL_KEY_FOUND)
-			EndWaitCursor();
-		}
 	}
 	else
 	{
@@ -2043,37 +1999,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 	{
 		m_pProgressBar2->SetPos(0);
 		m_bLockPrg2 = false;
-		if ((UINT)lParam == 1000)
-		{
-			this->Invalidate();
-			if (m_bWaitingForKeys)
-			{
-				m_bKeys2done = true;
-				if (m_bKeys1done)
-				{
-					m_bWaitingForKeys = false;
-					m_bKeys1done = false;
-					m_bKeys2done = false;
-					AfxBeginThread(MyThreadProc, this);
-					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
-				}
-			}
-		}
-		if ((UINT)lParam == 20000)
-		{
-			if (m_bWaitingForKeys)
-			{
-				m_bKeysGathering2done = true;
-				if (m_bKeysGathering1done)
-				{
-					m_bWaitingForKeys = false;
-					m_bKeysGathering1done = false;
-					m_bKeysGathering2done = false;
-					AfxBeginThread(MutualCheckThreadProc, this);
-					if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
-				}
-			}
-		}
 	}
 	else
 	{
@@ -2091,6 +2016,16 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 /// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 {
+	m_pProgressBar1->SetPos((UINT)lParam);
+	return 0;
+}
+
+
+/// <summary>
+/// Called when markInFiles completes: post-processes marking results in the UI thread.
+/// </summary>
+afx_msg LRESULT CChildView::OnCmMarkingReady(WPARAM wParam, LPARAM lParam)
+{
 	HWND hWnd = this->GetSafeHwnd();
 	long nor;
 	int prgHlpr, prgHlpr0;
@@ -2102,120 +2037,113 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 	CString temps = L"";
 	CString starts = L"";
 	CString ends = L"";
-	if ((UINT)lParam >100)
+	BeginWaitCursor();
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));  // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
+	m_pProgressBar1->SetPos(0);
+	m_pFoundDifferences->RemoveAllItems();
+	m_pFoundDifferences->SetEditText(L"");
 	{
-		BeginWaitCursor();
-		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));  // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
-		m_pProgressBar1->SetPos(0);
-		m_pFoundDifferences->RemoveAllItems();
-		m_pFoundDifferences->SetEditText(L"");
+		nor = m_Table1.NumberOfRows + 1;
+		for (int i1 = 1; i1 < nor; i1++)
 		{
-			nor = m_Table1.NumberOfRows + 1;
-			for (int i1 = 1; i1 < nor; i1++)
+			prgHlpr = (i1 * 100) / nor;
+			if (prgHlpr > prgHlpr0)
 			{
-				prgHlpr = (i1 * 100) / nor;
-				if (prgHlpr > prgHlpr0)
+				SendMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
+				prgHlpr0 = prgHlpr;
+			}
+			dfrncRow2 = m_pnFoundDifferences[i1];
+			if (dfrncRow2 > 0)
+			{
+				if (++dfrnCntr < 500)
 				{
-					SendMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-					prgHlpr0 = prgHlpr;
-				}
-				dfrncRow2 = m_pnFoundDifferences[i1];
-				if (dfrncRow2 > 0)
-				{
-					if (++dfrnCntr < 500)
-					{
-						fndDfrnc1 = L"";
-						fndDfrnc1.Format(L"(1r%i):", i1);
-						fndDfrnc1 += m_excel1.getCellValue(m_nOldy, i1);
-						fndDfrnc1 = fndDfrnc1.Left(26);
-						fndDfrnc2 = L"";
-						fndDfrnc2.Format(L"   (2r%i):", dfrncRow2);
-						fndDfrnc2 += m_excel2.getCellValue(m_nOldx, dfrncRow2);
-						fndDfrnc2 = fndDfrnc2.Left(26);
-						selKey = L"";
-						selKey.Format(L"%s%s   (key): %s", fndDfrnc1, fndDfrnc2, m_engine.getKeyStr1(i1));
-						fndDfrnc = selKey.Left(54);
-						//fndDfrnc = fndDfrnc1 + fndDfrnc2 + selKey;
-						m_pFoundDifferences->AddItem((LPCTSTR)fndDfrnc);
-					}
-				}
-				if (m_bIn1file)
-				{
-					if (m_pbMarkIn1Arr[i1])
-					{
-						if (starts == L"")
-						{
-							starts = convertR1C1(i1, m_nOldy);
-						}
-						ends = convertR1C1(i1, m_nOldy);
-					}
-					else
-					{
-						if (!(starts == L"") && !(ends == L""))
-						{
-							m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
-							starts = L"";
-							ends = L"";
-						}
-					}
+					fndDfrnc1 = L"";
+					fndDfrnc1.Format(L"(1r%i):", i1);
+					fndDfrnc1 += m_excel1.getCellValue(m_nOldy, i1);
+					fndDfrnc1 = fndDfrnc1.Left(26);
+					fndDfrnc2 = L"";
+					fndDfrnc2.Format(L"   (2r%i):", dfrncRow2);
+					fndDfrnc2 += m_excel2.getCellValue(m_nOldx, dfrncRow2);
+					fndDfrnc2 = fndDfrnc2.Left(26);
+					selKey = L"";
+					selKey.Format(L"%s%s   (key): %s", fndDfrnc1, fndDfrnc2, m_engine.getKeyStr1(i1));
+					fndDfrnc = selKey.Left(54);
+					//fndDfrnc = fndDfrnc1 + fndDfrnc2 + selKey;
+					m_pFoundDifferences->AddItem((LPCTSTR)fndDfrnc);
 				}
 			}
-			if (m_bIn1file && !(starts == L"") && !(ends == L""))
+			if (m_bIn1file)
 			{
-				m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
-				starts = L"";
-				ends = L"";
-			}
-		}
-		temps = L"";
-		starts = L"";
-		ends = L"";
-		if (m_bIn2file)
-		{
-			nor = m_Table2.NumberOfRows + 1;
-			for (int i2 = 1; i2 < nor; i2++)
-			{
-				prgHlpr = (i2 * 100) / nor;
-				if (prgHlpr > prgHlpr0)
-				{
-					SendMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-					prgHlpr0 = prgHlpr;
-				}
-				if (m_pbMarkIn2Arr[i2])
+				if (m_pbMarkIn1Arr[i1])
 				{
 					if (starts == L"")
 					{
-						starts = convertR1C1(i2, m_nOldx);
+						starts = convertR1C1(i1, m_nOldy);
 					}
-					ends = convertR1C1(i2, m_nOldx);
+					ends = convertR1C1(i1, m_nOldy);
 				}
 				else
 				{
 					if (!(starts == L"") && !(ends == L""))
 					{
-						m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
+						m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
 						starts = L"";
 						ends = L"";
 					}
 				}
 			}
-			if (!(starts == L"") && !(ends == L""))
+		}
+		if (m_bIn1file && !(starts == L"") && !(ends == L""))
+		{
+			m_excel1.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
+			starts = L"";
+			ends = L"";
+		}
+	}
+	temps = L"";
+	starts = L"";
+	ends = L"";
+	if (m_bIn2file)
+	{
+		nor = m_Table2.NumberOfRows + 1;
+		for (int i2 = 1; i2 < nor; i2++)
+		{
+			prgHlpr = (i2 * 100) / nor;
+			if (prgHlpr > prgHlpr0)
 			{
-				m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
-				starts = L"";
-				ends = L"";
+				SendMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
+				prgHlpr0 = prgHlpr;
+			}
+			if (m_pbMarkIn2Arr[i2])
+			{
+				if (starts == L"")
+				{
+					starts = convertR1C1(i2, m_nOldx);
+				}
+				ends = convertR1C1(i2, m_nOldx);
+			}
+			else
+			{
+				if (!(starts == L"") && !(ends == L""))
+				{
+					m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
+					starts = L"";
+					ends = L"";
+				}
 			}
 		}
-		SendMessage(CM_UPDATE_PROGRESS2, 0, 100);
-		m_bLockPrg2 = false;
-		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
-		EndWaitCursor();
-		DrainMsgQueue();
+		if (!(starts == L"") && !(ends == L""))
+		{
+			m_excel2.markCellRange(starts, ends, RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
+			starts = L"";
+			ends = L"";
+		}
 	}
-	else
-	{
-		m_pProgressBar1->SetPos((UINT)lParam);
-	}
+	SendMessage(CM_UPDATE_PROGRESS2, 0, 100);
+	m_bLockPrg2 = false;
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
+	EndWaitCursor();
+	DrainMsgQueue();
 	return 0;
 }
 
@@ -2393,7 +2321,7 @@ void CChildView::markInFiles()
 			}
 		}
 	}
-	PostMessage(CM_UPDATE_PROGRESS3, 0, 1000);
+	PostMessage(CM_MARKING_READY, 0, 0);
 	m_bLockPrg2 = false;
 }
 
@@ -2926,10 +2854,10 @@ bool CChildView::mutualCheck()
 	}
 	if (tmpRslt)
 	{
-		PostMessage(CM_UPDATE_PROGRESS, 0, static_cast<LPARAM>(1e5));
+		PostMessage(CM_KEYS_FOUND, 0, 0);
 		return true;
 	}
-	PostMessage(CM_UPDATE_PROGRESS, 0, static_cast<LPARAM>(2e5));
+	PostMessage(CM_KEYS_NOT_FOUND, 0, 0);
 	return false;
 }
 
@@ -3155,7 +3083,7 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 /// Shared similarity computation for a range of table-1 columns.
 /// Called by findSims1 (first half) and findSims2 (second half, uses cached values).
 /// </summary>
-void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, LPARAM doneValue, bool useTmp)
+void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, UINT doneMsg, bool useTmp)
 {
 	CString szdata;
 	long long tmpSim;
@@ -3257,7 +3185,7 @@ void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, L
 			}
 		}
 	}
-	PostMessage(progressMsg, 0, doneValue);
+	PostMessage(doneMsg, 0, 0);
 }
 
 
@@ -3267,7 +3195,7 @@ void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, L
 void CChildView::findSims1()
 {
 	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
-	findSimsRange(1, tmp_bnd_hlf, CM_UPDATE_KEYPROGRESS1, 1000, false);
+	findSimsRange(1, tmp_bnd_hlf, CM_UPDATE_KEYPROGRESS1, CM_SIMS1_DONE, false);
 }
 
 
@@ -3278,7 +3206,7 @@ void CChildView::findSims2()
 {
 	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
 	findSimsRange(m_Table1.NumberOfColumns - tmp_bnd_hlf, m_Table1.NumberOfColumns,
-	              CM_UPDATE_KEYPROGRESS2, 2000, true);
+	              CM_UPDATE_KEYPROGRESS2, CM_SIMS2_DONE, true);
 }
 
 
@@ -3369,22 +3297,7 @@ void CChildView::OnIdxcrtBtn()
 /// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam)
 {
-	if ((UINT)lParam > 99)
-	{
-		m_pKeyProgressBar1->SetPos(0);
-		if ((UINT)lParam == 1000)
-		{
-			m_bLockPrg1 = false;
-			if (m_bLockPrg2 == false)
-			{
-				finishFindRelations();
-			}
-		}
-	}
-	else
-	{
-		m_pKeyProgressBar1->SetPos((UINT)lParam);
-	}
+	m_pKeyProgressBar1->SetPos((UINT)lParam);
 	return 0;
 }
 
@@ -3397,21 +3310,194 @@ afx_msg LRESULT CChildView::OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam)
 /// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateKeyProgress2(WPARAM wParam, LPARAM lParam)
 {
-	if ((UINT)lParam > 99)
+	m_pKeyProgressBar2->SetPos((UINT)lParam);
+	return 0;
+}
+
+
+/// <summary>Called when createKeyArrays1 completes successfully.</summary>
+afx_msg LRESULT CChildView::OnCmKeys1Done(WPARAM wParam, LPARAM lParam)
+{
+	m_pProgressBar1->SetPos(0);
+	m_bLockPrg1 = false;
+	this->Invalidate();
+	if (m_bDoAutoMark)
 	{
-		m_pKeyProgressBar2->SetPos(0);
-		if ((UINT)lParam == 2000)
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
+		resolveAutoMark();
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
+	}
+	if (m_bWaitingForKeys)
+	{
+		m_bKeys1done = true;
+		if (m_bKeys2done)
 		{
-			m_bLockPrg2 = false;
-			if (m_bLockPrg1 == false)
-			{
-				finishFindRelations();
-			}
+			m_bWaitingForKeys = false;
+			m_bKeys1done = false;
+			m_bKeys2done = false;
+			AfxBeginThread(MyThreadProc, this);
+			if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
 		}
 	}
-	else
+	return 0;
+}
+
+
+/// <summary>Called when createKeyArrays2 completes successfully.</summary>
+afx_msg LRESULT CChildView::OnCmKeys2Done(WPARAM wParam, LPARAM lParam)
+{
+	m_pProgressBar2->SetPos(0);
+	m_bLockPrg2 = false;
+	this->Invalidate();
+	if (m_bWaitingForKeys)
 	{
-		m_pKeyProgressBar2->SetPos((UINT)lParam);
+		m_bKeys2done = true;
+		if (m_bKeys1done)
+		{
+			m_bWaitingForKeys = false;
+			m_bKeys1done = false;
+			m_bKeys2done = false;
+			AfxBeginThread(MyThreadProc, this);
+			if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
+		}
+	}
+	return 0;
+}
+
+
+/// <summary>Called when suggestKeys1 completes.</summary>
+afx_msg LRESULT CChildView::OnCmGathering1Done(WPARAM wParam, LPARAM lParam)
+{
+	m_pProgressBar1->SetPos(0);
+	m_bLockPrg1 = false;
+	this->Invalidate();
+	if (m_bDoAutoMark)
+	{
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
+		resolveAutoMark();
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
+	}
+	if (m_bWaitingForKeys)
+	{
+		m_bKeysGathering1done = true;
+		if (m_bKeysGathering2done)
+		{
+			m_bWaitingForKeys = false;
+			m_bKeysGathering1done = false;
+			m_bKeysGathering2done = false;
+			AfxBeginThread(MutualCheckThreadProc, this);
+			BeginWaitCursor();
+			if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));
+		}
+	}
+	return 0;
+}
+
+
+/// <summary>Called when suggestKeys2 completes.</summary>
+afx_msg LRESULT CChildView::OnCmGathering2Done(WPARAM wParam, LPARAM lParam)
+{
+	m_pProgressBar2->SetPos(0);
+	m_bLockPrg2 = false;
+	if (m_bWaitingForKeys)
+	{
+		m_bKeysGathering2done = true;
+		if (m_bKeysGathering1done)
+		{
+			m_bWaitingForKeys = false;
+			m_bKeysGathering1done = false;
+			m_bKeysGathering2done = false;
+			AfxBeginThread(MutualCheckThreadProc, this);
+			if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_X_COMP_IN_PRGRS)); // CMsg(IDS_X_COMP_IN_PRGRS)
+		}
+	}
+	return 0;
+}
+
+
+/// <summary>Called when mutualCheck finds a valid key combination.</summary>
+afx_msg LRESULT CChildView::OnCmKeysFound(WPARAM wParam, LPARAM lParam)
+{
+	m_pProgressBar1->SetPos(0);
+	m_bLockPrg1 = false;
+	this->Invalidate();
+	if (m_bDoAutoMark)
+	{
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
+		resolveAutoMark();
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
+	}
+	m_bWaitingForKeys = false;
+	usePossibleKeys();
+	CString tmpS;
+	tmpS.Format(CMsg(IDS_KEY_COMB_FOUND), m_keyFinder.getBestKeyComb().cnt); // CMsg(IDS_KEY_COMB_FOUND)
+	MessageBox(tmpS);
+	EndWaitCursor();
+	return 0;
+}
+
+
+/// <summary>Called when mutualCheck finds no compatible key combination.</summary>
+afx_msg LRESULT CChildView::OnCmKeysNotFound(WPARAM wParam, LPARAM lParam)
+{
+	m_pProgressBar1->SetPos(0);
+	m_bLockPrg1 = false;
+	this->Invalidate();
+	if (m_bDoAutoMark)
+	{
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
+		resolveAutoMark();
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
+	}
+	m_bWaitingForKeys = false;
+	MessageBox(CMsg(IDS_INCOMPATBL_KEY_FOUND)); // CMsg(IDS_INCOMPATBL_KEY_FOUND)
+	EndWaitCursor();
+	return 0;
+}
+
+
+/// <summary>Called when findSims1 completes.</summary>
+afx_msg LRESULT CChildView::OnCmSims1Done(WPARAM wParam, LPARAM lParam)
+{
+	m_pKeyProgressBar1->SetPos(0);
+	m_bLockPrg1 = false;
+	if (m_bLockPrg2 == false)
+	{
+		finishFindRelations();
+	}
+	return 0;
+}
+
+
+/// <summary>Called when findSims2 completes.</summary>
+afx_msg LRESULT CChildView::OnCmSims2Done(WPARAM wParam, LPARAM lParam)
+{
+	m_pKeyProgressBar2->SetPos(0);
+	m_bLockPrg2 = false;
+	if (m_bLockPrg1 == false)
+	{
+		finishFindRelations();
+	}
+	return 0;
+}
+
+
+/// <summary>Called when firstPass completes.</summary>
+afx_msg LRESULT CChildView::OnCmFirstPassDone(WPARAM wParam, LPARAM lParam)
+{
+	m_pProgressBar1->SetPos(0);
+	m_bLockPrg1 = false;
+	this->Invalidate();
+	if (m_bDoAutoMark)
+	{
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
+		resolveAutoMark();
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DONE)); // CMsg(IDS_DONE)
+	}
+	if (m_nEffMax)
+	{
+		m_szRsltTxt.Format(CMsg(IDS_FOUND_KEYS_FROM_TOTAL), m_nEffMax, (m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1), (m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1)); // CMsg(IDS_FOUND_KEYS_FROM_TOTAL)
+		if (g_pMainFrame) g_pMainFrame->updateStatusBar(m_szRsltTxt);
 	}
 	return 0;
 }

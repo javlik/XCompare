@@ -127,6 +127,16 @@ protected:
 	afx_msg LRESULT OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnCmUpdateKeyProgress2(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmKeys1Done(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmKeys2Done(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmGathering1Done(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmGathering2Done(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmKeysFound(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmKeysNotFound(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmMarkingReady(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmSims1Done(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmSims2Done(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnCmFirstPassDone(WPARAM wParam, LPARAM lParam);
 public:
 	//afx_msg void OnProgress2();
 	void markInFiles();
@@ -156,7 +166,7 @@ private:
 	int createTempKeyArrays2(); // kept as shell (body moved to KeyFinder)
 	void clearPossibleKeys();
 	void sort3(int & a, int & b, int & c);
-	void findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, LPARAM doneValue, bool useTmp);
+	void findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, UINT doneMsg, bool useTmp);
 public:
 	bool mutualCheck();
 	void deleteAllKeys();

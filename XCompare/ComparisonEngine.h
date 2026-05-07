@@ -115,7 +115,7 @@ public:
             m_pszKeyArr11[i_i] = szdata;
             m_Map1.SetAt(szdata, i_i);
         }
-        ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, 1000);
+        ::PostMessage(m_hWnd, CM_KEYS1_DONE, 0, 0);
         return 0;
     }
 
@@ -167,7 +167,7 @@ public:
             m_pszKeyArr21[i_i] = szdata;
             m_Map2.SetAt(szdata, i_i);
         }
-        ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, 1000);
+        ::PostMessage(m_hWnd, CM_KEYS2_DONE, 0, 0);
         return 0;
     }
 
@@ -359,10 +359,8 @@ public:
                 }
             }
         }
-        ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, 1000);
+        ::PostMessage(m_hWnd, CM_FIRSTPASS_DONE, 0, 0);
     }
-
-    // --- Key management ---
     int getNthKey(int table, int key) const
     {
         return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2;
