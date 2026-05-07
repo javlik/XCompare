@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include <cstring>
 #include <map>
 #include <vector>
@@ -421,7 +421,7 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
 		bool cursor = false;
 		mx_y_adj = mx_y + m_VisTopLeft.top;
 		dc.SetBkMode(OPAQUE);
-		if (isThisAKey(1, mx_y_adj))
+		if (m_engine.isThisAKey(1, mx_y_adj))
 		{
 			if (mx_y_adj == m_OldCell.y)
 			{
@@ -458,7 +458,7 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
 			}
 			else
 			{
-				if (isThisAKey(1, mx_y_adj))
+				if (m_engine.isThisAKey(1, mx_y_adj))
 				{
 					dc.SelectObject(ctx.brush6);
 				}
@@ -497,7 +497,7 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
 			}
 		}
 		dc.SetBkMode(TRANSPARENT);
-		if (isThisAKey(1, mx_y_adj))
+		if (m_engine.isThisAKey(1, mx_y_adj))
 		{
 			dc.SelectObject(ctx.font1B);
 			dc.SetTextColor(RGB(0, 0, 170));
@@ -520,7 +520,7 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 		bool cursor = false;
 		mx_x_adj = mx_x + m_VisTopLeft.left;
 		dc.SetBkMode(OPAQUE);
-		if (isThisAKey(2, mx_x_adj))
+		if (m_engine.isThisAKey(2, mx_x_adj))
 		{
 			if (mx_x_adj == m_OldCell.x)
 			{
@@ -557,7 +557,7 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 			}
 			else
 			{
-				if (isThisAKey(2, mx_x_adj))
+				if (m_engine.isThisAKey(2, mx_x_adj))
 				{
 					dc.SelectObject(ctx.brush6);
 				}
@@ -596,7 +596,7 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 			}
 		}
 		dc.SetBkMode(TRANSPARENT);
-		if (isThisAKey(2, mx_x_adj))
+		if (m_engine.isThisAKey(2, mx_x_adj))
 		{
 			dc.SelectObject(ctx.font2B);
 			dc.SetTextColor(RGB(0, 0, 170));
@@ -655,7 +655,7 @@ void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
 							}
 							else
 							{
-								if (isThisAKey(1, mx_y_adj) || isThisAKey(2, mx_x_adj))
+								if (m_engine.isThisAKey(1, mx_y_adj) || m_engine.isThisAKey(2, mx_x_adj))
 								{
 									dc.SelectObject(ctx.brush6);
 								}
@@ -668,7 +668,7 @@ void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
 					}
 					else
 					{
-						if (isThisAKey(1, mx_y_adj) || isThisAKey(2, mx_x_adj))
+						if (m_engine.isThisAKey(1, mx_y_adj) || m_engine.isThisAKey(2, mx_x_adj))
 						{
 							dc.SelectObject(ctx.brush6);
 						}
@@ -759,7 +759,7 @@ void CChildView::paintSimilarityLines(CDC& dc, PaintCtx& ctx)
 			mx_x = m_vecSimilaritiesAcrossTablesSorted[s_i].clm2;
 			if ((mx_y * mx_x  > 0) && ((mx_y - m_VisTopLeft.top) * (mx_x - m_VisTopLeft.left) > 0))
 			{
-				if (isThisAKey(1, mx_y) && isThisAKey(2, mx_x))
+				if (m_engine.isThisAKey(1, mx_y) && m_engine.isThisAKey(2, mx_x))
 				{
 					dc.SelectObject(&m_SimsPens[255 * m_vecSimilaritiesAcrossTablesSorted[s_i].similarity / maxHit]);
 					CPoint pt[4] = {
@@ -892,7 +892,7 @@ void CChildView::OnCreateMatrix()
 	}
 	m_nMatrixDone = 0;
 	m_nPrereqDone = 0;
-	if (areThereAnyKeys() == false)
+	if (m_engine.areThereAnyKeys() == false)
 	{
 		MessageBox(CMsg(IDS_ATLEAST_ONE_KEY)); // CMsg(IDS_ATLEAST_ONE_KEY)
 		return;
@@ -2935,41 +2935,6 @@ bool CChildView::mutualCheck()
 
 
 /// <summary>
-/// Checks the keys.
-/// </summary>
-/// <param name="tab1">The tab1.</param>
-/// <returns></returns>
-int CChildView::checkKeys(int tab1)
-{
-	m_bLockPrg1 = true;
-	return m_keyFinder.checkKeys(tab1);
-}
-
-
-/// <summary>
-/// Deletes the key.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="column">The column.</param>
-/// <returns></returns>
-int CChildView::deleteKey(int table, int column)
-{
-	return m_engine.deleteKey(table, column);
-}
-
-
-/// <summary>
-/// Sets the key.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="column">The column.</param>
-void CChildView::setKey(int table, int column)
-{
-	m_engine.setNthKey(m_engine.getKeyPairCounter(), table == 1 ? column : 0, table == 2 ? column : 0);
-}
-
-
-/// <summary>
 /// Deletes all keys.
 /// </summary>
 void CChildView::deleteAllKeys()
@@ -2979,42 +2944,6 @@ void CChildView::deleteAllKeys()
 	m_bXSimilarityComputed = false;
 	m_vecSimilaritiesAcrossTables.clear();
 	m_vecSimilaritiesAcrossTablesSorted.clear();
-}
-
-
-/// <summary>
-/// Determines whether there any keys.
-/// </summary>
-/// <returns></returns>
-bool CChildView::areThereAnyKeys()
-{
-	return m_engine.areThereAnyKeys();
-}
-
-
-/// <summary>
-/// Determines whether [is this a key] [the specified table].
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="column">The column.</param>
-/// <returns>
-///   <c>true</c> if [is this a key] [the specified table]; otherwise, <c>false</c>.
-/// </returns>
-bool CChildView::isThisAKey(int table, int column)
-{
-	return m_engine.isThisAKey(table, column);
-}
-
-
-/// <summary>
-/// Gets the key.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="key">The key.</param>
-/// <returns></returns>
-int CChildView::getNthKey(int table, int key)
-{
-	return m_engine.getNthKey(table, key);
 }
 
 
@@ -3037,51 +2966,6 @@ void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 		}
 	}
 	CWnd::OnRButtonUp(nFlags, point);
-}
-
-
-/// <summary>
-/// Sets the NTH key.
-/// </summary>
-/// <param name="n">The n.</param>
-/// <param name="col1">The col1.</param>
-/// <param name="col2">The col2.</param>
-void CChildView::setNthKey(int n, int col1, int col2)
-{
-	m_engine.setNthKey(n, col1, col2);
-}
-
-
-/// <summary>
-/// Inserts the key at cols.
-/// </summary>
-/// <param name="n">The n.</param>
-/// <param name="col1">The col1.</param>
-/// <param name="col2">The col2.</param>
-void CChildView::insertKeyAt(int n, int col1, int col2)
-{
-	m_engine.insertKeyAt(n, col1, col2);
-}
-
-
-/// <summary>
-/// Deletes the key at position.
-/// </summary>
-/// <param name="n">The n.</param>
-void CChildView::deleteKeyAt(int n)
-{
-	m_engine.deleteKeyAt(n);
-}
-
-
-/// <summary>
-/// Pushes the key.
-/// </summary>
-/// <param name="col1">The col1.</param>
-/// <param name="col2">The col2.</param>
-void CChildView::pushKey(int col1, int col2)
-{
-	m_engine.pushKey(col1, col2);
 }
 
 

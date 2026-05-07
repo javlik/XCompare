@@ -158,18 +158,8 @@ private:
 	void sort3(int & a, int & b, int & c);
 public:
 	bool mutualCheck();
-	int checkKeys(int tab1);
-	int deleteKey(int table, int column);
-	void setKey(int table, int column);
 	void deleteAllKeys();
-	bool areThereAnyKeys();
-	bool isThisAKey(int table, int column);
-	int getNthKey(int table, int key);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
-	void setNthKey(int n, int col1, int col2);
-	void insertKeyAt(int n, int col1, int col2); // kept for compatibility
-	void deleteKeyAt(int n);
-	void pushKey(int col1, int col2);
 	bool usePossibleKeys();
 	int getNumberOfPossibleKeys();
 	// sortExaminedKeys, sumExaminedKeys, is2BExaminedOnce, getSimilarKeyProbability,
