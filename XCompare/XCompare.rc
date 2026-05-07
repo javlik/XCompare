@@ -1,556 +1,556 @@
-// Microsoft Visual C++ generated resource script.
-//
-#include "resource.h"
-
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-#ifndef APSTUDIO_INVOKED
-#include "targetver.h"
-#endif
-#include "afxres.h"
-#include "verrsrc.h"
-
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// Czech (Czech Republic) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CSY)
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
-#pragma code_page(1250)
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#ifndef APSTUDIO_INVOKED\r\n"
-    "#include ""targetver.h""\r\n"
-    "#endif\r\n"
-    "#include ""afxres.h""\r\n"
-    "#include ""verrsrc.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "#define _AFX_NO_OLE_RESOURCES\r\n"
-    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
-    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
-    "\r\n"
-    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
-    "LANGUAGE 9, 1\r\n"
-    "#include ""res\\XCompare.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
-    "#include ""afxres.rc""      // Standard components\r\n"
-    "#if !defined(_AFXDLL)\r\n"
-    "#include ""afxprint.rc""        // printing/print preview resources\r\n"
-    "#include ""afxribbon.rc""        // MFC ribbon and control bar resources\r\n"
-    "#endif\r\n"
-    "#endif\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// PNG
-//
-
-IDB_PNG4                PNG                     "res\\buttons_2.png"
-
-IDB_PNG1                PNG                     "res\\x.png"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE
-BEGIN
-    IDP_OLE_INIT_FAILED     "Inicializace OLE selhala. Ujistï¿½te se, ï¿½e pouï¿½ï¿½vate sprï¿½vnou verzi OLE knihoven"
-END
-
-STRINGTABLE
-BEGIN
-    IDR_MAINFRAME           "XCompare"
-END
-
-STRINGTABLE
-BEGIN
-    AFX_IDS_APP_TITLE       "XCompare"
-    AFX_IDS_IDLEMESSAGE     "Pï¿½ipraven"
-END
-
-STRINGTABLE
-BEGIN
-    ID_INDICATOR_EXT        "EXT"
-    ID_INDICATOR_CAPS       "CAP"
-    ID_INDICATOR_NUM        "NUM"
-    ID_INDICATOR_SCRL       "SCRL"
-    ID_INDICATOR_OVR        "OVR"
-    ID_INDICATOR_REC        "REC"
-END
-
-STRINGTABLE
-BEGIN
-    ID_APP_ABOUT            "Zobrazit informace o programu, verze a copyright\nO programu..."
-    ID_APP_EXIT             "Ukonï¿½it aplikaci"
-END
-
-STRINGTABLE
-BEGIN
-    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
-    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
-END
-
-STRINGTABLE
-BEGIN
-    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
-END
-
-STRINGTABLE
-BEGIN
-    ID_EDIT_CLEAR           "Erase the selection\nErase"
-    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
-    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
-    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
-    ID_EDIT_FIND            "Find the specified text\nFind"
-    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
-    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
-    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
-    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
-    ID_EDIT_UNDO            "Undo the last action\nUndo"
-    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
-    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle Status Bar"
-END
-
-STRINGTABLE
-BEGIN
-    AFX_IDS_SCSIZE          "Change the window size"
-    AFX_IDS_SCMOVE          "Change the window position"
-    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
-    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
-    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
-    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
-    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
-END
-
-STRINGTABLE
-BEGIN
-    AFX_IDS_SCRESTORE       "Restore the window to normal size"
-    AFX_IDS_SCTASKLIST      "Activate Task List"
-    IDS_EMPTY               "(prï¿½zdnï¿½)"
-    IDS_WAIT_TILL_IN_EXCEL  "Poï¿½kejte, dokud se soubor nenahraje do Excelu"
-    IDS_PATH_TO_FILE        "Cesta k souboru:  %s\r\n\r\n"
-    IDS_FILE_SUCCESFULLY_LOADED "Soubor ï¿½spï¿½nï¿½ nahrï¿½n"
-    IDS_ANOTHER_PROCESS_STILL_RUNNING 
-                            "Pracovnï¿½ vlï¿½kno je blokovï¿½no jinï¿½m procesem.\nPoï¿½kejte prosï¿½m."
-    IDS_ATLEAST_ONE_KEY     "Pï¿½ed spuï¿½tï¿½nï¿½m porovnï¿½nï¿½ musï¿½te vybrat alespoï¿½ 1 klï¿½ï¿½ pro kaï¿½dï¿½ soubor."
-    IDS_COMPARISON_IN_PROGRESS "Probï¿½hï¿½ kï¿½ï¿½ovï¿½ porovnï¿½vï¿½nï¿½"
-    IDS_1ST_FILE            "1. soubor: "
-    IDS_2ND_FILE            "2. soubor: "
-    IDS_EXCEL_CANNOT_RUN    "Aplikace MS Excel nemohla bï¿½t spuï¿½tï¿½na."
-    IDS_WAIT_UNTIL_PRELIMINARY_CHECK 
-                            "Poï¿½kejte dokud nebude dokonï¿½ena pï¿½edbï¿½nï¿½ kontrola dat"
-    IDS_DATA_VERIFIED       "Data ovï¿½ï¿½ena"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_STATUS_PANE1        "Vyberte soubory k porovnï¿½nï¿½"
-    IDS_STATUS_PANE2        "Pane 2"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_EDIT_MENU           "Edit"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_NEW                 "Novï¿½ porovnï¿½vï¿½nï¿½"
-    IDS_OPEN                "Otevï¿½ï¿½t soubor ..."
-    IDS_SAVE                "Uloï¿½it"
-    IDS_SAVE_AS             "Uloï¿½it jako ..."
-    IDS_KEY_SUITABILITY     "Vhodnost samost. klï¿½ï¿½e:"
-    IDS_WAIT_PRELIM_CHK     "Poï¿½kejte dokud nebude dokonï¿½ena pï¿½edbï¿½nï¿½ kontrola dat"
-END
-
-STRINGTABLE
-BEGIN
-    ID_AUTO_MARK               "Pouï¿½itelnï¿½ pouze pokud jsou nï¿½zvy sloupcï¿½ v obou souborech identickï¿½\nPro identickï¿½ nï¿½zvy sloupcï¿½"
-    ID_DIFFS_LIST           "Po kliknutï¿½ na jedno z tlaï¿½ï¿½tek vpravo ji muï¿½ete lokalizovat v 1. nebo 2. souboru\nZvolte odliï¿½nost"
-END
-
-STRINGTABLE
-BEGIN
-    ID_COLOR_PICKER2              "pro pozadï¿½ nalezenï¿½ch rozdï¿½lï¿½\nVyberte barvu"
-    ID_KEY1_1               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
-    ID_KEY1_2               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
-END
-
-STRINGTABLE
-BEGIN
-    ID_KEY2_1               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
-    ID_KEY2_2               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
-    ID_KEY1_3               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
-    ID_KEY2_3               "Klï¿½ï¿½e musï¿½ bï¿½t v kaï¿½dï¿½m ï¿½ï¿½dku jedineï¿½nï¿½ pro celou tabulku\nVyberte klï¿½ï¿½e"
-    ID_MARK_IN_FILE1               "Oznaï¿½ovat po dvojkliknutï¿½ na buï¿½ku nebo automaticky\nOznaï¿½ovat odliï¿½nosti prï¿½mo v porovnï¿½vanï¿½m souboru"
-    ID_MARK_IN_FILE2               "Oznaï¿½ovat po dvojkliknutï¿½ na buï¿½ku nebo automaticky\nOznaï¿½ovat odliï¿½nosti prï¿½mo v porovnï¿½vanï¿½m souboru"
-END
-
-STRINGTABLE
-BEGIN
-    ID_SAME_NAMES_ONLY               "Zapnout/vypnout zvï¿½razï¿½ovï¿½nï¿½ dvojice sloupcï¿½ s identickï¿½mi nï¿½zvy\nZvï¿½raznit ohranicenï¿½ bunek pro dvojice stejnojmennï¿½ch sloupcï¿½"
-    ID_COLOR_PICKER1              "pro pozadï¿½ nalezenï¿½ch rozdï¿½lï¿½\nVyberte barvu"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_NO_NAME             "bez nï¿½zvu "
-    IDS_MARKING_IN_EXCEL_RUNNING "Probï¿½hï¿½ oznaï¿½ovï¿½nï¿½ odliï¿½nostï¿½ v Excelu"
-    IDS_COORDS              "ï¿½ï¿½slo sloupce v 1. souboru: %i;  ï¿½ï¿½slo sloupce ve 2. souboru: %i"
-    IDS_MARK_SUSP_INTERS    "Oznaï¿½it prï¿½seï¿½ï¿½ky sloupcï¿½, jejichï¿½ podobnost je vyï¿½ï¿½ï¿½, neï¿½ %i"
-    IDS_FOUND_KEYS_FROM_TOTAL 
-                            "Bylo nalezeno %i pï¿½rï¿½ klï¿½ï¿½ï¿½ z celkovï¿½ch %i ï¿½ï¿½dkï¿½ v souboru ï¿½.1 a %i ï¿½ï¿½dkï¿½ v souboru ï¿½.2"
-    IDS_DONE                "Dokonï¿½eno"
-    IDS_X_COMP_IN_PRGRS     "Probï¿½hï¿½ kï¿½ï¿½ovï¿½ porovnï¿½vï¿½nï¿½"
-    IDS_MARKING_DONE        "Oznaï¿½ovï¿½nï¿½ dokonï¿½eno"
-    IDS_CHOSEN_KEYS1_NOT_UNIQUE "Zvolenï¿½ klï¿½ï¿½e pro 1. soubor nejsou jedineï¿½nï¿½"
-    IDS_CHOSEN_KEYS2_NOT_UNIQUE "Zvolenï¿½ klï¿½ï¿½e pro 2. soubor nejsou jedineï¿½nï¿½"
-    IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS 
-                            "Vybranï¿½ klï¿½ï¿½e pro 1. tabulku nejsou jedineï¿½nï¿½.\nNalezen identickï¿½ klï¿½ï¿½ '%s' na ï¿½ï¿½dcï¿½ch %i a %i"
-    IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS 
-                            "Vybranï¿½ klï¿½ï¿½e pro 2. tabulku nejsou jedineï¿½nï¿½.\nNalezen identickï¿½ klï¿½ï¿½ '%s' na ï¿½ï¿½dcï¿½ch %i a %i"
-    IDS_DURING_MARKING_THREAD_BLOCKED 
-                            "Bï¿½hem oznaï¿½ovï¿½nï¿½ odliï¿½nostï¿½ je pracovnï¿½ vlï¿½kno blokovï¿½no. Prosï¿½m o trpï¿½livost."
-    IDS_NOT_SELECTED        "(nevybrï¿½n)"
-    IDS_FRST_CHOOSE_DATA    "Nejprve vyberte listy obsahujï¿½cï¿½ data, kterï¿½ chcete porovnat."
-    IDS_KEY_COMB_FOUND      "Byla nalezena vhodnï¿½ kombinace klï¿½ï¿½ovï¿½ch sloupcï¿½.\nTato kombinace umoï¿½ï¿½uje porovnat %i spoleï¿½nï¿½ch ï¿½ï¿½dkï¿½"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_INCOMPATBL_KEY_FOUND 
-                            "V obou tabulkï¿½ch byly nalezeny klï¿½ï¿½e, kterï¿½ ale nejsou vzï¿½jemnï¿½ sluï¿½itelnï¿½.\nSoubory nelze porovnat bez pï¿½edchozï¿½ ï¿½pravy tabulek."
-    IDS_NO_SHEET_SELCTD_IN_FRST 
-                            "V prvnï¿½m souboru nenï¿½ vybrï¿½n list obsahujï¿½cï¿½ data"
-    IDS_NO_SHEET_SELCTD_IN_SCND 
-                            "Ve druhï¿½m souboru nenï¿½ vybrï¿½n list obsahujï¿½cï¿½ data"
-    IDS_NTHR_TBL_KEY_FND    "V prvnï¿½m ani ve druhï¿½m souboru nebyly nalezeny ï¿½ï¿½dnï¿½ pouï¿½itelnï¿½ klï¿½ï¿½e"
-    IDS_NO_KEY_FND_IN_FRST  "V prvnï¿½m souboru nebyly nalezeny ï¿½ï¿½dnï¿½ pouï¿½itelnï¿½ klï¿½ï¿½e"
-    IDS_NO_KEY_FND_IN_SCND  "Ve druhï¿½m souboru nebyly nalezeny ï¿½ï¿½dnï¿½ pouï¿½itelnï¿½ klï¿½ï¿½e"
-    IDS_IDXING_WARNING      "Pï¿½ed vyuï¿½ï¿½vï¿½nï¿½m tohoto pï¿½epï¿½naï¿½e se dï¿½kladnï¿½ ujistï¿½te, ï¿½e pouï¿½ï¿½vï¿½te vhodnï¿½ klï¿½ï¿½ (napï¿½. pomocï¿½ funkce hledï¿½nï¿½ souvislostï¿½)!"
-END
-
-#endif    // Czech (Czech Republic) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
-IDR_MAINFRAME_256       BITMAP                  "res\\Toolbar256.bmp"
-
-IDB_MAIN                BITMAP                  "res\\main.bmp"
-
-IDB_FILELARGE           BITMAP                  "res\\filelarge.bmp"
-
-IDB_FILESMALL           BITMAP                  "res\\filesmall.bmp"
-
-IDB_WRITELARGE          BITMAP                  "res\\writelarge.bmp"
-
-IDB_WRITESMALL          BITMAP                  "res\\writesmall.bmp"
-
-IDB_BUTTONS             BITMAP                  "res\\buttons.bmp"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\XCompare.ico"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Toolbar
-//
-
-IDR_MAINFRAME TOOLBAR 16, 15
-BEGIN
-    BUTTON      ID_EDIT_CUT
-    BUTTON      ID_EDIT_COPY
-    BUTTON      ID_EDIT_PASTE
-    SEPARATOR
-    BUTTON      ID_APP_ABOUT
-END
-
-IDR_MAINFRAME_256 TOOLBAR 16, 15
-BEGIN
-    BUTTON      ID_EDIT_CUT
-    BUTTON      ID_EDIT_COPY
-    BUTTON      ID_EDIT_PASTE
-    SEPARATOR
-    BUTTON      ID_APP_ABOUT
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDR_MAINFRAME MENU
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "E&xit",                       ID_APP_EXIT
-    END
-    POPUP "&Edit"
-    BEGIN
-        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
-        MENUITEM SEPARATOR
-        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
-        POPUP "&Application Look"
-        BEGIN
-            MENUITEM "Windows &2000",               ID_VIEW_APPLOOK_WIN_2000
-            MENUITEM "Office &XP",                  ID_VIEW_APPLOOK_OFF_XP
-            MENUITEM "&Windows XP",                 ID_VIEW_APPLOOK_WIN_XP
-            MENUITEM "Office 200&3",                ID_VIEW_APPLOOK_OFF_2003
-            MENUITEM "Visual Studio 200&5",         ID_VIEW_APPLOOK_VS_2005
-            MENUITEM "Visual Studio 200&8",         ID_VIEW_APPLOOK_VS_2008
-            POPUP "Office 200&7"
-            BEGIN
-                MENUITEM "&Modrï¿½ styl",                 ID_VIEW_APPLOOK_OFF_2007_BLUE
-                MENUITEM "ï¿½&ernï¿½ styl",                 ID_VIEW_APPLOOK_OFF_2007_BLACK
-                MENUITEM "&Stï¿½ï¿½brnï¿½ styl",              ID_VIEW_APPLOOK_OFF_2007_SILVER
-                MENUITEM "&Aqua",                       ID_VIEW_APPLOOK_OFF_2007_AQUA
-            END
-        END
-    END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "&About XCompare...",          ID_APP_ABOUT
-    END
-END
-
-IDR_POPUP_EDIT MENU
-BEGIN
-    POPUP "Edit"
-    BEGIN
-        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
-    END
-END
-
-IDR_WINDOWS_MENU MENU
-BEGIN
-    MENUITEM "&New Window",                 ID_WINDOW_NEW
-END
-
-IDR_HELP_MENU MENU
-BEGIN
-    MENUITEM "&About XCompare...",          ID_APP_ABOUT
-END
-
-IDR_THEME_MENU MENU
-BEGIN
-    MENUITEM "Office 2007 (&Modrï¿½ Styl)",   ID_VIEW_APPLOOK_OFF_2007_BLUE
-    MENUITEM "Office 2007 (C&ernï¿½ styl)",   ID_VIEW_APPLOOK_OFF_2007_BLACK
-    MENUITEM "Office 2007 (&Strï¿½brnï¿½ styl)", ID_VIEW_APPLOOK_OFF_2007_SILVER
-    MENUITEM "Office 2007 (&Aqua)",         ID_VIEW_APPLOOK_OFF_2007_AQUA
-    MENUITEM "Win&dows 7",                  ID_VIEW_APPLOOK_WINDOWS_7
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-IDR_MAINFRAME ACCELERATORS
-BEGIN
-    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
-    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
-    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
-    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
-    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
-    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
-    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
-    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,1,2
- PRODUCTVERSION 2,0,1,2
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x40004L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "000904b0"
-        BEGIN
-            VALUE "CompanyName", "javlik"
-            VALUE "FileDescription", "XCompare"
-            VALUE "FileVersion", "2.0.1.2"
-            VALUE "InternalName", "XCompare.exe"
-            VALUE "LegalCopyright", "ï¿½ 2018 Jirï¿½ Havlï¿½k, License CC BY-SA 4.0"
-            VALUE "OriginalFilename", "XCompare.exe"
-            VALUE "ProductName", "XCompare (Cross comparison tool)"
-            VALUE "ProductVersion", "2.0.1.2"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x9, 1200
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Ribbon
-//
-
-IDR_RIBBON              RT_RIBBON_XML           "res\\ribbon.mfcribbon-ms"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_ABOUTBOX DIALOGEX 0, 0, 361, 282
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About XCompare"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,20,20
-    LTEXT           "XCompare, Version 2.0.1.2, CZ (HR) (64b)",IDC_STATIC,42,14,163,8,SS_NOPREFIX
-    LTEXT           "RBCB/ICO3, Copyright (C) 2017",IDC_STATIC,42,26,114,8
-    DEFPUSHBUTTON   "OK",IDOK,120,256,128,19,WS_GROUP
-    CONTROL         IDB_BITMAP1,IDC_STATIC,"Static",SS_BITMAP,17,42,328,204
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
-BEGIN
-    IDD_ABOUTBOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 354
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 275
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// AFX_DIALOG_LAYOUT
-//
-
-IDD_ABOUTBOX AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-#endif    // English (United States) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-#define _AFX_NO_OLE_RESOURCES
-#define _AFX_NO_TRACKER_RESOURCES
-#define _AFX_NO_PROPERTY_RESOURCES
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE 9, 1
-#include "res\XCompare.rc2"  // non-Microsoft Visual C++ edited resources
-#include "afxres.rc"      // Standard components
-#if !defined(_AFXDLL)
-#include "afxprint.rc"        // printing/print preview resources
-#include "afxribbon.rc"        // MFC ribbon and control bar resources
-#endif
-#endif
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+#include "verrsrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Czech (Czech Republic) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CSY)
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+#pragma code_page(1250)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "#include ""verrsrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#include ""res\\XCompare.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""      // Standard components\r\n"
+    "#if !defined(_AFXDLL)\r\n"
+    "#include ""afxprint.rc""        // printing/print preview resources\r\n"
+    "#include ""afxribbon.rc""        // MFC ribbon and control bar resources\r\n"
+    "#endif\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_PNG4                PNG                     "res\\buttons_2.png"
+
+IDB_PNG1                PNG                     "res\\x.png"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDP_OLE_INIT_FAILED     "OLE initialization failed. Make sure you are using the correct version of OLE libraries"
+END
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "XCompare"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "XCompare"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE
+BEGIN
+    ID_APP_ABOUT            "Display program information, version and copyright\nAbout..."
+    ID_APP_EXIT             "Quit the application"
+END
+
+STRINGTABLE
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle Status Bar"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+    IDS_EMPTY               "(empty)"
+    IDS_WAIT_TILL_IN_EXCEL  "Wait until the file is loaded in Excel"
+    IDS_PATH_TO_FILE        "Path to file:  %s\r\n\r\n"
+    IDS_FILE_SUCCESFULLY_LOADED "File loaded successfully"
+    IDS_ANOTHER_PROCESS_STILL_RUNNING 
+                            "Worker thread is blocked by another process.\nPlease wait."
+    IDS_ATLEAST_ONE_KEY     "Before starting the comparison you must select at least 1 key for each file."
+    IDS_COMPARISON_IN_PROGRESS "Cross-comparison in progress"
+    IDS_1ST_FILE            "1st file: "
+    IDS_2ND_FILE            "2nd file: "
+    IDS_EXCEL_CANNOT_RUN    "MS Excel could not be started."
+    IDS_WAIT_UNTIL_PRELIMINARY_CHECK 
+                            "Wait until the preliminary data check is complete"
+    IDS_DATA_VERIFIED       "Data verified"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_PANE1        "Select files to compare"
+    IDS_STATUS_PANE2        "Pane 2"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT_MENU           "Edit"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEW                 "New comparison"
+    IDS_OPEN                "Open file ..."
+    IDS_SAVE                "Save"
+    IDS_SAVE_AS             "Save as ..."
+    IDS_KEY_SUITABILITY     "Key suitability:"
+    IDS_WAIT_PRELIM_CHK     "Wait until the preliminary data check is complete"
+END
+
+STRINGTABLE
+BEGIN
+    ID_AUTO_MARK            "Only usable when column names are identical in both files\nFor identical column names"
+    ID_DIFFS_LIST           "After clicking one of the buttons on the right you can navigate to it in file 1 or 2\nSelect a difference"
+END
+
+STRINGTABLE
+BEGIN
+    ID_COLOR_PICKER2         "for the background of found differences\nChoose color"
+    ID_KEY1_1               "Keys must be unique in each row for the entire table\nSelect keys"
+    ID_KEY1_2               "Keys must be unique in each row for the entire table\nSelect keys"
+END
+
+STRINGTABLE
+BEGIN
+    ID_KEY2_1               "Keys must be unique in each row for the entire table\nSelect keys"
+    ID_KEY2_2               "Keys must be unique in each row for the entire table\nSelect keys"
+    ID_KEY1_3               "Keys must be unique in each row for the entire table\nSelect keys"
+    ID_KEY2_3               "Keys must be unique in each row for the entire table\nSelect keys"
+    ID_MARK_IN_FILE1         "Mark on double-click or automatically\nMark differences directly in the compared file"
+    ID_MARK_IN_FILE2         "Mark on double-click or automatically\nMark differences directly in the compared file"
+END
+
+STRINGTABLE
+BEGIN
+    ID_SAME_NAMES_ONLY       "Toggle highlighting of column pairs with identical names\nHighlight cell borders for same-name column pairs"
+    ID_COLOR_PICKER1         "for the background of found differences\nChoose color"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_NAME             "unnamed "
+    IDS_MARKING_IN_EXCEL_RUNNING "Marking differences in Excel in progress"
+    IDS_COORDS              "Column number in file 1: %i;  Column number in file 2: %i"
+    IDS_MARK_SUSP_INTERS    "Mark column intersections whose similarity is higher than %i"
+    IDS_FOUND_KEYS_FROM_TOTAL 
+                            "Found %i key pairs out of %i total rows in file 1 and %i rows in file 2"
+    IDS_DONE                "Done"
+    IDS_X_COMP_IN_PRGRS     "Cross-comparison in progress"
+    IDS_MARKING_DONE        "Marking complete"
+    IDS_CHOSEN_KEYS1_NOT_UNIQUE "Selected keys for file 1 are not unique"
+    IDS_CHOSEN_KEYS2_NOT_UNIQUE "Selected keys for file 2 are not unique"
+    IDS_CHOSEN_KEYS1_NOT_UNIQUE_KEYS 
+                            "Selected keys for table 1 are not unique.\nIdentical key '%s' found on rows %i and %i"
+    IDS_CHOSEN_KEYS2_NOT_UNIQUE_KEYS 
+                            "Selected keys for table 2 are not unique.\nIdentical key '%s' found on rows %i and %i"
+    IDS_DURING_MARKING_THREAD_BLOCKED 
+                            "Worker thread is blocked during marking of differences. Please be patient."
+    IDS_NOT_SELECTED        "(not selected)"
+    IDS_FRST_CHOOSE_DATA    "First select the sheets containing the data you want to compare."
+    IDS_KEY_COMB_FOUND      "A suitable combination of key columns was found.\nThis combination allows comparing %i common rows"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INCOMPATBL_KEY_FOUND 
+                            "Keys were found in both tables, but they are not mutually compatible.\nFiles cannot be compared without prior adjustment of the tables."
+    IDS_NO_SHEET_SELCTD_IN_FRST 
+                            "No data sheet selected in the first file"
+    IDS_NO_SHEET_SELCTD_IN_SCND 
+                            "No data sheet selected in the second file"
+    IDS_NTHR_TBL_KEY_FND    "No usable keys found in either the first or the second file"
+    IDS_NO_KEY_FND_IN_FRST  "No usable keys found in the first file"
+    IDS_NO_KEY_FND_IN_SCND  "No usable keys found in the second file"
+    IDS_IDXING_WARNING      "Before using this toggle, make sure you are using a suitable key (e.g. via the column relation finder)!"
+END
+
+#endif    // Czech (Czech Republic) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
+IDR_MAINFRAME_256       BITMAP                  "res\\Toolbar256.bmp"
+
+IDB_MAIN                BITMAP                  "res\\main.bmp"
+
+IDB_FILELARGE           BITMAP                  "res\\filelarge.bmp"
+
+IDB_FILESMALL           BITMAP                  "res\\filesmall.bmp"
+
+IDB_WRITELARGE          BITMAP                  "res\\writelarge.bmp"
+
+IDB_WRITESMALL          BITMAP                  "res\\writesmall.bmp"
+
+IDB_BUTTONS             BITMAP                  "res\\buttons.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\XCompare.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+IDR_MAINFRAME_256 TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        POPUP "&Application Look"
+        BEGIN
+            MENUITEM "Windows &2000",               ID_VIEW_APPLOOK_WIN_2000
+            MENUITEM "Office &XP",                  ID_VIEW_APPLOOK_OFF_XP
+            MENUITEM "&Windows XP",                 ID_VIEW_APPLOOK_WIN_XP
+            MENUITEM "Office 200&3",                ID_VIEW_APPLOOK_OFF_2003
+            MENUITEM "Visual Studio 200&5",         ID_VIEW_APPLOOK_VS_2005
+            MENUITEM "Visual Studio 200&8",         ID_VIEW_APPLOOK_VS_2008
+            POPUP "Office 200&7"
+            BEGIN
+                MENUITEM "&Blue Style",                 ID_VIEW_APPLOOK_OFF_2007_BLUE
+                MENUITEM "B&lack Style",                 ID_VIEW_APPLOOK_OFF_2007_BLACK
+                MENUITEM "&Silver Style",              ID_VIEW_APPLOOK_OFF_2007_SILVER
+                MENUITEM "&Aqua",                       ID_VIEW_APPLOOK_OFF_2007_AQUA
+            END
+        END
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About XCompare...",          ID_APP_ABOUT
+    END
+END
+
+IDR_POPUP_EDIT MENU
+BEGIN
+    POPUP "Edit"
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+    END
+END
+
+IDR_WINDOWS_MENU MENU
+BEGIN
+    MENUITEM "&New Window",                 ID_WINDOW_NEW
+END
+
+IDR_HELP_MENU MENU
+BEGIN
+    MENUITEM "&About XCompare...",          ID_APP_ABOUT
+END
+
+IDR_THEME_MENU MENU
+BEGIN
+    MENUITEM "Office 2007 (&Blue Style)",   ID_VIEW_APPLOOK_OFF_2007_BLUE
+    MENUITEM "Office 2007 (B&lack Style)",   ID_VIEW_APPLOOK_OFF_2007_BLACK
+    MENUITEM "Office 2007 (&Silver Style)", ID_VIEW_APPLOOK_OFF_2007_SILVER
+    MENUITEM "Office 2007 (&Aqua)",         ID_VIEW_APPLOOK_OFF_2007_AQUA
+    MENUITEM "Win&dows 7",                  ID_VIEW_APPLOOK_WINDOWS_7
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2,0,1,2
+ PRODUCTVERSION 2,0,1,2
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000904b0"
+        BEGIN
+            VALUE "CompanyName", "javlik"
+            VALUE "FileDescription", "XCompare"
+            VALUE "FileVersion", "2.0.1.2"
+            VALUE "InternalName", "XCompare.exe"
+            VALUE "LegalCopyright", "© 2018 Jirí Havlík, License CC BY-SA 4.0"
+            VALUE "OriginalFilename", "XCompare.exe"
+            VALUE "ProductName", "XCompare (Cross comparison tool)"
+            VALUE "ProductVersion", "2.0.1.2"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x9, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Ribbon
+//
+
+IDR_RIBBON              RT_RIBBON_XML           "res\\ribbon.mfcribbon-ms"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 361, 282
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About XCompare"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,20,20
+    LTEXT           "XCompare, Version 2.0.1.2, CZ (HR) (64b)",IDC_STATIC,42,14,163,8,SS_NOPREFIX
+    LTEXT           "RBCB/ICO3, Copyright (C) 2017",IDC_STATIC,42,26,114,8
+    DEFPUSHBUTTON   "OK",IDOK,120,256,128,19,WS_GROUP
+    CONTROL         IDB_BITMAP1,IDC_STATIC,"Static",SS_BITMAP,17,42,328,204
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 354
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 275
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ABOUTBOX AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#include "res\XCompare.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"      // Standard components
+#if !defined(_AFXDLL)
+#include "afxprint.rc"        // printing/print preview resources
+#include "afxribbon.rc"        // MFC ribbon and control bar resources
+#endif
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
