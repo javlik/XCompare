@@ -8,12 +8,13 @@
 #include "Cnterior.h"
 #include "Msg.h"
 
-/// <summary>
-/// Encapsulates OLE Automation access to one Excel workbook (one compared table).
-/// CChildView creates two instances - m_excel1 and m_excel2 - one per table.
-/// The shared CApplication (Excel process singleton) is kept in CChildView and
-/// passed by reference to methods that need it.
-/// </summary>
+/**
+ * @brief Encapsulates OLE Automation access to one Excel workbook (one compared table).
+ *
+ * CChildView creates two instances — @c m_excel1 and @c m_excel2 — one per table.
+ * The shared @c CApplication (Excel process singleton) is kept in CChildView and
+ * passed by reference to methods that need it.
+ */
 class ExcelConnector
 {
 public:
@@ -21,10 +22,14 @@ public:
 		: m_covOptional(COleVariant((long)DISP_E_PARAMNOTFOUND, VT_ERROR))
 	{}
 
-	/// <summary>
-	/// Opens an Excel file. Returns true on success.
-	/// Creates or reuses the shared Excel.Application singleton passed in.
-	/// </summary>
+	/**
+	 * @brief Opens an Excel file and makes it visible.
+	 *
+	 * Creates or reuses the shared @c Excel.Application singleton passed in @p app.
+	 * @param path Full path of the .xlsx/.xls file to open.
+	 * @param app  Shared application object; created automatically if not yet connected.
+	 * @return @c true on success, @c false if Excel could not be started.
+	 */
 	bool openFile(const CString& path, CApplication& app)
 	{
 		if (!app)
@@ -48,9 +53,9 @@ public:
 		return isOpen();
 	}
 
-	/// <summary>
-	/// Closes the current workbook. Safe to call when no workbook is open.
-	/// </summary>
+	/**
+	 * @brief Closes the current workbook. Safe to call when no workbook is open.
+	 */
 	void closeBook()
 	{
 		if (isOpen())
@@ -63,10 +68,12 @@ public:
 		}
 	}
 
-	/// <summary>
-	/// Selects a sheet by name and loads its used range into the internal safe arrays.
-	/// outRows and outCols receive the 1-based dimensions of the used range.
-	/// </summary>
+	/**
+	 * @brief Selects a sheet by name and loads its used range into internal safe arrays.
+	 * @param sheetName Name of the worksheet tab to select.
+	 * @param outRows   Receives the 1-based number of rows in the used range.
+	 * @param outCols   Receives the 1-based number of columns in the used range.
+	 */
 	void selectSheet(const CString& sheetName, long& outRows, long& outCols)
 	{
 		m_saRet.Destroy();
@@ -79,10 +86,11 @@ public:
 		m_saTmpRet = m_Range.get_Value(m_covOptional);
 	}
 
-	/// <summary>
-	/// Returns the cell value at (column, row) from the in-memory safe array.
-	/// column and row are 1-based. Returns an empty string on error.
-	/// </summary>
+	/**
+	 * @brief Returns the cell value at (@p column, @p row) from the in-memory safe array.
+	 *
+	 * Both @p column and @p row are 1-based. Returns an empty string on any OLE error.
+	 */
 	CString getCellValue(int column, int row)
 	{
 		long index[2];
@@ -103,10 +111,12 @@ public:
 		return szdata;
 	}
 
-	/// <summary>
-	/// Returns the cell value from the secondary (temporary) safe array.
-	/// Used by key-suggestion routines that run concurrently with the main pass.
-	/// </summary>
+	/**
+	 * @brief Returns the cell value from the secondary (temporary) safe array.
+	 *
+	 * Used by key-suggestion routines that run concurrently with the main comparison pass.
+	 * Both @p column and @p row are 1-based.
+	 */
 	CString getTmpCellValue(int column, int row)
 	{
 		long index[2];
@@ -127,10 +137,12 @@ public:
 		return szdata;
 	}
 
-	/// <summary>
-	/// Marks a contiguous range of cells with the given RGB colour.
-	/// startCell and endCell use Excel A1 notation (e.g. "B3").
-	/// </summary>
+	/**
+	 * @brief Fills a cell range with a solid background colour via OLE Automation.
+	 * @param startCell Top-left cell in Excel A1 notation (e.g. @c "B3").
+	 * @param endCell   Bottom-right cell in Excel A1 notation.
+	 * @param color     RGB colour value (Windows @c COLORREF).
+	 */
 	void markCellRange(const CString& startCell, const CString& endCell, COLORREF color)
 	{
 		CRange range = m_Sheet.get_Range(COleVariant(startCell), COleVariant(endCell));
@@ -138,11 +150,10 @@ public:
 		m_Interior.put_Color(COleVariant(long(color)));
 	}
 
-	/// <summary>
-	/// Selects and activates a cell in the sheet so Excel scrolls to it.
-	/// cellRef uses Excel A1 notation. Call CApplication methods separately
-	/// to bring Excel to the foreground if needed.
-	/// </summary>
+	/**
+	 * @brief Selects and activates a cell so Excel scrolls to it.
+	 * @param cellRef Target cell in Excel A1 notation.
+	 */
 	void selectAndActivateCell(const CString& cellRef)
 	{
 		CRange range = m_Sheet.get_Range(COleVariant(cellRef), COleVariant(cellRef));
@@ -150,16 +161,17 @@ public:
 		range.Select();
 	}
 
-	/// <summary>Returns true if a workbook is currently open.</summary>
+	/** @brief Returns @c true if a workbook is currently open. */
 	bool isOpen() const { return m_Book.m_lpDispatch != nullptr; }
 
-	/// <summary>Returns the path of the currently open file (empty if none).</summary>
+	/** @brief Returns the full path of the currently open file, or empty string if none. */
 	CString getFilename() const { return m_filename; }
 
-	/// <summary>
-	/// Provides access to the worksheets collection for sheet-combo population.
-	/// Valid after a successful openFile() call.
-	/// </summary>
+	/**
+	 * @brief Returns the worksheets collection for populating the sheet combo box.
+	 *
+	 * Valid only after a successful @c openFile() call.
+	 */
 	CWorksheets& getSheets() { return m_Sheets; }
 
 private:
@@ -168,8 +180,8 @@ private:
 	CWorksheets   m_Sheets;
 	CWorksheet    m_Sheet;
 	CRange        m_Range;
-	COleSafeArray m_saRet;
-	COleSafeArray m_saTmpRet;
+	COleSafeArray m_saRet;     ///< Primary safe array (main comparison pass).
+	COleSafeArray m_saTmpRet;  ///< Secondary safe array (key-suggestion threads).
 	Cnterior      m_Interior;
 	COleVariant   m_covOptional;
 	CString       m_filename;

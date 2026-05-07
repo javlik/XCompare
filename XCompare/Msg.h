@@ -29,33 +29,41 @@
 
 #pragma once
 
-//
-//   CMsg : Wrapper around LoadString().
-//          The index in the string table is passed to the c'tor.
-//          Since CMsg derives from CString, it has an LPCTSTR operator, hence can replace a string literal.
-//
-//          e.g.: AfxMessageBox(CMsg(IDS_ERROR), MB_ICONERROR); // Error. Login Failed.
-//
-
+/**
+ * @brief CString loaded from the resource string table by ID.
+ *
+ * Pass a string-table resource ID to the constructor; the resulting object
+ * can be used wherever a @c CString or @c LPCTSTR is expected.
+ *
+ * @code
+ *   AfxMessageBox(CMsg(IDS_ERROR), MB_ICONERROR);
+ * @endcode
+ */
 class CMsg : public CString  
 {
-public :
-  CMsg(UINT nID); // c'tor loads a string from the resource string table
+public:
+	/** @brief Loads string @p nID from the resource string table. Asserts in debug if not found. */
+	CMsg(UINT nID);
 };
 
-//
-//   CFMsg: Creates a formatted message. Wrapper around the API FormatMessage(). Kind of super-printf().
-//          Since CFMsg derives from CString, it has an LPCTSTR operator, hence can replace a string literal.
-//
-//          e.g.: AfxMessageBox( CFMsg(IDS_AGE, szName, nAge), MB_ICONINFORMATION ); 
-//                                     // IDS_AGE : %1 is %2!d! years old.
-//                                     // Message : Jane is 27 years old.
-//
-
+/**
+ * @brief Formatted message string built with FormatMessage-style arguments.
+ *
+ * A super-printf that uses @c FormatMessage() notation (@c %1, @c %2!d!, …)
+ * instead of @c printf notation. The result is a @c CString and can be used
+ * wherever a @c LPCTSTR is expected.
+ *
+ * @code
+ *   // IDS_AGE resource: "%1 is %2!d! years old."
+ *   AfxMessageBox(CFMsg(IDS_AGE, szName, nAge), MB_ICONINFORMATION);
+ * @endcode
+ */
 class CFMsg : public CString 
-{                            
+{
 public:
-  CFMsg(LPCTSTR pszFormat,...); // Format string can be a string literal...
-  CFMsg(UINT nFormatID,...);    // ... or a string stored in the string table.
+	/** @brief Builds a formatted string from a literal format string (FormatMessage notation). */
+	CFMsg(LPCTSTR pszFormat, ...);
+	/** @brief Builds a formatted string from a string-table format resource. */
+	CFMsg(UINT nFormatID, ...);
 };
 

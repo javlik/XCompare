@@ -6,23 +6,26 @@
 #include <vector>
 #include <map>
 
-// ComparisonEngine encapsulates the comparison algorithm data and methods
-// that were previously embedded directly in CChildView.
-//
-// It holds all per-comparison data arrays, key structures and entropy tables.
-// It needs a HWND for progress PostMessage calls and references to the two
-// ExcelConnector objects so it can read cell values.
-//
-// Usage:
-//   ComparisonEngine m_engine;
-//   m_engine.init(hWnd, m_excel1, m_excel2, m_Table1, m_Table2);
-//   m_engine.makePrereq1();
-//   m_engine.firstPass();
-
+/**
+ * @brief Encapsulates the comparison algorithm state and logic for both tables.
+ *
+ * Holds all per-comparison data arrays, key structures and the lookup maps.
+ * Requires a @c HWND for progress @c PostMessage calls and references to the
+ * two @c ExcelConnector objects so it can read cell values.
+ *
+ * Typical usage:
+ * @code
+ *   ComparisonEngine m_engine;
+ *   m_engine.init(hWnd, m_excel1, m_excel2, m_Table1, m_Table2);
+ *   m_engine.makePrereq1();
+ *   m_engine.firstPass(...);
+ * @endcode
+ */
 class ComparisonEngine
 {
 public:
     // --- Initialisation ---
+    /** @brief Initialises the engine with window handle, Excel connections and table descriptors. */
     void init(HWND hWnd,
               ExcelConnector& excel1, ExcelConnector& excel2,
               const Table& table1, const Table& table2)
@@ -34,7 +37,7 @@ public:
         m_Table2 = table2;
     }
 
-    // Refresh the table descriptors (called after sheet selection)
+    /** @brief Refreshes the table descriptors after a sheet selection change. */
     void setTables(const Table& table1, const Table& table2)
     {
         m_Table1 = table1;
@@ -42,6 +45,7 @@ public:
     }
 
     // --- Prerequisite building ---
+    /** @brief Reads all cells of table 1 into internal char arrays and marks empty columns. */
     void makePrereq1()
     {
         m_bPrereq1valid = false;
@@ -51,6 +55,7 @@ public:
         m_bPrereq1valid = true;
     }
 
+    /** @brief Reads all cells of table 2 into internal char arrays and marks empty columns. */
     void makePrereq2()
     {
         m_bPrereq2valid = false;
@@ -60,13 +65,20 @@ public:
         m_bPrereq2valid = true;
     }
 
+    /** @brief Returns @c true if the prerequisite data for table 1 is up to date. */
     bool isPrereq1Valid() const { return m_bPrereq1valid; }
+    /** @brief Returns @c true if the prerequisite data for table 2 is up to date. */
     bool isPrereq2Valid() const { return m_bPrereq2valid; }
+    /** @brief Marks the table-1 prerequisite data as stale (e.g. after a sheet change). */
     void invalidatePrereq1()    { m_bPrereq1valid = false; }
+    /** @brief Marks the table-2 prerequisite data as stale (e.g. after a sheet change). */
     void invalidatePrereq2()    { m_bPrereq2valid = false; }
 
     // --- Key arrays ---
-    // Returns 0 on success, 1 if keys in table 1 are not unique, 2 for table 2.
+    /**
+     * @brief Builds the concatenated key string array for table 1 and the lookup map.
+     * @return 0 on success, 1 if duplicate keys were found in table 1.
+     */
     int createKeyArrays1()
     {
         m_NotUniqueKeys1 = { 0, 0, L"" };
@@ -119,6 +131,10 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Builds the concatenated key string array for table 2 and the lookup map.
+     * @return 0 on success, 2 if duplicate keys were found in table 2.
+     */
     int createKeyArrays2()
     {
         m_NotUniqueKeys2 = { 0, 0, L"" };
@@ -171,6 +187,7 @@ public:
         return 0;
     }
 
+    /** @brief Verifies that every key string in table 1 is unique. @return @c true if all keys are unique. */
     bool checkKeysUniqueness1()
     {
         int prgHlpr = 0, prgHlpr0 = 0;
@@ -197,6 +214,7 @@ public:
         return true;
     }
 
+    /** @brief Verifies that every key string in table 2 is unique. @return @c true if all keys are unique. */
     bool checkKeysUniqueness2()
     {
         int prgHlpr = 0, prgHlpr0 = 0;
@@ -224,6 +242,21 @@ public:
     }
 
     // --- First pass (main comparison algorithm) ---
+    /**
+     * @brief Runs the main comparison pass and fills the similarity matrix.
+     *
+     * Matches each row of table 1 to the corresponding row in table 2 via the key
+     * lookup map, then counts matching cell values per column pair.
+     * Posts @c CM_FIRSTPASS_DONE on the owner window when finished.
+     *
+     * @param matrix        Receives the per-column-pair match counts.
+     * @param bAutoMark     If true, also populates the key-missing arrays for diff highlighting.
+     * @param bIn2file      If true, also checks for rows present in table 2 but not in table 1.
+     * @param pbGreenClms1  Receives per-column "fully matched" flags for table 1.
+     * @param pbGreenClms2  Receives per-column "fully matched" flags for table 2.
+     * @param nEffMax       Receives the number of successfully key-matched row pairs.
+     * @param bDoAutoMark   Receives the effective auto-mark flag (mirrors @p bAutoMark).
+     */
     void firstPass(ComparisonMatrix& matrix,
                    bool bAutoMark, bool bIn2file,
                    std::vector<bool>& pbGreenClms1,
@@ -361,22 +394,30 @@ public:
         }
         ::PostMessage(m_hWnd, CM_FIRSTPASS_DONE, 0, 0);
     }
+    /** @brief Returns the column index of the @p key-th key for @p table (1 or 2). */
     int getNthKey(int table, int key) const
     {
         return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2;
     }
+    /** @brief Overwrites the @p n-th key pair with new column indices. */
     void setNthKey(int n, int col1, int col2) { m_KeyPair[n].tab1 = col1; m_KeyPair[n].tab2 = col2; }
+    /** @brief Appends a new key pair (one column from each table) to the active key list. */
     void pushKey(int col1, int col2)
     {
         m_KeyPair[m_nKeyPairCounter].tab1 = col1;
         m_KeyPair[m_nKeyPairCounter].tab2 = col2;
         m_nKeyPairCounter++;
     }
+    /** @brief Removes all key pairs, resetting the key counter to zero. */
     void deleteAllKeys()
     {
         for (int i = 0; i < m_nKeyPairCounter; i++) { m_KeyPair[i].tab1 = 0; m_KeyPair[i].tab2 = 0; }
         m_nKeyPairCounter = 0;
     }
+    /**
+     * @brief Removes all key pairs that reference @p column in @p table (1 or 2).
+     * @return Number of key pairs removed.
+     */
     int deleteKey(int table, int column)
     {
         int rslt = 0;
@@ -391,6 +432,7 @@ public:
         }
         return rslt;
     }
+    /** @brief Removes the key pair at position @p n, shifting subsequent pairs down. */
     void deleteKeyAt(int n)
     {
         for (int i = n; i < m_nKeyPairCounter; i++)
@@ -400,6 +442,7 @@ public:
         }
         m_nKeyPairCounter--;
     }
+    /** @brief Inserts a key pair at position @p n, shifting subsequent pairs up. */
     void insertKeyAt(int n, int col1, int col2)
     {
         for (int i = m_nKeyPairCounter; i > n; i--)
@@ -409,6 +452,7 @@ public:
         }
         m_nKeyPairCounter++;
     }
+    /** @brief Returns @c true if @p column in @p table (1 or 2) is part of any active key pair. */
     bool isThisAKey(int table, int column) const
     {
         for (int i = 0; i < m_nKeyPairCounter; i++)
@@ -418,19 +462,31 @@ public:
         }
         return false;
     }
+    /** @brief Returns @c true if at least one key pair has been defined. */
     bool areThereAnyKeys() const { return m_nKeyPairCounter > 0; }
+    /** @brief Returns the number of active key pairs. */
     int  getKeyPairCounter() const { return m_nKeyPairCounter; }
 
     // --- Data accessors ---
+    /** @brief Returns the concatenated key string for row @p row in table 1. */
     CString getKeyStr1(int row) const { return m_pszKeyArr11[row]; }
+    /** @brief Returns the concatenated key string for row @p row in table 2. */
     CString getKeyStr2(int row) const { return m_pszKeyArr21[row]; }
+    /** @brief Returns @c true if row @p row in table 1 has no matching key in table 2. */
     bool    isKeyMissing1(int row) const { return m_pbKeyMissing1[row]; }
+    /** @brief Returns @c true if row @p row in table 2 has no matching key in table 1. */
     bool    isKeyMissing2(int row) const { return m_pbKeyMissing2[row]; }
+    /** @brief Returns @c true if column @p col in table 1 contains no data. */
     bool    isEmptyCol1(int col)   const { return m_pbEmptyClms1[col]; }
+    /** @brief Returns @c true if column @p col in table 2 contains no data. */
     bool    isEmptyCol2(int col)   const { return m_pbEmptyClms2[col]; }
+    /** @brief Returns the cached first character of cell (row, col) in table 1. */
     char    getMainChar1(int row, int col) const { return m_pchMainArr1[(row - 1) * m_Table1.NumberOfColumns + col]; }
+    /** @brief Returns the cached first character of cell (row, col) in table 2. */
     char    getMainChar2(int row, int col) const { return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col]; }
+    /** @brief Returns a reference to the key-to-row lookup map for table 1. */
     CMap<CString, LPCTSTR, long, long>& getMap1() { return m_Map1; }
+    /** @brief Returns a reference to the key-to-row lookup map for table 2. */
     CMap<CString, LPCTSTR, long, long>& getMap2() { return m_Map2; }
 
     NotUniqueKeys m_NotUniqueKeys1;
@@ -439,6 +495,7 @@ public:
 
 private:
     // --- Internal helpers ---
+    /** @brief Reads each cell in table 1 and stores its first character in m_pchMainArr1. */
     void makeCharArr1()
     {
         if (int arSize1 = (m_Table1.NumberOfColumns + 1) * (m_Table1.NumberOfRows + 1))
@@ -459,6 +516,7 @@ private:
         ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, 100);
     }
 
+    /** @brief Reads each cell in table 2 and stores its first character in m_pchMainArr2. */
     void makeCharArr2()
     {
         if (int arSize2 = (m_Table2.NumberOfColumns + 1) * (m_Table2.NumberOfRows + 1))
@@ -479,6 +537,7 @@ private:
         ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, 100);
     }
 
+    /** @brief Determines which columns of table 1 are entirely empty and flags them in m_pbEmptyClms1. */
     void checkEmptiness1()
     {
         m_pbEmptyClms1.assign(m_Table1.NumberOfColumns + 2, true);
@@ -495,6 +554,7 @@ private:
         ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, 100);
     }
 
+    /** @brief Determines which columns of table 2 are entirely empty and flags them in m_pbEmptyClms2. */
     void checkEmptiness2()
     {
         m_pbEmptyClms2.assign(m_Table2.NumberOfColumns + 2, true);

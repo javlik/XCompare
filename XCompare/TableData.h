@@ -1,75 +1,75 @@
 #pragma once
 
-// Key candidate columns for one table
+/** @brief Up to 256 candidate key column indices for one table, as selected by the key-suggestion algorithm. */
 struct PossibleKeys {
-	int k[256];
+	int k[256]; ///< Column indices (1-based) of candidate key columns.
 };
 
-// RGB color entry for the difference-highlight palette
+/** @brief One RGB entry in the colour palette used to highlight differences. */
 struct Palette {
-	int red;
-	int green;
-	int blue;
+	int red;   ///< Red channel (0–255).
+	int green; ///< Green channel (0–255).
+	int blue;  ///< Blue channel (0–255).
 };
 
-// Descriptor of one Excel table (sheet)
+/** @brief Describes the layout of one loaded Excel sheet (table). */
 struct Table {
-	int    WorkSheetNumber;
-	long   MaxNumberOfRows;
-	long   MaxNumberOfCols;
-	long   NumberOfRows;
-	int    FirstRowWithData;
-	int    RowWithNames;
-	int    NumberOfColumns;
-	CString Columns[256];
-	bool   keys[256];
-	int    keysCnt;
+	int    WorkSheetNumber;   ///< 1-based sheet index within the workbook.
+	long   MaxNumberOfRows;   ///< Maximum row capacity (used-range upper bound from Excel).
+	long   MaxNumberOfCols;   ///< Maximum column capacity (used-range upper bound from Excel).
+	long   NumberOfRows;      ///< Actual number of data rows (excluding the header row).
+	int    FirstRowWithData;  ///< 1-based row index of the first data row.
+	int    RowWithNames;      ///< 1-based row index of the column-name header row.
+	int    NumberOfColumns;   ///< Number of columns present in the sheet.
+	CString Columns[256];     ///< Column header names, indexed 1–NumberOfColumns.
+	bool   keys[256];         ///< Per-column flag: true if that column is part of the active key.
+	int    keysCnt;           ///< Number of key columns currently selected.
 };
 
-// Top-left corner of the visible matrix region (in cell units)
+/** @brief Top-left corner of the visible comparison matrix, in cell-unit coordinates. */
 struct VisTopLeft {
-	int top;
-	int left;
+	int top;  ///< First visible row index (0-based).
+	int left; ///< First visible column index (0-based).
 };
 
-// One key-column pair (one column from each table)
+/** @brief A pair of matched key columns, one from each table. */
 struct KeyPair {
-	int tab1;
-	int tab2;
+	int tab1; ///< Key column index in table 1 (1-based).
+	int tab2; ///< Key column index in table 2 (1-based).
 };
 
-// Similarity score between two columns across tables
+/** @brief Pairwise similarity score between one column from each table. */
 struct SimilaritiesAcrossTables {
-	int  clm1;
-	int  clm2;
-	long similarity;
-	int  similarityOrder;
-	int  pureSim;
+	int  clm1;            ///< Column index in table 1 (1-based).
+	int  clm2;            ///< Column index in table 2 (1-based).
+	long similarity;      ///< Raw overlap count (number of matching values).
+	int  similarityOrder; ///< Rank of this pair in the sorted similarity list.
+	int  pureSim;         ///< Similarity after removing exact-name-match bonus.
 };
 
-// Matrix cell coordinates (column x, row y)
+/** @brief Screen coordinates (in cell units) of the cell the user has clicked on. */
 struct ChosenCell {
-	int x;
-	int y;
+	int x; ///< Column index (1-based, 0 = none).
+	int y; ///< Row index (1-based, 0 = none).
 };
 
-// Size of the client drawing area in pixels
+/** @brief Pixel dimensions of the client drawing area. */
 struct Clnt {
-	int w;
-	int h;
+	int w; ///< Width in pixels.
+	int h; ///< Height in pixels.
 };
 
-// Best key combination found by the key-suggestion algorithm
+/** @brief Best key-column combination found so far by the key-suggestion algorithm. */
 struct BestKeyComb {
-	int  pk1;
-	int  pk2;
-	int  rating;
-	long cnt;
+	int  pk1;    ///< Index into PossibleKeys for table 1.
+	int  pk2;    ///< Index into PossibleKeys for table 2.
+	int  rating; ///< Combined score (higher is better).
+	long cnt;    ///< Number of successfully matched rows with this combination.
 };
 
-// Information about the first duplicate key found (used for user error messages)
+/** @brief Details of the first duplicate key value encountered during uniqueness checking. */
 struct NotUniqueKeys {
-	long    firstRow;
-	long    secondRow;
-	CString keyString;
+	long    firstRow;  ///< Row of the first occurrence of the duplicate.
+	long    secondRow; ///< Row of the second occurrence of the duplicate.
+	CString keyString; ///< The duplicated key value (as a string).
 };

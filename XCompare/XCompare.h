@@ -20,29 +20,36 @@
 #include "resource.h"       // main symbols
 
 
-// CXCompareApp:
-// See XCompare.cpp for the implementation of this class
-//
-
+/**
+ * @brief The application singleton class for XCompare.
+ *
+ * Derives from @c CWinAppEx and manages application-level initialisation,
+ * OLE startup, the main frame window, and the ribbon/look persistence.
+ */
 class CXCompareApp : public CWinAppEx
 {
 public:
 	CXCompareApp();
 
-
 // Overrides
 public:
+	/** @brief Initialises OLE, creates the main frame window, and shows it. */
 	virtual BOOL InitInstance();
+	/** @brief Terminates OLE and cleans up before the process exits. */
 	virtual int ExitInstance();
 
 // Implementation
 
 public:
-	UINT  m_nAppLook;
+	UINT  m_nAppLook; ///< ID of the currently active visual style (persisted in the registry).
+	/** @brief Registers the Edit pop-up context menu before the state is loaded. */
 	virtual void PreLoadState();
+	/** @brief Placeholder for loading custom persistent state (currently empty). */
 	virtual void LoadCustomState();
+	/** @brief Placeholder for saving custom persistent state (currently empty). */
 	virtual void SaveCustomState();
 
+	/** @brief Displays the About dialog box. */
 	afx_msg void OnAppAbout();
 	DECLARE_MESSAGE_MAP()
 };
