@@ -206,13 +206,13 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_CHECK3               "Pou�iteln� pouze pokud jsou n�zvy sloupc� v obou souborech identick�\nPro identick� n�zvy sloupc�"
+    ID_AUTO_MARK               "Pou�iteln� pouze pokud jsou n�zvy sloupc� v obou souborech identick�\nPro identick� n�zvy sloupc�"
     ID_DIFFS_LIST           "Po kliknut� na jedno z tla��tek vpravo ji mu�ete lokalizovat v 1. nebo 2. souboru\nZvolte odli�nost"
 END
 
 STRINGTABLE
 BEGIN
-    ID_BUTTON3              "pro pozad� nalezen�ch rozd�l�\nVyberte barvu"
+    ID_COLOR_PICKER2              "pro pozad� nalezen�ch rozd�l�\nVyberte barvu"
     ID_KEY1_1               "Kl��e mus� b�t v ka�d�m ��dku jedine�n� pro celou tabulku\nVyberte kl��e"
     ID_KEY1_2               "Kl��e mus� b�t v ka�d�m ��dku jedine�n� pro celou tabulku\nVyberte kl��e"
 END
@@ -223,14 +223,14 @@ BEGIN
     ID_KEY2_2               "Kl��e mus� b�t v ka�d�m ��dku jedine�n� pro celou tabulku\nVyberte kl��e"
     ID_KEY1_3               "Kl��e mus� b�t v ka�d�m ��dku jedine�n� pro celou tabulku\nVyberte kl��e"
     ID_KEY2_3               "Kl��e mus� b�t v ka�d�m ��dku jedine�n� pro celou tabulku\nVyberte kl��e"
-    ID_CHECK4               "Ozna�ovat po dvojkliknut� na bu�ku nebo automaticky\nOzna�ovat odli�nosti pr�mo v porovn�van�m souboru"
-    ID_CHECK5               "Ozna�ovat po dvojkliknut� na bu�ku nebo automaticky\nOzna�ovat odli�nosti pr�mo v porovn�van�m souboru"
+    ID_MARK_IN_FILE1               "Ozna�ovat po dvojkliknut� na bu�ku nebo automaticky\nOzna�ovat odli�nosti pr�mo v porovn�van�m souboru"
+    ID_MARK_IN_FILE2               "Ozna�ovat po dvojkliknut� na bu�ku nebo automaticky\nOzna�ovat odli�nosti pr�mo v porovn�van�m souboru"
 END
 
 STRINGTABLE
 BEGIN
-    ID_CHECK7               "Zapnout/vypnout zv�raz�ov�n� dvojice sloupc� s identick�mi n�zvy\nZv�raznit ohranicen� bunek pro dvojice stejnojmenn�ch sloupc�"
-    ID_BUTTON5              "pro pozad� nalezen�ch rozd�l�\nVyberte barvu"
+    ID_SAME_NAMES_ONLY               "Zapnout/vypnout zv�raz�ov�n� dvojice sloupc� s identick�mi n�zvy\nZv�raznit ohranicen� bunek pro dvojice stejnojmenn�ch sloupc�"
+    ID_COLOR_PICKER1              "pro pozad� nalezen�ch rozd�l�\nVyberte barvu"
 END
 
 STRINGTABLE

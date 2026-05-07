@@ -97,13 +97,13 @@ public:
 	bool checkKeysUniqueness1();
 	bool checkKeysUniqueness2();
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnSlider2();
-	afx_msg void OnUpdateSlider2(CCmdUI *pCmdUI);
-	afx_msg void OnCheck4();
-	afx_msg void OnUpdateCheck4(CCmdUI *pCmdUI);
-	afx_msg void OnCheck5();
-	afx_msg void OnUpdateCheck5(CCmdUI *pCmdUI);
-	afx_msg void OnButton2();
+	afx_msg void OnSimilarityThreshold();
+	afx_msg void OnUpdateSimilarityThreshold(CCmdUI *pCmdUI);
+	afx_msg void OnMarkInFile1();
+	afx_msg void OnUpdateMarkInFile1(CCmdUI *pCmdUI);
+	afx_msg void OnMarkInFile2();
+	afx_msg void OnUpdateMarkInFile2(CCmdUI *pCmdUI);
+	afx_msg void OnSuggestKeys();
 //	CString convertR1C1();
 	CString convertR1C1(int row, int clm);
 	void markIn1(int row, int clm);
@@ -113,14 +113,14 @@ public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnUpdateProgress2(CCmdUI *pCmdUI);
 
-	afx_msg void OnUpdateCheck2(CCmdUI *pCmdUI);
-	afx_msg void OnCheck2();
+	afx_msg void OnUpdateVerifyKeys(CCmdUI *pCmdUI);
+	afx_msg void OnVerifyKeys();
 //	UINT JobThread();
-	afx_msg void OnUpdateButton2(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateSuggestKeys(CCmdUI *pCmdUI);
 
 
-	afx_msg void OnCheck7();
-	afx_msg void OnUpdateCheck7(CCmdUI *pCmdUI);
+	afx_msg void OnSameNamesOnly();
+	afx_msg void OnUpdateSameNamesOnly(CCmdUI *pCmdUI);
 protected:
 	afx_msg LRESULT OnCmUpdateProgress(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam);
@@ -140,21 +140,21 @@ protected:
 public:
 	//afx_msg void OnProgress2();
 	void markInFiles();
-	afx_msg void OnButton5();
-	afx_msg void OnUpdateButton5(CCmdUI *pCmdUI);
-	afx_msg void OnButton3();
-	afx_msg void OnUpdateButton3(CCmdUI *pCmdUI);
-	afx_msg void OnCheck3();
-	afx_msg void OnUpdateCheck3(CCmdUI *pCmdUI);
+	afx_msg void OnColorPicker1();
+	afx_msg void OnUpdateColorPicker1(CCmdUI *pCmdUI);
+	afx_msg void OnColorPicker2();
+	afx_msg void OnUpdateColorPicker2(CCmdUI *pCmdUI);
+	afx_msg void OnAutoMark();
+	afx_msg void OnUpdateAutoMark(CCmdUI *pCmdUI);
 	void resolveAutoMark();
 	void DrainMsgQueue(void);
 	afx_msg void OnDiffslist();
 	afx_msg void OnUpdateDiffslist(CCmdUI *pCmdUI);
-	afx_msg void OnSel1();
+	afx_msg void OnGotoDiffInFile1();
 	int rowFromCombo();
-	afx_msg void OnButton6();
-	afx_msg void OnPut2front();
-	afx_msg void OnUpdatePut2front(CCmdUI *pCmdUI);
+	afx_msg void OnGotoDiffInFile2();
+	afx_msg void OnBringExcelToFront();
+	afx_msg void OnUpdateBringExcelToFront(CCmdUI *pCmdUI);
 	void suggestKeys1();
 	void suggestKeys2();
 private:
@@ -175,15 +175,15 @@ public:
 	int getNumberOfPossibleKeys();
 	// sortExaminedKeys, sumExaminedKeys, is2BExaminedOnce, getSimilarKeyProbability,
 	// getNthEntropy, CalculateEntropyRank, isEntropyStored -- moved to KeyFinder (private)
-	afx_msg void OnUpdateCombo2(CCmdUI *pCmdUI);
-	afx_msg void OnCombo2();
+	afx_msg void OnUpdateKeySearchComplexity(CCmdUI *pCmdUI);
+	afx_msg void OnKeySearchComplexity();
 	int getNumberOfPossibleKeys(int table, int order, int item);
 	void findSims();
 	void findSims1();
 	void findSims2();
-	afx_msg void OnSimilarpaircheckbox();
-	afx_msg void OnUpdateSimilarpaircheckbox(CCmdUI *pCmdUI);
-	afx_msg void OnFindrelBtn();
+	afx_msg void OnShowSimilarColumns();
+	afx_msg void OnUpdateShowSimilarColumns(CCmdUI *pCmdUI);
+	afx_msg void OnFindColumnRelations();
 	afx_msg void OnIdxcrtBtn();
 	afx_msg void OnUpdateKeyProgress1(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateKeyProgress2(CCmdUI *pCmdUI);
@@ -192,8 +192,8 @@ public:
 	int ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos);
 	afx_msg void OnCheckIdx();
 	afx_msg void OnUpdateCheckIdx(CCmdUI *pCmdUI);
-	afx_msg void OnUsidxCheck();
-	afx_msg void OnUpdateUsidxCheck(CCmdUI *pCmdUI);
+	afx_msg void OnUseKeyIndexing();
+	afx_msg void OnUpdateUseKeyIndexing(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateRows1(CCmdUI *pCmdUI);
 	afx_msg void OnRows1();
 	afx_msg void OnUpdateCols1(CCmdUI *pCmdUI);

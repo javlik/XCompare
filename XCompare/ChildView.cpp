@@ -194,40 +194,40 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	// --- Comparison matrix ---
 	ON_COMMAND(ID_CREATE_MATRIX,                &CChildView::OnCreateMatrix)
 	ON_UPDATE_COMMAND_UI(ID_CREATE_MATRIX,      &CChildView::OnUpdateCreateMatrix)
-	ON_COMMAND(ID_SLIDER2,                      &CChildView::OnSlider2)
-	ON_UPDATE_COMMAND_UI(ID_SLIDER2,            &CChildView::OnUpdateSlider2)
-	ON_COMMAND(ID_SEL1,                         &CChildView::OnSel1)
-	ON_COMMAND(ID_COMBO2,                       &CChildView::OnCombo2)
-	ON_UPDATE_COMMAND_UI(ID_COMBO2,             &CChildView::OnUpdateCombo2)
-	ON_COMMAND(ID_PUT2FRONT,                    &CChildView::OnPut2front)
-	ON_UPDATE_COMMAND_UI(ID_PUT2FRONT,          &CChildView::OnUpdatePut2front)
+	ON_COMMAND(ID_SIMILARITY_THRESHOLD,         &CChildView::OnSimilarityThreshold)
+	ON_UPDATE_COMMAND_UI(ID_SIMILARITY_THRESHOLD,&CChildView::OnUpdateSimilarityThreshold)
+	ON_COMMAND(ID_GOTO_DIFF_IN_FILE1,           &CChildView::OnGotoDiffInFile1)
+	ON_COMMAND(ID_KEY_SEARCH_COMPLEXITY,        &CChildView::OnKeySearchComplexity)
+	ON_UPDATE_COMMAND_UI(ID_KEY_SEARCH_COMPLEXITY,&CChildView::OnUpdateKeySearchComplexity)
+	ON_COMMAND(ID_BRING_EXCEL_TO_FRONT,         &CChildView::OnBringExcelToFront)
+	ON_UPDATE_COMMAND_UI(ID_BRING_EXCEL_TO_FRONT,&CChildView::OnUpdateBringExcelToFront)
 
 	// --- Key finding and column-relation detection ---
-	ON_COMMAND(ID_FINDREL_BTN,                  &CChildView::OnFindrelBtn)
+	ON_COMMAND(ID_FIND_COLUMN_RELATIONS,        &CChildView::OnFindColumnRelations)
 	ON_COMMAND(ID_IDXCRT_BTN,                   &CChildView::OnIdxcrtBtn)
-	ON_COMMAND(ID_SIMILARPAIRCHECKBOX,          &CChildView::OnSimilarpaircheckbox)
-	ON_UPDATE_COMMAND_UI(ID_SIMILARPAIRCHECKBOX,&CChildView::OnUpdateSimilarpaircheckbox)
-	ON_COMMAND(ID_USIDX_CHECK,                  &CChildView::OnUsidxCheck)
-	ON_UPDATE_COMMAND_UI(ID_USIDX_CHECK,        &CChildView::OnUpdateUsidxCheck)
+	ON_COMMAND(ID_SHOW_SIMILAR_COLUMNS,         &CChildView::OnShowSimilarColumns)
+	ON_UPDATE_COMMAND_UI(ID_SHOW_SIMILAR_COLUMNS,&CChildView::OnUpdateShowSimilarColumns)
+	ON_COMMAND(ID_USE_KEY_INDEXING,             &CChildView::OnUseKeyIndexing)
+	ON_UPDATE_COMMAND_UI(ID_USE_KEY_INDEXING,   &CChildView::OnUpdateUseKeyIndexing)
 
 	// --- Marking and difference display ---
-	ON_COMMAND(ID_BUTTON2,                      &CChildView::OnButton2)
-	ON_UPDATE_COMMAND_UI(ID_BUTTON2,            &CChildView::OnUpdateButton2)
-	ON_COMMAND(ID_BUTTON3,                      &CChildView::OnButton3)
-	ON_UPDATE_COMMAND_UI(ID_BUTTON3,            &CChildView::OnUpdateButton3)
-	ON_COMMAND(ID_BUTTON5,                      &CChildView::OnButton5)
-	ON_UPDATE_COMMAND_UI(ID_BUTTON5,            &CChildView::OnUpdateButton5)
-	ON_COMMAND(ID_BUTTON6,                      &CChildView::OnButton6)
-	ON_COMMAND(ID_CHECK2,                       &CChildView::OnCheck2)
-	ON_UPDATE_COMMAND_UI(ID_CHECK2,             &CChildView::OnUpdateCheck2)
-	ON_COMMAND(ID_CHECK3,                       &CChildView::OnCheck3)
-	ON_UPDATE_COMMAND_UI(ID_CHECK3,             &CChildView::OnUpdateCheck3)
-	ON_COMMAND(ID_CHECK4,                       &CChildView::OnCheck4)
-	ON_UPDATE_COMMAND_UI(ID_CHECK4,             &CChildView::OnUpdateCheck4)
-	ON_COMMAND(ID_CHECK5,                       &CChildView::OnCheck5)
-	ON_UPDATE_COMMAND_UI(ID_CHECK5,             &CChildView::OnUpdateCheck5)
-	ON_COMMAND(ID_CHECK7,                       &CChildView::OnCheck7)
-	ON_UPDATE_COMMAND_UI(ID_CHECK7,             &CChildView::OnUpdateCheck7)
+	ON_COMMAND(ID_SUGGEST_KEYS,                 &CChildView::OnSuggestKeys)
+	ON_UPDATE_COMMAND_UI(ID_SUGGEST_KEYS,       &CChildView::OnUpdateSuggestKeys)
+	ON_COMMAND(ID_COLOR_PICKER2,                &CChildView::OnColorPicker2)
+	ON_UPDATE_COMMAND_UI(ID_COLOR_PICKER2,      &CChildView::OnUpdateColorPicker2)
+	ON_COMMAND(ID_COLOR_PICKER1,                &CChildView::OnColorPicker1)
+	ON_UPDATE_COMMAND_UI(ID_COLOR_PICKER1,      &CChildView::OnUpdateColorPicker1)
+	ON_COMMAND(ID_GOTO_DIFF_IN_FILE2,           &CChildView::OnGotoDiffInFile2)
+	ON_COMMAND(ID_VERIFY_KEYS,                  &CChildView::OnVerifyKeys)
+	ON_UPDATE_COMMAND_UI(ID_VERIFY_KEYS,        &CChildView::OnUpdateVerifyKeys)
+	ON_COMMAND(ID_AUTO_MARK,                    &CChildView::OnAutoMark)
+	ON_UPDATE_COMMAND_UI(ID_AUTO_MARK,          &CChildView::OnUpdateAutoMark)
+	ON_COMMAND(ID_MARK_IN_FILE1,                &CChildView::OnMarkInFile1)
+	ON_UPDATE_COMMAND_UI(ID_MARK_IN_FILE1,      &CChildView::OnUpdateMarkInFile1)
+	ON_COMMAND(ID_MARK_IN_FILE2,                &CChildView::OnMarkInFile2)
+	ON_UPDATE_COMMAND_UI(ID_MARK_IN_FILE2,      &CChildView::OnUpdateMarkInFile2)
+	ON_COMMAND(ID_SAME_NAMES_ONLY,              &CChildView::OnSameNamesOnly)
+	ON_UPDATE_COMMAND_UI(ID_SAME_NAMES_ONLY,    &CChildView::OnUpdateSameNamesOnly)
 	ON_COMMAND(ID_DIFFS_LIST,                   &CChildView::OnDiffslist)
 	ON_UPDATE_COMMAND_UI(ID_DIFFS_LIST,         &CChildView::OnUpdateDiffslist)
 
@@ -1635,7 +1635,7 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 /// <summary>
 /// Called when [slider2].
 /// </summary>
-void CChildView::OnSlider2()
+void CChildView::OnSimilarityThreshold()
 {
 	m_nSldr = m_pSlider->GetPos();
 	this->Invalidate();
@@ -1652,10 +1652,10 @@ void CChildView::OnSlider2()
 /// Called when [update slider2].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateSlider2(CCmdUI* pCmdUI)
+void CChildView::OnUpdateSimilarityThreshold(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pSlider = DYNAMIC_DOWNCAST(CMFCRibbonSlider, m_pRibbon->FindByID(ID_SLIDER2));
+	m_pSlider = DYNAMIC_DOWNCAST(CMFCRibbonSlider, m_pRibbon->FindByID(ID_SIMILARITY_THRESHOLD));
 	if (m_pSlider->GetPos() == 0)
 		m_pSlider->SetPos(m_nSldr);
 }
@@ -1664,7 +1664,7 @@ void CChildView::OnUpdateSlider2(CCmdUI* pCmdUI)
 /// <summary>
 /// Called when [check4].
 /// </summary>
-void CChildView::OnCheck4()
+void CChildView::OnMarkInFile1()
 {
 	m_bIn1file = !m_bIn1file;
 }
@@ -1674,19 +1674,19 @@ void CChildView::OnCheck4()
 /// Called when [update check4].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateCheck4(CCmdUI* pCmdUI)
+void CChildView::OnUpdateMarkInFile1(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pCmdUI->SetCheck(m_bIn1file);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pMarkIn1 = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_CHECK4));
+	m_pMarkIn1 = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_MARK_IN_FILE1));
 }
 
 
 /// <summary>
 /// Called when [check5].
 /// </summary>
-void CChildView::OnCheck5()
+void CChildView::OnMarkInFile2()
 {
 	m_bIn2file = !m_bIn2file;
 }
@@ -1696,19 +1696,19 @@ void CChildView::OnCheck5()
 /// Called when [update check5].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateCheck5(CCmdUI* pCmdUI)
+void CChildView::OnUpdateMarkInFile2(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
 	pCmdUI->SetCheck(m_bIn2file);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pMarkIn2 = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_CHECK5));
+	m_pMarkIn2 = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_MARK_IN_FILE2));
 }
 
 
 /// <summary>
 /// Called when [button2].
 /// </summary>
-void CChildView::OnButton2()
+void CChildView::OnSuggestKeys()
 {
 	if (m_bLockPrg1 || m_bLockPrg2) {
 		MessageBox(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
@@ -1900,18 +1900,18 @@ void CChildView::OnUpdateProgress2(CCmdUI* pCmdUI)
 /// Called when [update check2].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateCheck2(CCmdUI* pCmdUI)
+void CChildView::OnUpdateVerifyKeys(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_bVerifyKeys);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pVerifyKeys = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_CHECK2));
+	m_pVerifyKeys = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_VERIFY_KEYS));
 }
 
 
 /// <summary>
 /// Called when [check2].
 /// </summary>
-void CChildView::OnCheck2()
+void CChildView::OnVerifyKeys()
 {
 	m_bVerifyKeys = !m_bVerifyKeys;
 }
@@ -1921,19 +1921,19 @@ void CChildView::OnCheck2()
 /// Called when [update button2].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateButton2(CCmdUI* pCmdUI)
+void CChildView::OnUpdateSuggestKeys(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
 	//pCmdUI->SetText(m_bUseIndexes ? L"Sestavit kl��" : L"Naj�t kl��");
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pButton2 = DYNAMIC_DOWNCAST(CMFCRibbonButton, m_pRibbon->FindByID(ID_BUTTON2));
+	m_pButton2 = DYNAMIC_DOWNCAST(CMFCRibbonButton, m_pRibbon->FindByID(ID_SUGGEST_KEYS));
 }
 
 
 /// <summary>
 /// Called when [check7].
 /// </summary>
-void CChildView::OnCheck7()
+void CChildView::OnSameNamesOnly()
 {
 	m_bSameNames = !m_bSameNames;
 	m_VisTopLeft.top = m_nVScrollPos / STEP_Y;
@@ -1952,11 +1952,11 @@ void CChildView::OnCheck7()
 /// Called when [update check7].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateCheck7(CCmdUI* pCmdUI)
+void CChildView::OnUpdateSameNamesOnly(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_bSameNames);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pSameNames = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_CHECK7));
+	m_pSameNames = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_SAME_NAMES_ONLY));
 }
 
 
@@ -2344,7 +2344,7 @@ void CChildView::markInFiles()
 /// <summary>
 /// Called when [button5].
 /// </summary>
-void CChildView::OnButton5()
+void CChildView::OnColorPicker1()
 {
 	COLORREF i = (int)m_pColorPicker1->GetSelectedItem();
 	m_nChosenColor1 = i;
@@ -2355,18 +2355,18 @@ void CChildView::OnButton5()
 /// Called when [update button5].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateButton5(CCmdUI* pCmdUI)
+void CChildView::OnUpdateColorPicker1(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pColorPicker1 = DYNAMIC_DOWNCAST(CMFCRibbonColorButton, m_pRibbon->FindByID(ID_BUTTON5));
+	m_pColorPicker1 = DYNAMIC_DOWNCAST(CMFCRibbonColorButton, m_pRibbon->FindByID(ID_COLOR_PICKER1));
 }
 
 
 /// <summary>
 /// Called when [button3].
 /// </summary>
-void CChildView::OnButton3()
+void CChildView::OnColorPicker2()
 {
 	COLORREF i = (int)m_pColorPicker2->GetSelectedItem();
 	m_nChosenColor2 = i;
@@ -2377,18 +2377,18 @@ void CChildView::OnButton3()
 /// Called when [update button3].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateButton3(CCmdUI* pCmdUI)
+void CChildView::OnUpdateColorPicker2(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pColorPicker2 = DYNAMIC_DOWNCAST(CMFCRibbonColorButton, m_pRibbon->FindByID(ID_BUTTON3));
+	m_pColorPicker2 = DYNAMIC_DOWNCAST(CMFCRibbonColorButton, m_pRibbon->FindByID(ID_COLOR_PICKER2));
 }
 
 
 /// <summary>
 /// Called when [check3].
 /// </summary>
-void CChildView::OnCheck3()
+void CChildView::OnAutoMark()
 {
 	m_bAutoMark = !m_bAutoMark;
 }
@@ -2398,7 +2398,7 @@ void CChildView::OnCheck3()
 /// Called when [update check3].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateCheck3(CCmdUI* pCmdUI)
+void CChildView::OnUpdateAutoMark(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
 	pCmdUI->SetCheck(m_bAutoMark);
@@ -2574,7 +2574,7 @@ void CChildView::OnUpdateDiffslist(CCmdUI* pCmdUI)
 /// <summary>
 /// Called when [sel1].
 /// </summary>
-void CChildView::OnSel1()
+void CChildView::OnGotoDiffInFile1()
 {
 	long row;
 	long column;
@@ -2621,7 +2621,7 @@ int CChildView::rowFromCombo()
 /// <summary>
 /// Called when [button6].
 /// </summary>
-void CChildView::OnButton6()
+void CChildView::OnGotoDiffInFile2()
 {
 	long row;
 	long column;
@@ -2646,7 +2646,7 @@ void CChildView::OnButton6()
 /// <summary>
 /// Called when [put2front].
 /// </summary>
-void CChildView::OnPut2front()
+void CChildView::OnBringExcelToFront()
 {
 	m_bToFront = !m_bToFront;
 }
@@ -2656,7 +2656,7 @@ void CChildView::OnPut2front()
 /// Called when [update put2front].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdatePut2front(CCmdUI* pCmdUI)
+void CChildView::OnUpdateBringExcelToFront(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_bToFront);
 }
@@ -2948,13 +2948,13 @@ int CChildView::getNumberOfPossibleKeys()
 /// Called when [update combo2].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateCombo2(CCmdUI* pCmdUI)
+void CChildView::OnUpdateKeySearchComplexity(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
 	if (!m_pCombo2)
 	{
-		m_pCombo2 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, m_pRibbon->FindByID(ID_COMBO2));
+		m_pCombo2 = DYNAMIC_DOWNCAST(CMFCRibbonComboBox, m_pRibbon->FindByID(ID_KEY_SEARCH_COMPLEXITY));
 		if (m_pCombo2)
 		{
 			m_pCombo2->SelectItem(1);
@@ -2966,7 +2966,7 @@ void CChildView::OnUpdateCombo2(CCmdUI* pCmdUI)
 /// <summary>
 /// Called when [combo2].
 /// </summary>
-void CChildView::OnCombo2()
+void CChildView::OnKeySearchComplexity()
 {
 	int complexity = 100000;
 	if (m_pCombo2->GetCurSel() == 0) complexity = 10000;
@@ -3228,7 +3228,7 @@ void CChildView::findSims2()
 /// <summary>
 /// Called when [similarpaircheckbox].
 /// </summary>
-void CChildView::OnSimilarpaircheckbox()
+void CChildView::OnShowSimilarColumns()
 {
 	if (m_Table1.NumberOfColumns * m_Table2.NumberOfColumns == 0)
 	{
@@ -3247,11 +3247,11 @@ void CChildView::OnSimilarpaircheckbox()
 /// Called when [update similarpaircheckbox].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateSimilarpaircheckbox(CCmdUI* pCmdUI)
+void CChildView::OnUpdateShowSimilarColumns(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(m_Table1.NumberOfColumns * m_Table2.NumberOfColumns && m_bXSimilarityComputed);
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pShowSims = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_SIMILARPAIRCHECKBOX));
+	m_pShowSims = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_SHOW_SIMILAR_COLUMNS));
 	pCmdUI->SetCheck(m_bToDisplaySimilarClms);
 }
 
@@ -3259,7 +3259,7 @@ void CChildView::OnUpdateSimilarpaircheckbox(CCmdUI* pCmdUI)
 /// <summary>
 /// Called when [findrel BTN].
 /// </summary>
-void CChildView::OnFindrelBtn()
+void CChildView::OnFindColumnRelations()
 {
 	if (m_Table1.NumberOfColumns * m_Table2.NumberOfColumns == 0)
 	{
@@ -3649,7 +3649,7 @@ void CChildView::OnUpdateCheckIdx(CCmdUI* pCmdUI)
 /// <summary>
 /// Called when [usidx check].
 /// </summary>
-void CChildView::OnUsidxCheck()
+void CChildView::OnUseKeyIndexing()
 {
 	m_bUseIndexes = !m_bUseIndexes;
 	m_engine.m_bUseIndexes = m_bUseIndexes;
@@ -3661,10 +3661,10 @@ void CChildView::OnUsidxCheck()
 /// Called when [update usidx check].
 /// </summary>
 /// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateUsidxCheck(CCmdUI* pCmdUI)
+void CChildView::OnUpdateUseKeyIndexing(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
-	m_pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_USIDX_CHECK));
+	m_pUseIndices = DYNAMIC_DOWNCAST(CMFCRibbonCheckBox, m_pRibbon->FindByID(ID_USE_KEY_INDEXING));
 	pCmdUI->SetCheck(m_bUseIndexes);
 }
 
