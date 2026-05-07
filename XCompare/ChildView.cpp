@@ -80,7 +80,7 @@ CChildView::CChildView()
 	// m_nKeyPairCounter is now inside m_engine
 	m_nOldx = 0; m_nOldy = 0;
 	m_Clnt.w = 0; m_Clnt.h = 0;
-	m_nNatrixDone  = 0;
+	m_nMatrixDone  = 0;
 	m_nPrereqDone  = 0;
 	m_bMarkIdentCols = false;
 	m_nCellWidth  = 0; m_nCellHeight  = 0;
@@ -333,7 +333,7 @@ void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
 	dc.SelectObject(ctx.font4);
 	CString prcnt;
 	prcnt = L"";
-	if (!m_bToDisplaySimilarClms && M_CCell.x * M_CCell.y && m_nNatrixDone)
+	if (!m_bToDisplaySimilarClms && M_CCell.x * M_CCell.y && m_nMatrixDone)
 	{
 		dc.SetBkMode(TRANSPARENT);
 		if (M_CCell.x <= ctx.bnd_X_max && M_CCell.y <= ctx.bnd_Y_max)
@@ -481,7 +481,7 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
 			dc.SelectObject(ctx.brush0);
 			dc.SelectObject(ctx.pen4);
 		}
-		if (m_nNatrixDone && !m_bOnlyPcnt && ((mx_y - m_VisTopLeft.top) > 0))
+		if (m_nMatrixDone && !m_bOnlyPcnt && ((mx_y - m_VisTopLeft.top) > 0))
 		{
 			if (m_pbGreenClms1[mx_y])
 			{
@@ -580,7 +580,7 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 			dc.SelectObject(ctx.brush0);
 			dc.SelectObject(ctx.pen4);
 		}
-		if (m_nNatrixDone && !m_bOnlyPcnt && ((mx_x - m_VisTopLeft.left) > 0))
+		if (m_nMatrixDone && !m_bOnlyPcnt && ((mx_x - m_VisTopLeft.left) > 0))
 		{
 			if (m_pbGreenClms2[mx_x])
 			{
@@ -614,7 +614,7 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
 {
 	dc.SelectObject(ctx.pen2);
-	if (m_nNatrixDone && !m_bOnlyPcnt)
+	if (m_nMatrixDone && !m_bOnlyPcnt)
 	{
 		dc.SetBkMode(OPAQUE);
 		dc.SelectObject(ctx.font3);
@@ -777,12 +777,9 @@ void CChildView::paintSimilarityLines(CDC& dc, PaintCtx& ctx)
 }
 
 
-/// <summary>
-/// Called when [pick first file].
-/// </summary>
-void CChildView::OnPickFirstFile()
+void CChildView::pickFile(bool* pNewFile, ExcelConnector* pExcel, Table* pTable, CMFCRibbonComboBox* pSheetCombo, CString* pFilename)
 {
-	m_bNewFile1 = false;
+	*pNewFile = false;
 	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // CMsg(IDS_WAIT_TILL_IN_EXCEL)
 	CString fileName;
 	wchar_t* p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
@@ -813,22 +810,22 @@ void CChildView::OnPickFirstFile()
 			fileCount++;
 		}
 	}
-	m_excel1.closeBook();
+	pExcel->closeBook();
 	if (!(CString(fileName) == L""))
 	{
 		for (int i = 0; i < 255; i++)
 		{
-			m_Table1.Columns[i] = "";
+			pTable->Columns[i] = "";
 		}
-		if (m_excel1.openFile(fileName, m_App))
+		if (pExcel->openFile(fileName, m_App))
 		{
-			m_pSheetCombo1->RemoveAllItems();
-			CWorksheets& sheets = m_excel1.getSheets();
+			pSheetCombo->RemoveAllItems();
+			CWorksheets& sheets = pExcel->getSheets();
 			for (int i = 1; i <= sheets.get_Count(); i++)
 			{
 				if (CWorksheet tempSheet = sheets.get_Item(COleVariant((short)i)))
 				{
-					m_pSheetCombo1->AddItem(tempSheet.get_Name());
+					pSheetCombo->AddItem(tempSheet.get_Name());
 				}
 				else
 				{
@@ -837,13 +834,13 @@ void CChildView::OnPickFirstFile()
 			}
 		}
 	}
-	m_szFilename1 = fileName;
-	m_bNewFile1 = true;
+	*pFilename = fileName;
+	*pNewFile = true;
 	m_nUiToBeRefreshed = 3;
-	if (m_nNatrixDone > 0)
+	if (m_nMatrixDone > 0)
 	{
 		m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
-		m_nNatrixDone = 0;
+		m_nMatrixDone = 0;
 		m_OldCell.x = 0;
 		m_OldCell.y = 0;
 	}
@@ -853,77 +850,34 @@ void CChildView::OnPickFirstFile()
 }
 
 
+
+/// <summary>
+/// Called when [pick first file].
+/// </summary>
+void CChildView::OnPickFirstFile()
+{
+	bool* pNewFile = &m_bNewFile1;
+	ExcelConnector* pExcel = &m_excel1;
+	Table* pTable = &m_Table1;
+	CMFCRibbonComboBox* pSheetCombo = m_pSheetCombo1;
+	CString * pFilename = &m_szFilename1;
+
+	pickFile(pNewFile, pExcel, pTable, pSheetCombo, pFilename);
+}
+
+
 /// <summary>
 /// Called when [pick second file].
 /// </summary>
 void CChildView::OnPickSecondFile()
 {
-	m_bNewFile2 = false;
-	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // // CMsg(IDS_WAIT_TILL_IN_EXCEL)
-	CString fileName;
-	wchar_t* p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
-	CFileDialog dlgFile(TRUE);
-	OPENFILENAME& ofn = dlgFile.GetOFN();
-	//ofn.Flags |= OFN_ALLOWMULTISELECT; // for future scalability
-	ofn.lpstrFile = p;
-	ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
-	dlgFile.DoModal();
-	fileName.ReleaseBuffer();
-	wchar_t* pBufEnd = p + FILE_LIST_BUFFER_SIZE - 2;
-	wchar_t* start = p;
-	while ((p < pBufEnd) && (*p))
-		p++;
-	if (p > start)
-	{
-		_tprintf(CMsg(IDS_PATH_TO_FILE), start); // CMsg(IDS_PATH_TO_FILE)
-		p++;
-		int fileCount = 1;
-		while ((p < pBufEnd) && (*p))
-		{
-			start = p;
-			while ((p < pBufEnd) && (*p))
-				p++;
-			if (p > start)
-				_tprintf(_T("%2d. %s\r\n"), fileCount, start);
-			p++;
-			fileCount++;
-		}
-	}
-	m_excel2.closeBook();
-	if (!(CString(fileName) == L""))
-	{
-		for (int i = 0; i < 255; i++)
-		{
-			m_Table2.Columns[i] = "";
-		}
-		if (m_excel2.openFile(fileName, m_App))
-		{
-			m_pSheetCombo2->RemoveAllItems();
-			CWorksheets& sheets = m_excel2.getSheets();
-			for (int i = 1; i <= sheets.get_Count(); i++)
-			{
-				if (CWorksheet tempSheet = sheets.get_Item(COleVariant((short)i)))
-				{
-					m_pSheetCombo2->AddItem(tempSheet.get_Name());
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-	}
-	m_szFilename2 = fileName;
-	m_bNewFile2 = true;
-	m_nUiToBeRefreshed = 3;
-	if (m_nNatrixDone > 0)
-	{
-		m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
-		m_nNatrixDone = 0;
-	}
-	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED)); // CMsg(IDS_FILE_SUCCESFULLY_LOADED)
-	deleteAllKeys();
-	this->Invalidate();
+	bool* pNewFile = &m_bNewFile2;
+	ExcelConnector* pExcel = &m_excel2;
+	Table* pTable = &m_Table2;
+	CMFCRibbonComboBox* pSheetCombo = m_pSheetCombo2;
+	CString * pFilename = &m_szFilename2;
+
+	pickFile(pNewFile, pExcel, pTable, pSheetCombo, pFilename);
 }
 
 
@@ -936,7 +890,7 @@ void CChildView::OnCreateMatrix()
 		MessageBox(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
 		return;
 	}
-	m_nNatrixDone = 0;
+	m_nMatrixDone = 0;
 	m_nPrereqDone = 0;
 	if (areThereAnyKeys() == false)
 	{
@@ -993,20 +947,16 @@ void CChildView::OnUpdateCreateMatrix(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [update filename1].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
-void CChildView::OnUpdateFilename1(CCmdUI* pCmdUI)
+void CChildView::updateFileName(CCmdUI* pCmdUI, CString* pszFilename, int idString)
 {
 	if (m_nUiToBeRefreshed)
 	{
-		if (!(m_szFilename1 == ""))
+		if (!(*pszFilename == ""))
 		{
-			CString s = m_szFilename1;
+			CString s = *pszFilename;
 			int origLen = s.GetLength();
 			s = s.Right(20);
-			s = (CString)CMsg(IDS_1ST_FILE) + (origLen > 20 ? ".." : "") + s; // CMsg(IDS_1ST_FILE)
+			s = (CString)CMsg(idString) + (origLen > 20 ? ".." : "") + s; // CMsg(idString)
 			pCmdUI->SetText(s);
 			pCmdUI->Enable(true);
 			this->GetTopLevelFrame()->Invalidate();
@@ -1017,6 +967,17 @@ void CChildView::OnUpdateFilename1(CCmdUI* pCmdUI)
 		}
 		if (m_nUiToBeRefreshed > 0) m_nUiToBeRefreshed -= 1;
 	}
+
+}
+
+
+/// <summary>
+/// Called when [update filename1].
+/// </summary>
+/// <param name="pCmdUI">The p command UI.</param>
+void CChildView::OnUpdateFilename1(CCmdUI* pCmdUI)
+{
+	updateFileName(pCmdUI, &m_szFilename1, IDS_1ST_FILE);
 }
 
 
@@ -1026,24 +987,7 @@ void CChildView::OnUpdateFilename1(CCmdUI* pCmdUI)
 /// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateFilename2(CCmdUI* pCmdUI)
 {
-	if (m_nUiToBeRefreshed)
-	{
-		if (!(m_szFilename2 == ""))
-		{
-			CString s = m_szFilename2;
-			int origLen = s.GetLength();
-			s = s.Right(20);
-			s = (CString)CMsg(IDS_2ND_FILE) + (origLen > 20 ? ".." : "") + s; // CMsg(IDS_2ND_FILE)
-			pCmdUI->SetText(s);
-			pCmdUI->Enable(true);
-			this->GetTopLevelFrame()->Invalidate();
-		}
-		else
-		{
-			pCmdUI->Enable(false);
-		}
-		if (m_nUiToBeRefreshed > 0) m_nUiToBeRefreshed -= 1;
-	}
+	updateFileName(pCmdUI, &m_szFilename2, IDS_2ND_FILE);
 }
 
 
@@ -1223,42 +1167,38 @@ void CChildView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 }
 
 
-/// <summary>
-/// Called when [pick first sheet].
-/// </summary>
-void CChildView::OnPickFirstSheet()
+void CChildView::pickSheet(ExcelConnector* pExcel, Table* pTable, CMFCRibbonComboBox* pSheetCombo, CMFCRibbonEdit* pSpinner_Names, CMFCRibbonEdit* pSpinner_Fdata, CMFCRibbonEdit* pRows, CMFCRibbonEdit* pCols)
 {
-	int tmpWSN = m_pSheetCombo1->GetCurSel() + 1;
-	CString tmpWSS = m_pSheetCombo1->GetEditText();
-	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_PRELIM_CHK)); // CMsg(IDS_WAIT_PRELIM_CHK)
+	int tmpWSN = pSheetCombo->GetCurSel() + 1;
+	CString tmpWSS = pSheetCombo->GetEditText();
+	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_PRELIM_CHK));
 	if (tmpWSN > 0)
 	{
-		m_Table1.WorkSheetNumber = tmpWSN;
+		pTable->WorkSheetNumber = tmpWSN;
 		long iRows;
 		long iCols;
-		m_excel1.selectSheet(tmpWSS, iRows, iCols);
-		m_Table1.MaxNumberOfRows = iRows;
-		m_Table1.MaxNumberOfCols = iCols;
-		m_Table1.NumberOfColumns = iCols;
-		m_Table1.NumberOfRows = iRows;
-		m_Table1.RowWithNames = 1;
+		pExcel->selectSheet(tmpWSS, iRows, iCols);
+		pTable->MaxNumberOfRows = iRows;
+		pTable->MaxNumberOfCols = iCols;
+		pTable->NumberOfColumns = iCols;
+		pTable->NumberOfRows = iRows;
+		pTable->RowWithNames = 1;
 		CString tmps;
 		tmps.Format(_T("%d"), 1);
-		m_pSpinner1_Names->SetEditText(tmps);
-		m_Table1.RowWithNames = 1;
+		pSpinner_Names->SetEditText(tmps);
+		pTable->RowWithNames = 1;
 		tmps.Format(_T("%d"), 2);
-		m_pSpinner1_Fdata->SetEditText(tmps);
-		m_Table1.FirstRowWithData = 2;
-		tmps.Format(_T("%d"), m_Table1.NumberOfRows);
-		m_pRows1->SetEditText(tmps);
-		tmps.Format(_T("%d"), m_Table1.NumberOfColumns);
-		m_pCols1->SetEditText(tmps);
-		updateCombos1();
+		pSpinner_Fdata->SetEditText(tmps);
+		pTable->FirstRowWithData = 2;
+		tmps.Format(_T("%d"), pTable->NumberOfRows);
+		pRows->SetEditText(tmps);
+		tmps.Format(_T("%d"), pTable->NumberOfColumns);
+		pCols->SetEditText(tmps);
 		m_nCellWidth = STEP_X;
 		m_nCellHeight = STEP_Y;
 		m_nRibbonWidth = 0;
-		m_nViewWidth = STEP_X + OFFSET_X + ((m_Table2.NumberOfColumns + 1) * m_nCellWidth) + m_nRibbonWidth;
-		m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (m_Table1.NumberOfColumns + 1);
+		m_nViewWidth = STEP_X + OFFSET_X + ((pTable->NumberOfColumns + 1) * m_nCellWidth) + m_nRibbonWidth;
+		m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (pTable->NumberOfColumns + 1);
 		SCROLLINFO si;
 		si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
 		si.nMin = 0;
@@ -1267,12 +1207,12 @@ void CChildView::OnPickFirstSheet()
 		si.nPage = m_nVPageSize;
 		SetScrollInfo(SB_VERT, &si, TRUE);
 		this->Invalidate();
-		m_nNatrixDone = false;
+		m_nMatrixDone = false;
 		deleteAllKeys();
-		if (m_nNatrixDone > 0)
+		if (m_nMatrixDone > 0)
 		{
-			m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
-			m_nNatrixDone = 0;
+			m_matrix.clear(pTable->NumberOfColumns + 1, pTable->NumberOfRows + 1);
+			m_nMatrixDone = 0;
 			m_OldCell.x = 0;
 			m_OldCell.y = 0;
 			M_CCell.x = 0;
@@ -1282,6 +1222,16 @@ void CChildView::OnPickFirstSheet()
 		m_engine.setTables(m_Table1, m_Table2);
 		AfxBeginThread(makePrereq1ThreadProc, this);
 	}
+}
+
+
+/// <summary>
+/// Called when [pick first sheet].
+/// </summary>
+void CChildView::OnPickFirstSheet()
+{
+	pickSheet(&m_excel1, &m_Table1, m_pSheetCombo1, m_pSpinner1_Names, m_pSpinner1_Fdata, m_pRows1, m_pCols1);
+	updateCombos1();
 }
 
 
@@ -1374,60 +1324,8 @@ void CChildView::updateCombos1()
 /// </summary>
 void CChildView::OnPickSecondSheet()
 {
-	int tmpWSN = m_pSheetCombo2->GetCurSel() + 1;
-	CString tmpWSS = m_pSheetCombo2->GetEditText();
-	if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)); // CMsg(IDS_WAIT_UNTIL_PRELIMINARY_CHECK)
-	if (tmpWSN > 0)
-	{
-		m_Table2.WorkSheetNumber = tmpWSN;
-		long iRows;
-		long iCols;
-		m_excel2.selectSheet(tmpWSS, iRows, iCols);
-		m_Table2.MaxNumberOfRows = iRows;
-		m_Table2.MaxNumberOfCols = iCols;
-		m_Table2.NumberOfColumns = iCols;
-		m_Table2.NumberOfRows = iRows;
-		m_Table2.RowWithNames = 1;
-		CString tmps;
-		tmps.Format(_T("%d"), 1);
-		m_pSpinner2_Names->SetEditText(tmps);
-		m_Table2.RowWithNames = 1;
-		tmps.Format(_T("%d"), 2);
-		m_pSpinner2_Fdata->SetEditText(tmps);
-		m_Table2.FirstRowWithData = 2;
-		tmps.Format(_T("%d"), m_Table2.NumberOfRows);
-		m_pRows2->SetEditText(tmps);
-		tmps.Format(_T("%d"), m_Table2.NumberOfColumns);
-		m_pCols2->SetEditText(tmps);
-		m_nCellWidth = STEP_X;
-		m_nCellHeight = STEP_Y;
-		m_nRibbonWidth = 0;
-		m_nViewWidth = STEP_X + OFFSET_X + ((m_Table2.NumberOfColumns + 1) * m_nCellWidth) + m_nRibbonWidth;
-		m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (m_Table1.NumberOfColumns + 1);
-		SCROLLINFO si;
-		si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
-		si.nMin = 0;
-		si.nMax = m_nViewWidth - 1;
-		si.nPos = m_nHScrollPos;
-		si.nPage = m_nHPageSize;
-		SetScrollInfo(SB_HORZ, &si, TRUE);
-		deleteAllKeys();
-		if (m_nNatrixDone > 0)
-		{
-			m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
-			m_nNatrixDone = 0;
-			m_OldCell.x = 0;
-			m_OldCell.y = 0;
-			M_CCell.x = 0;
-			M_CCell.y = 0;
-		}
-		updateCombos2();
-		this->Invalidate();
-		m_nNatrixDone = false;
-		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
-		m_engine.setTables(m_Table1, m_Table2);
-		AfxBeginThread(makePrereq2ThreadProc, this);
-	}
+	pickSheet(&m_excel2, &m_Table2, m_pSheetCombo2, m_pSpinner2_Names, m_pSpinner2_Fdata, m_pRows2, m_pCols2);
+	updateCombos2();
 }
 
 
@@ -1525,7 +1423,7 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		MessageBox(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
 		return;
 	}
-	if (m_nNatrixDone && (M_CCell.y <= m_Table1.NumberOfColumns && M_CCell.x <= m_Table2.NumberOfColumns))
+	if (m_nMatrixDone && (M_CCell.y <= m_Table1.NumberOfColumns && M_CCell.x <= m_Table2.NumberOfColumns))
 	{
 		if (g_pMainFrame) g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_IN_EXCEL_RUNNING)); // CMsg(IDS_MARKING_IN_EXCEL_RUNNING)
 		m_bLockPrg2 = true;
@@ -1574,7 +1472,7 @@ void CChildView::firstPass()
 	m_engine.firstPass(m_matrix, m_bAutoMark, m_bIn2file,
 	                   m_pbGreenClms1, m_pbGreenClms2,
 	                   m_nEffMax, m_bDoAutoMark);
-	m_nNatrixDone++;
+	m_nMatrixDone++;
 	m_bLockPrg1 = false;
 }
 
@@ -3131,9 +3029,9 @@ void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 	{
 		if (m_Table1.NumberOfColumns * m_Table2.NumberOfColumns)
 		{
-			if (deleteKey(1, M_CCell.y) + deleteKey(2, M_CCell.x) == 0)
+			if (m_engine.deleteKey(1, M_CCell.y) + m_engine.deleteKey(2, M_CCell.x) == 0)
 			{
-				pushKey(M_CCell.y, M_CCell.x);
+				m_engine.pushKey(M_CCell.y, M_CCell.x);
 			}
 			this->Invalidate();
 		}
@@ -3202,7 +3100,7 @@ bool CChildView::usePossibleKeys()
 		int k2 = m_keyFinder.getPossibleKey2(best.pk2, tmp_i);
 		if (k1 + k2)
 		{
-			pushKey(k1, k2);
+			m_engine.pushKey(k1, k2);
 		}
 	}
 	return false;
@@ -3374,6 +3272,7 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 /// </summary>
 void CChildView::findSims1()
 {
+	long index[2];
 	COleVariant vData;
 	CString szdata;
 	long long tmpSim;
@@ -3474,13 +3373,7 @@ void CChildView::findSims1()
 					sim = 1;
 				}
 			}
-			//if (c_i1 == 16)
-			//{
-			//	//CString s;
-			//	//s.Format(L"c_i1: %n    c_i2: %n    tmp_varRat: %n", c_i1, c_i2, tmp_varRat);
-			//	TRACE(L"c_i1: %i    c_i2: %i    thdSafe_tmpMap1.size(): %i     thdSafe_tmpMap2.size(): %i     tmpSim: %i    sumOccurence1: %i    sumOccurence2: %i\n", c_i1, c_i2, thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size(), tmpSim, sumOccurence1, sumOccurence2);
-			//}
-				pureSim = (maxsize - abs(sumOccurence2 - sumOccurence1)) - tmpSim;
+			pureSim = (maxsize - abs(sumOccurence2 - sumOccurence1)) - tmpSim;
 			if (pureSim > m_vecSimilaritiesAcrossTables[c_i1].pureSim && sim > 0)
 			{
 				m_vecSimilaritiesAcrossTables[c_i1].similarity = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
@@ -3507,7 +3400,6 @@ void CChildView::findSims2()
 	prgHlpr = prgHlpr0 = 0;
 	std::map<CString, long> thdSafe_tmpMap1; // searching for appropriate keys
 	std::map<CString, long> thdSafe_tmpMap2;
-	//typedef	std::map<CString, long>::iterator Iterator;
 	CString what = L"";
 	long occurence1 = 0;
 	long occurence2 = 0;
@@ -3557,7 +3449,6 @@ void CChildView::findSims2()
 					if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
 					{
 						thdSafe_tmpMap2[szdata] = 1;
-						//tmpSim++;
 					}
 					else
 					{
@@ -3582,8 +3473,8 @@ void CChildView::findSims2()
 				}
 			}
 			sim = tmpSim;
-			size1 = m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1; //size1 = thdSafe_tmpMap1.size();
-			size2 = m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1; //size2 = thdSafe_tmpMap2.size();
+			size1 = m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1;
+			size2 = m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1;
 			minsize = min(size1, size2);
 			minsize = minsize ? minsize : 1;
 			maxsize = max(size1, size2);
@@ -3600,11 +3491,6 @@ void CChildView::findSims2()
 					sim = 1;
 				}
 			}
-			//{
-			//	//CString s;
-			//	//s.Format(L"c_i1: %n    c_i2: %n    tmp_varRat: %n", c_i1, c_i2, tmp_varRat);
-			//	TRACE(L"c_i1: %i    c_i2: %i    thdSafe_tmpMap1.size(): %i     thdSafe_tmpMap2.size(): %i     tmpSim: %i    sumOccurence1: %i    sumOccurence2: %i\n", c_i1, c_i2, thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size(), tmpSim, sumOccurence1, sumOccurence2);
-			//}
 			pureSim = (maxsize - abs(sumOccurence2 - sumOccurence1)) - tmpSim;
 			if (pureSim > m_vecSimilaritiesAcrossTables[c_i1].pureSim && sim > 0)
 			{
@@ -3684,7 +3570,6 @@ void CChildView::OnFindrelBtn()
 	// </Preparation for actual-relations check>
 	m_bToDisplaySimilarClms = false;
 	m_bXSimilarityComputed = false;
-	//AfxBeginThread(FindSimsThreadProc, this);
 	AfxBeginThread(FindSimsThreadProc1, this);
 	AfxBeginThread(FindSimsThreadProc2, this);
 	m_bLockPrg1 = true;
@@ -3803,7 +3688,7 @@ void CChildView::finishFindRelations()
 		tempSimilarity.similarityOrder = 0;
 		for (int i1 = 1; i1 <= m_Table1.NumberOfColumns; i1++)
 		{
-			if (/*similaritiesAcrossTables[i1].similarity > 0 && */ m_vecSimilaritiesAcrossTables[i1].similarity > tempSimilarity.similarity && m_vecSimilaritiesAcrossTables[i1].similarityOrder == 0) // clm2 only serves here for storing of the actual measured similarity
+			if (m_vecSimilaritiesAcrossTables[i1].similarity > tempSimilarity.similarity && m_vecSimilaritiesAcrossTables[i1].similarityOrder == 0) // clm2 only serves here for storing of the actual measured similarity
 			{
 				tempSimilarity.similarityOrder = simOrder;
 				tempSimilarity.similarity = m_vecSimilaritiesAcrossTables[i1].similarity;
@@ -3811,7 +3696,6 @@ void CChildView::finishFindRelations()
 				tempSimilarity.clm2 = m_vecSimilaritiesAcrossTables[i1].clm2;
 			}
 		}
-		/*if (tempSimilarity.similarity > 0)*/
 		{
 			simOrder++;
 			m_vecSimilaritiesAcrossTablesSorted.push_back(tempSimilarity);

@@ -12,6 +12,7 @@
 #include "KeyFinder.h"
 #include <vector>
 #include <map>
+#include <atomic>
 
 // CChildView window
 
@@ -62,18 +63,21 @@ protected:
 public:
 	afx_msg void OnPickFirstFile();
 	afx_msg void OnPickSecondFile();
+    void pickFile(bool* pNewFile, ExcelConnector* pExcel, Table* pTable, CMFCRibbonComboBox* pSheetCombo, CString* pFilename);
 	afx_msg void OnCreateMatrix();
 	afx_msg void OnUpdatePickFirstSheet(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateCreateMatrix(CCmdUI *pCmdUI);
 //	afx_msg void OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnUpdateFilename1(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateFilename2(CCmdUI *pCmdUI);
+	void updateFileName(CCmdUI* pCmdUI, CString* pszFilename, int idString);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnUpdatePickSecondSheet(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateProgress1(CCmdUI *pCmdUI);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 
+	void pickSheet(ExcelConnector* pExcel, Table* pTable, CMFCRibbonComboBox* pSheetCombo, CMFCRibbonEdit* pSpinner_Names, CMFCRibbonEdit* pSpinner_Fdata, CMFCRibbonEdit* pRows, CMFCRibbonEdit* pCols);
 	void OnPickFirstSheet();
 	afx_msg void OnSpin1Names();
 	afx_msg void OnUpdateSpin1Names(CCmdUI *pCmdUI);
@@ -204,21 +208,21 @@ public:
 
 	// Public: accessed directly by worker thread functions
 public:
-	BOOL         m_bUniqueKeys1; // keys in table 1 are unique
-	BOOL         m_bUniqueKeys2; // keys in table 2 are unique
-	bool         m_bLockPrg1;    // thread 1 is running
-	bool         m_bLockPrg2;    // thread 2 is running
+	std::atomic<bool>         m_bUniqueKeys1{false}; // keys in table 1 are unique
+	std::atomic<bool>         m_bUniqueKeys2{false}; // keys in table 2 are unique
+	std::atomic<bool>         m_bLockPrg1{false};    // thread 1 is running
+	std::atomic<bool>         m_bLockPrg2{false};    // thread 2 is running
 	// m_NotUniqueKeys1/2 are now in m_engine.m_NotUniqueKeys1/2
 	ComparisonEngine m_engine;
 	KeyFinder        m_keyFinder;
 
 private:
 	// Synchronisation between threads
-	bool m_bWaitingForKeys;
-	bool m_bKeys1done;
-	bool m_bKeys2done;
-	bool m_bKeysGathering1done;
-	bool m_bKeysGathering2done;
+	std::atomic<bool> m_bWaitingForKeys{false};
+	std::atomic<bool> m_bKeys1done{false};
+	std::atomic<bool> m_bKeys2done{false};
+	std::atomic<bool> m_bKeysGathering1done{false};
+	std::atomic<bool> m_bKeysGathering2done{false};
 
 	// Algorithm parameters
 	CString m_szRsltTxt;
@@ -233,7 +237,7 @@ private:
 	int  m_nChosenColor2;
 	Clnt m_Clnt;
 	bool m_bDoAutoMark;
-	int  m_nNatrixDone;
+	int  m_nMatrixDone;
 	int  m_nPrereqDone;
 	bool m_bMarkIdentCols;
 	bool m_bSameNames;
