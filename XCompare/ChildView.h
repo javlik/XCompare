@@ -14,22 +14,6 @@
 #include <map>
 #include <atomic>
 
-// This file declares the CChildView class, which is responsible for the main application window's client area.
-// ChildView.h : interface of the CChildView class
-//
-
-
-#pragma once
-#include "Constants.h"
-#include "TableData.h"
-#include "ComparisonMatrix.h"
-#include "ExcelConnector.h"
-#include "ComparisonEngine.h"
-#include "KeyFinder.h"
-#include <vector>
-#include <map>
-#include <atomic>
-
 /**
  * @brief Main client-area window of the XCompare application.
  *

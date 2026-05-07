@@ -154,6 +154,9 @@ public:
      * Posts @c CM_GATHERING2_DONE when finished.
      */
     void suggestKeys2()
+    {
+        int attempts = 0;
+        bool alreadyChecked = false;
         for (int i = 0; i < SUGKEYS; i++)
             m_nCheckedKeys2[i] = 0;
         int prgHlpr = 0, prgHlpr0 = 0;
@@ -405,6 +408,9 @@ private:
 
     /** @brief Builds a temporary uniqueness map for the current key-column combination in table 2. @return 0 = unique, 1 = all-zero keys, 2 = duplicate found. */
     int createTempKeyArrays2()
+    {
+        CString szdata;
+        m_mapTmpMap2.clear();
         if (sumExaminedKeys(2, SUGKEYS - 1) > 0)
         {
             for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
@@ -432,6 +438,8 @@ private:
 
     /** @brief Compacts a just-recorded PossibleKeys entry by moving non-zero indices to the front. */
     void sortExaminedKeys(int table)
+    {
+        int nonzerosNr = 0;
         if (table == 1)
         {
             for (int i_i = 0; i_i < SUGKEYS; i_i++)
