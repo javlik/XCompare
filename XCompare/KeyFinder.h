@@ -63,89 +63,7 @@ public:
      * @c SUGKEYS columns, checking each for uniqueness. Stores successful candidates
      * in @c m_PossibleKeys1. Posts @c CM_GATHERING1_DONE when finished.
      */
-    void suggestKeys1()
-    {
-        int attempts = 0;
-        bool alreadyChecked = false;
-        m_nCheckedKeysCounter1 = 0;
-        for (int i = 0; i < SUGKEYS; i++)
-            m_nCheckedKeys1[i] = 0;
-        int prgHlpr = 0, prgHlpr0 = 0;
-        m_nPossibleKeyCounter1 = 0;
-        for (int i = 0; i < 255; i++)
-            m_nInvEntropy1[i] = 0;
-        for (int i = 0; i <= SUGKEYS + 1; i++)
-            m_nExaminedKeys1[i] = 0;
-
-        CString szdata;
-        for (int i_h = 1; i_h <= m_Table1.NumberOfColumns; i_h++)
-        {
-            m_mapTmpMap1.clear();
-            for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
-            {
-                szdata = m_pExcel1->getCellValue(i_h, i_i);
-                if (m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end())
-                {
-                    m_mapTmpMap1[szdata] = i_i;
-                    m_nInvEntropy1[i_h]++;
-                }
-            }
-        }
-        CalculateEntropyRank(1);
-
-        if (m_Table1.NumberOfRows > 0)
-        {
-            int foundKeysSet1 = 10;
-            while (true)
-            {
-                prgHlpr0 = attempts % 97;
-                if (prgHlpr0 > prgHlpr)
-                {
-                    prgHlpr = prgHlpr0;
-                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS,    0, prgHlpr);
-                    ::PostMessage(m_hWnd, CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
-                }
-                if (is2BExaminedOnce(1, SUGKEYS - 1))
-                {
-                    alreadyChecked = getSimilarKeyProbability(1, SUGKEYS);
-                    if (!alreadyChecked)
-                        foundKeysSet1 = createTempKeyArrays1();
-                }
-                else
-                {
-                    foundKeysSet1 = 4; // Low entropy of key indexes
-                }
-                if (foundKeysSet1 == 0)
-                {
-                    for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
-                        m_PossibleKeys1[m_nPossibleKeyCounter1].k[tmp_i] = getNthEntropy(1, m_nExaminedKeys1[tmp_i]);
-                    sortExaminedKeys(1);
-                    m_nPossibleKeyCounter1++;
-                }
-                if (attempts++ > m_nComplexity || m_nPossibleKeyCounter1 > m_Table1.NumberOfColumns)
-                    break;
-                int e_i = SUGKEYS - 1;
-                while (e_i >= 0)
-                {
-                    if (m_nExaminedKeys1[e_i] >= m_Table1.NumberOfColumns)
-                    {
-                        m_nExaminedKeys1[e_i] = 0;
-                        --e_i;
-                    }
-                    else
-                    {
-                        ++m_nExaminedKeys1[e_i];
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            ::MessageBox(m_hWnd, CMsg(IDS_NO_SHEET_SELCTD_IN_FRST), nullptr, MB_OK);
-        }
-        ::PostMessage(m_hWnd, CM_GATHERING1_DONE, 0, 0);
-    }
+    void suggestKeys1() { suggestKeysImpl(1); }
 
     /**
      * @brief Searches table 2 for candidate key column combinations.
@@ -153,88 +71,7 @@ public:
      * Mirror of @c suggestKeys1() for the second table.
      * Posts @c CM_GATHERING2_DONE when finished.
      */
-    void suggestKeys2()
-    {
-        int attempts = 0;
-        bool alreadyChecked = false;
-        for (int i = 0; i < SUGKEYS; i++)
-            m_nCheckedKeys2[i] = 0;
-        int prgHlpr = 0, prgHlpr0 = 0;
-        m_nPossibleKeyCounter2 = 0;
-        for (int i = 0; i < 255; i++)
-            m_nInvEntropy2[i] = 0;
-        for (int i = 0; i <= SUGKEYS + 1; i++)
-            m_nExaminedKeys2[i] = 0;
-
-        CString szdata;
-        for (int i_h = 1; i_h <= m_Table2.NumberOfColumns; i_h++)
-        {
-            m_mapTmpMap2.clear();
-            for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
-            {
-                szdata = m_pExcel2->getCellValue(i_h, i_i);
-                if (m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end())
-                {
-                    m_mapTmpMap2[szdata] = i_i;
-                    m_nInvEntropy2[i_h]++;
-                }
-            }
-        }
-        CalculateEntropyRank(2);
-
-        if (m_Table2.NumberOfRows > 0)
-        {
-            int foundKeysSet2 = 10;
-            while (true)
-            {
-                prgHlpr0 = attempts % 97;
-                if (prgHlpr0 > prgHlpr)
-                {
-                    prgHlpr = prgHlpr0;
-                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2,   0, prgHlpr);
-                    ::PostMessage(m_hWnd, CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
-                }
-                if (is2BExaminedOnce(2, SUGKEYS - 1))
-                {
-                    alreadyChecked = getSimilarKeyProbability(2, SUGKEYS);
-                    if (!alreadyChecked)
-                        foundKeysSet2 = createTempKeyArrays2();
-                }
-                else
-                {
-                    foundKeysSet2 = 4;
-                }
-                if (foundKeysSet2 == 0)
-                {
-                    for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
-                        m_PossibleKeys2[m_nPossibleKeyCounter2].k[tmp_i] = getNthEntropy(2, m_nExaminedKeys2[tmp_i]);
-                    sortExaminedKeys(2);
-                    m_nPossibleKeyCounter2++;
-                }
-                if (attempts++ > m_nComplexity || m_nPossibleKeyCounter2 > m_Table2.NumberOfColumns)
-                    break;
-                int e_i = SUGKEYS - 1;
-                while (e_i >= 0)
-                {
-                    if (m_nExaminedKeys2[e_i] >= m_Table2.NumberOfColumns)
-                    {
-                        m_nExaminedKeys2[e_i] = 0;
-                        --e_i;
-                    }
-                    else
-                    {
-                        ++m_nExaminedKeys2[e_i];
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            ::MessageBox(m_hWnd, CMsg(IDS_NO_SHEET_SELCTD_IN_SCND), nullptr, MB_OK);
-        }
-        ::PostMessage(m_hWnd, CM_GATHERING2_DONE, 0, 0);
-    }
+    void suggestKeys2() { suggestKeysImpl(2); }
 
     // --- Support methods called from CChildView ---
     /** @brief Resets all candidate key arrays and counters for both tables. */
@@ -376,57 +213,149 @@ public:
 
 private:
     // --- Internal helpers ---
-    /** @brief Builds a temporary uniqueness map for the current key-column combination in table 1. @return 0 = unique, 1 = all-zero keys, 2 = duplicate found. */
-    int createTempKeyArrays1()
+
+    /**
+     * @brief Shared implementation for suggestKeys1() and suggestKeys2().
+     *
+     * All per-table differences (member arrays, message IDs, resource strings) are
+     * resolved via local references/pointers at the top, so the algorithm body is
+     * written only once.
+     * @param table 1 = operate on table 1, 2 = operate on table 2.
+     */
+    void suggestKeysImpl(int table)
     {
+        // --- Message IDs that differ between the two tables ---
+        const UINT msgProgress = (table == 1) ? CM_UPDATE_PROGRESS      : CM_UPDATE_PROGRESS2;
+        const UINT msgKeyProg  = (table == 1) ? CM_UPDATE_KEYPROGRESS1   : CM_UPDATE_KEYPROGRESS2;
+        const UINT msgDone     = (table == 1) ? CM_GATHERING1_DONE       : CM_GATHERING2_DONE;
+        const UINT idNoSheet   = (table == 1) ? IDS_NO_SHEET_SELCTD_IN_FRST : IDS_NO_SHEET_SELCTD_IN_SCND;
+
+        // --- Per-table references (ternary on lvalues of the same type yields a reference) ---
+        const Table&                     tbl      = (table == 1) ? m_Table1              : m_Table2;
+        ExcelConnector* const            pExcel   = (table == 1) ? m_pExcel1             : m_pExcel2;
+        long* const                      invEnt   = (table == 1) ? m_nInvEntropy1        : m_nInvEntropy2;
+        int*  const                      exKeys   = (table == 1) ? m_nExaminedKeys1      : m_nExaminedKeys2;
+        PossibleKeys*                    posKeys  = (table == 1) ? m_PossibleKeys1       : m_PossibleKeys2;
+        int&                             posKeyCnt= (table == 1) ? m_nPossibleKeyCounter1 : m_nPossibleKeyCounter2;
+        std::map<CString, long>&         tmpMap   = (table == 1) ? m_mapTmpMap1          : m_mapTmpMap2;
+        int&                             chKeyCnt = (table == 1) ? m_nCheckedKeysCounter1 : m_nCheckedKeysCounter2;
+        std::vector<unsigned long long>& chKeys   = (table == 1) ? m_nCheckedKeys1       : m_nCheckedKeys2;
+
+        // --- Initialise state ---
+        int attempts = 0;
+        bool alreadyChecked = false;
+        chKeyCnt = 0;
+        for (int i = 0; i < SUGKEYS; i++)
+            chKeys[i] = 0;
+        int prgHlpr = 0, prgHlpr0 = 0;
+        posKeyCnt = 0;
+        for (int i = 0; i < 255; i++)
+            invEnt[i] = 0;
+        for (int i = 0; i <= SUGKEYS + 1; i++)
+            exKeys[i] = 0;
+
+        // --- Compute per-column inverse entropy ---
         CString szdata;
-        m_mapTmpMap1.clear();
-        if (sumExaminedKeys(1, SUGKEYS - 1) > 0)
+        for (int i_h = 1; i_h <= tbl.NumberOfColumns; i_h++)
         {
-            for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
+            tmpMap.clear();
+            for (int i_i = tbl.FirstRowWithData; i_i <= tbl.NumberOfRows; i_i++)
             {
-                szdata = L"";
-                for (int k_i = 0; k_i < SUGKEYS; k_i++)
+                szdata = pExcel->getCellValue(i_h, i_i);
+                if (tmpMap.find(szdata) == tmpMap.end())
                 {
-                    if (m_nExaminedKeys1[k_i])
-                        szdata += m_pExcel1->getCellValue(getNthEntropy(1, m_nExaminedKeys1[k_i]), i_i);
+                    tmpMap[szdata] = i_i;
+                    invEnt[i_h]++;
                 }
-                if (m_mapTmpMap1.find(szdata) != m_mapTmpMap1.end())
+            }
+        }
+        CalculateEntropyRank(table);
+
+        // --- Main search loop ---
+        if (tbl.NumberOfRows > 0)
+        {
+            int foundKeysSet = 10;
+            while (true)
+            {
+                prgHlpr0 = attempts % 97;
+                if (prgHlpr0 > prgHlpr)
                 {
-                    m_mapTmpMap1.clear();
-                    return 2;
+                    prgHlpr = prgHlpr0;
+                    ::PostMessage(m_hWnd, msgProgress, 0, prgHlpr);
+                    ::PostMessage(m_hWnd, msgKeyProg,  0, prgHlpr);
                 }
-                m_mapTmpMap1[szdata] = i_i;
+                if (is2BExaminedOnce(table, SUGKEYS - 1))
+                {
+                    alreadyChecked = getSimilarKeyProbability(table, SUGKEYS);
+                    if (!alreadyChecked)
+                        foundKeysSet = createTempKeyArrays(table);
+                }
+                else
+                {
+                    foundKeysSet = 4; // Low entropy of key indexes
+                }
+                if (foundKeysSet == 0)
+                {
+                    for (int tmp_i = 0; tmp_i < SUGKEYS; tmp_i++)
+                        posKeys[posKeyCnt].k[tmp_i] = getNthEntropy(table, exKeys[tmp_i]);
+                    sortExaminedKeys(table);
+                    posKeyCnt++;
+                }
+                if (attempts++ > m_nComplexity || posKeyCnt > tbl.NumberOfColumns)
+                    break;
+                int e_i = SUGKEYS - 1;
+                while (e_i >= 0)
+                {
+                    if (exKeys[e_i] >= tbl.NumberOfColumns)
+                    {
+                        exKeys[e_i] = 0;
+                        --e_i;
+                    }
+                    else
+                    {
+                        ++exKeys[e_i];
+                        break;
+                    }
+                }
             }
         }
         else
         {
-            return 1;
+            ::MessageBox(m_hWnd, CMsg(idNoSheet), nullptr, MB_OK);
         }
-        return 0;
+        ::PostMessage(m_hWnd, msgDone, 0, 0);
     }
 
-    /** @brief Builds a temporary uniqueness map for the current key-column combination in table 2. @return 0 = unique, 1 = all-zero keys, 2 = duplicate found. */
-    int createTempKeyArrays2()
+    /**
+     * @brief Builds a temporary uniqueness map for the current examined-key combination.
+     * @param table 1 or 2.
+     * @return 0 = combination is unique, 1 = all examined indices are zero, 2 = duplicate found.
+     */
+    int createTempKeyArrays(int table)
     {
+        int*  const              exKeys = (table == 1) ? m_nExaminedKeys1 : m_nExaminedKeys2;
+        const Table&             tbl    = (table == 1) ? m_Table1         : m_Table2;
+        ExcelConnector* const    pExcel = (table == 1) ? m_pExcel1        : m_pExcel2;
+        std::map<CString, long>& tmpMap = (table == 1) ? m_mapTmpMap1     : m_mapTmpMap2;
+
         CString szdata;
-        m_mapTmpMap2.clear();
-        if (sumExaminedKeys(2, SUGKEYS - 1) > 0)
+        tmpMap.clear();
+        if (sumExaminedKeys(table, SUGKEYS - 1) > 0)
         {
-            for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
+            for (int i_i = tbl.FirstRowWithData; i_i <= tbl.NumberOfRows; i_i++)
             {
                 szdata = L"";
                 for (int k_i = 0; k_i < SUGKEYS; k_i++)
                 {
-                    if (m_nExaminedKeys2[k_i])
-                        szdata += m_pExcel2->getCellValue(getNthEntropy(2, m_nExaminedKeys2[k_i]), i_i);
+                    if (exKeys[k_i])
+                        szdata += pExcel->getCellValue(getNthEntropy(table, exKeys[k_i]), i_i);
                 }
-                if (m_mapTmpMap2.find(szdata) != m_mapTmpMap2.end())
+                if (tmpMap.find(szdata) != tmpMap.end())
                 {
-                    m_mapTmpMap2.clear();
+                    tmpMap.clear();
                     return 2;
                 }
-                m_mapTmpMap2[szdata] = i_i;
+                tmpMap[szdata] = i_i;
             }
         }
         else
