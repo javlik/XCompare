@@ -225,21 +225,23 @@ private:
     void suggestKeysImpl(int table)
     {
         // --- Message IDs that differ between the two tables ---
-        const UINT msgProgress = (table == 1) ? CM_UPDATE_PROGRESS      : CM_UPDATE_PROGRESS2;
-        const UINT msgKeyProg  = (table == 1) ? CM_UPDATE_KEYPROGRESS1   : CM_UPDATE_KEYPROGRESS2;
-        const UINT msgDone     = (table == 1) ? CM_GATHERING1_DONE       : CM_GATHERING2_DONE;
-        const UINT idNoSheet   = (table == 1) ? IDS_NO_SHEET_SELCTD_IN_FRST : IDS_NO_SHEET_SELCTD_IN_SCND;
 
         // --- Per-table references (ternary on lvalues of the same type yields a reference) ---
-        const Table&                     tbl      = (table == 1) ? m_Table1              : m_Table2;
-        ExcelConnector* const            pExcel   = (table == 1) ? m_pExcel1             : m_pExcel2;
-        long* const                      invEnt   = (table == 1) ? m_nInvEntropy1        : m_nInvEntropy2;
-        int*  const                      exKeys   = (table == 1) ? m_nExaminedKeys1      : m_nExaminedKeys2;
-        PossibleKeys*                    posKeys  = (table == 1) ? m_PossibleKeys1       : m_PossibleKeys2;
-        int&                             posKeyCnt= (table == 1) ? m_nPossibleKeyCounter1 : m_nPossibleKeyCounter2;
-        std::map<CString, long>&         tmpMap   = (table == 1) ? m_mapTmpMap1          : m_mapTmpMap2;
-        int&                             chKeyCnt = (table == 1) ? m_nCheckedKeysCounter1 : m_nCheckedKeysCounter2;
-        std::vector<unsigned long long>& chKeys   = (table == 1) ? m_nCheckedKeys1       : m_nCheckedKeys2;
+        const bool isT1 = (table == 1);
+        const UINT msgProgress = isT1 ? CM_UPDATE_PROGRESS      : CM_UPDATE_PROGRESS2;
+        const UINT msgKeyProg  = isT1 ? CM_UPDATE_KEYPROGRESS1   : CM_UPDATE_KEYPROGRESS2;
+        const UINT msgDone     = isT1 ? CM_GATHERING1_DONE       : CM_GATHERING2_DONE;
+        const UINT idNoSheet   = isT1 ? IDS_NO_SHEET_SELCTD_IN_FRST : IDS_NO_SHEET_SELCTD_IN_SCND;
+
+        const Table&                     tbl      = isT1 ? m_Table1               : m_Table2;
+        ExcelConnector* const            pExcel   = isT1 ? m_pExcel1              : m_pExcel2;
+        long* const                      invEnt   = isT1 ? m_nInvEntropy1         : m_nInvEntropy2;
+        int*  const                      exKeys   = isT1 ? m_nExaminedKeys1       : m_nExaminedKeys2;
+        PossibleKeys*                    posKeys  = isT1 ? m_PossibleKeys1        : m_PossibleKeys2;
+        int&                             posKeyCnt= isT1 ? m_nPossibleKeyCounter1 : m_nPossibleKeyCounter2;
+        std::map<CString, long>&         tmpMap   = isT1 ? m_mapTmpMap1           : m_mapTmpMap2;
+        int&                             chKeyCnt = isT1 ? m_nCheckedKeysCounter1 : m_nCheckedKeysCounter2;
+        std::vector<unsigned long long>& chKeys   = isT1 ? m_nCheckedKeys1        : m_nCheckedKeys2;
 
         // --- Initialise state ---
         int attempts = 0;
@@ -333,10 +335,11 @@ private:
      */
     int createTempKeyArrays(int table)
     {
-        int*  const              exKeys = (table == 1) ? m_nExaminedKeys1 : m_nExaminedKeys2;
-        const Table&             tbl    = (table == 1) ? m_Table1         : m_Table2;
-        ExcelConnector* const    pExcel = (table == 1) ? m_pExcel1        : m_pExcel2;
-        std::map<CString, long>& tmpMap = (table == 1) ? m_mapTmpMap1     : m_mapTmpMap2;
+        const bool isT1 = (table == 1);
+        int*  const              exKeys = isT1 ? m_nExaminedKeys1 : m_nExaminedKeys2;
+        const Table&             tbl    = isT1 ? m_Table1         : m_Table2;
+        ExcelConnector* const    pExcel = isT1 ? m_pExcel1        : m_pExcel2;
+        std::map<CString, long>& tmpMap = isT1 ? m_mapTmpMap1     : m_mapTmpMap2;
 
         CString szdata;
         tmpMap.clear();
