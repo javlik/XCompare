@@ -39,3 +39,21 @@ template <typename T> constexpr int sgn(T x)
 {
     return static_cast<int>((x > T(0)) - (x < T(0)));
 }
+
+// --- Helpers for using MFC CString as unordered_map key ---
+#include <string>
+#include <unordered_map>
+
+/// @brief Hasher for MFC CString — delegates to std::hash<std::wstring>.
+struct CStringHash
+{
+    std::size_t operator()(const CString& s) const noexcept
+    {
+        return std::hash<std::wstring>{}(std::wstring(s.GetString(), s.GetLength()));
+    }
+};
+/// @brief Equality comparator for MFC CString (case-sensitive).
+struct CStringEqual
+{
+    bool operator()(const CString& a, const CString& b) const noexcept { return a == b; }
+};

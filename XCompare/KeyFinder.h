@@ -3,23 +3,7 @@
 #include "TableData.h"
 #include "ExcelConnector.h"
 #include <vector>
-#include <unordered_map>
-#include <string>
 #include <cmath>
-
-/// @brief Hasher for MFC CString — delegates to std::hash<std::wstring>.
-struct CStringHash
-{
-    std::size_t operator()(const CString& s) const noexcept
-    {
-        return std::hash<std::wstring>{}(std::wstring(s.GetString(), s.GetLength()));
-    }
-};
-/// @brief Equality comparator for MFC CString (case-sensitive).
-struct CStringEqual
-{
-    bool operator()(const CString& a, const CString& b) const noexcept { return a == b; }
-};
 
 /**
  * @brief Encapsulates the automatic key-suggestion algorithm.

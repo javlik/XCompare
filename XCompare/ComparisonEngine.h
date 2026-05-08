@@ -4,7 +4,7 @@
 #include "Constants.h"
 #include "ExcelConnector.h"
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 /**
  * @brief Encapsulates the comparison algorithm state and logic for both tables.
@@ -132,8 +132,9 @@ public:
                     ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr);
                 }
                 concatenatedKey1 = m_pszKeyArr11[i1];
-                if (m_Map2.Lookup(concatenatedKey1, (long&)keyRow2))
+                if (auto it2 = m_Map2.find(concatenatedKey1); it2 != m_Map2.end())
                 {
+                    keyRow2 = it2->second;
                     nEffMax++;
                     fchar1_y = (i1 - 1) * m_Table1.NumberOfColumns;
                     for (int i3 = 1; i3 <= m_Table1.NumberOfColumns; i3++)
@@ -177,7 +178,6 @@ public:
             }
             if (bIn2file)
             {
-                long keyRow1;
                 prgHlpr = 0;
                 prgHlpr0 = 0;
                 for (long i1_2 = m_Table2.FirstRowWithData; i1_2 <= m_Table2.NumberOfRows; i1_2++)
@@ -189,7 +189,7 @@ public:
                         ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr);
                     }
                     concatenatedKey2 = m_pszKeyArr21[i1_2];
-                    if (!m_Map1.Lookup(concatenatedKey2, (long&)keyRow1))
+                    if (m_Map1.find(concatenatedKey2) == m_Map1.end())
                         m_pbKeyMissing2[i1_2] = true;
                 }
             }
@@ -206,8 +206,9 @@ public:
                     ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr);
                 }
                 concatenatedKey1 = m_pszKeyArr11[i1];
-                if (m_Map2.Lookup(concatenatedKey1, (long&)keyRow2))
+                if (auto it2 = m_Map2.find(concatenatedKey1); it2 != m_Map2.end())
                 {
+                    keyRow2 = it2->second;
                     nEffMax++;
                     fchar1_y = (i1 - 1) * m_Table1.NumberOfColumns;
                     for (int i3 = 1; i3 <= m_Table1.NumberOfColumns; i3++)
@@ -380,9 +381,9 @@ public:
         return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col];
     }
     /** @brief Returns a reference to the key-to-row lookup map for table 1. */
-    CMap<CString, LPCTSTR, long, long>& getMap1() { return m_Map1; }
+    std::unordered_map<CString, long, CStringHash, CStringEqual>& getMap1() { return m_Map1; }
     /** @brief Returns a reference to the key-to-row lookup map for table 2. */
-    CMap<CString, LPCTSTR, long, long>& getMap2() { return m_Map2; }
+    std::unordered_map<CString, long, CStringHash, CStringEqual>& getMap2() { return m_Map2; }
 
     NotUniqueKeys m_NotUniqueKeys1;
     NotUniqueKeys m_NotUniqueKeys2;
@@ -396,7 +397,7 @@ private:
         const bool isT1 = (table == 1);
         NotUniqueKeys& notUniq = isT1 ? m_NotUniqueKeys1 : m_NotUniqueKeys2;
         const Table& tbl = isT1 ? m_Table1 : m_Table2;
-        CMap<CString, LPCTSTR, long, long>& map = isT1 ? m_Map1 : m_Map2;
+        std::unordered_map<CString, long, CStringHash, CStringEqual>& map = isT1 ? m_Map1 : m_Map2;
         std::vector<CString>& keyArr = isT1 ? m_pszKeyArr11 : m_pszKeyArr21;
         std::vector<bool>& keyMissing = isT1 ? m_pbKeyMissing1 : m_pbKeyMissing2;
         ExcelConnector* const pExcel = isT1 ? m_pExcel1 : m_pExcel2;
@@ -405,10 +406,9 @@ private:
         const int dupCode = isT1 ? 1 : 2;
 
         notUniq = {0, 0, L""};
-        long mapIdx;
         CString szdata;
         long idx = 0;
-        map.RemoveAll();
+        map.clear();
         CString testdata;
         keyArr.assign(tbl.NumberOfRows + 2, L"");
         keyMissing.assign(tbl.NumberOfRows + 2, false);
@@ -436,20 +436,21 @@ private:
                 {
                     idx++;
                     testdata.Format(L"%s_idx%i", szdata.GetString(), idx);
-                } while (map.Lookup(testdata, (long&)mapIdx));
+                } while (map.count(testdata));
                 szdata = testdata;
             }
             else
             {
-                if (map.Lookup(szdata, (long&)mapIdx))
+                auto it = map.find(szdata);
+                if (it != map.end())
                 {
-                    notUniq = {i_i, mapIdx, szdata};
-                    map.RemoveAll();
+                    notUniq = {i_i, it->second, szdata};
+                    map.clear();
                     return dupCode;
                 }
             }
             keyArr[i_i] = szdata;
-            map.SetAt(szdata, i_i);
+            map[szdata] = i_i;
         }
         ::PostMessage(m_hWnd, msgDone, 0, 0);
         return 0;
@@ -606,8 +607,8 @@ private:
     std::vector<bool> m_pbKeyMissing1;
     std::vector<bool> m_pbKeyMissing2;
 
-    CMap<CString, LPCTSTR, long, long> m_Map1;
-    CMap<CString, LPCTSTR, long, long> m_Map2;
+        std::unordered_map<CString, long, CStringHash, CStringEqual> m_Map1;
+    std::unordered_map<CString, long, CStringHash, CStringEqual> m_Map2;
 
     KeyPair m_KeyPair[256] = {};
     int m_nKeyPairCounter = 0;

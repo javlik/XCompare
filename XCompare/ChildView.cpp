@@ -2108,7 +2108,6 @@ UINT MyThreadProc3(LPVOID pParam)
 void CChildView::markInFiles()
 {
     m_bLockPrg2 = true;
-    CString concatenatedKey1, concatenatedKey2;
     int prgHlpr = 0, prgHlpr0 = 0;
     int cx, cy;
     cx = M_CCell.x;
@@ -2127,12 +2126,8 @@ void CChildView::markInFiles()
     {
         m_pbMarkIn2Arr[i2] = false;
     }
-    long keyRow1, keyRow2;
-    POSITION mapPos1;
-    mapPos1 = m_engine.getMap1().GetStartPosition();
-    int i1; // iterator for progress visualisation;
-    i1 = m_Table1.FirstRowWithData - 1;
-    while (mapPos1 != NULL)
+    int i1 = m_Table1.FirstRowWithData - 1;
+    for (const auto& [key, keyRow1] : m_engine.getMap1())
     {
         i1++;
         prgHlpr0 = 100 * i1 / m_Table1.NumberOfRows;
@@ -2141,16 +2136,16 @@ void CChildView::markInFiles()
             prgHlpr = prgHlpr0;
             PostMessage(CM_UPDATE_PROGRESS3, 0, prgHlpr);
         }
-        m_engine.getMap1().GetNextAssoc(mapPos1, concatenatedKey1, (long&)keyRow1);
-        if (m_engine.getMap2().Lookup(concatenatedKey1, (long&)keyRow2))
+        if (auto it2 = m_engine.getMap2().find(key); it2 != m_engine.getMap2().end())
         {
+            const long keyRow2 = it2->second;
             if (!(m_excel1.getCellValue(cy, keyRow1) == m_excel2.getCellValue(cx, keyRow2)))
             {
                 m_pnFoundDifferences[keyRow1] = keyRow2;
                 if (m_bIn1file)
-                    m_pbMarkIn1Arr[keyRow1] = true; //markIn1(i1, cy);
+                    m_pbMarkIn1Arr[keyRow1] = true;
                 if (m_bIn2file)
-                    m_pbMarkIn2Arr[keyRow2] = true; //markIn2(i2, cx);
+                    m_pbMarkIn2Arr[keyRow2] = true;
             }
         }
     }
