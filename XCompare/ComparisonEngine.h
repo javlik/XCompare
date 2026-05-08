@@ -85,9 +85,9 @@ public:
     [[nodiscard]] int createKeyArrays2() { return createKeyArraysImpl(2); }
 
     /** @brief Verifies that every key string in table 1 is unique. @return @c true if all keys are unique. */
-    [[nodiscard]] bool checkKeysUniqueness1() { return checkKeysUniquenessImpl(1); }
+    [[nodiscard]] bool checkKeysUniqueness1() const { return checkKeysUniquenessImpl(1); }
     /** @brief Verifies that every key string in table 2 is unique. @return @c true if all keys are unique. */
-    [[nodiscard]] bool checkKeysUniqueness2() { return checkKeysUniquenessImpl(2); }
+    [[nodiscard]] bool checkKeysUniqueness2() const { return checkKeysUniquenessImpl(2); }
 
     // --- First pass (main comparison algorithm) ---
     /**
@@ -417,7 +417,7 @@ private:
     }
 
     /** @brief Shared implementation for checkKeysUniqueness1() and checkKeysUniqueness2(). */
-    bool checkKeysUniquenessImpl(int table)
+    bool checkKeysUniquenessImpl(int table) const
     {
         const bool isT1 = (table == 1);
         const Table& tbl = isT1 ? m_Table1 : m_Table2;
