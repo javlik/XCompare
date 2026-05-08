@@ -3,8 +3,23 @@
 #include "TableData.h"
 #include "ExcelConnector.h"
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include <string>
 #include <cmath>
+
+/// @brief Hasher for MFC CString — delegates to std::hash<std::wstring>.
+struct CStringHash
+{
+    std::size_t operator()(const CString& s) const noexcept
+    {
+        return std::hash<std::wstring>{}(std::wstring(s.GetString(), s.GetLength()));
+    }
+};
+/// @brief Equality comparator for MFC CString (case-sensitive).
+struct CStringEqual
+{
+    bool operator()(const CString& a, const CString& b) const noexcept { return a == b; }
+};
 
 /**
  * @brief Encapsulates the automatic key-suggestion algorithm.
@@ -237,7 +252,7 @@ private:
         int* const exKeys = isT1 ? m_nExaminedKeys1 : m_nExaminedKeys2;
         PossibleKeys* posKeys = isT1 ? m_PossibleKeys1 : m_PossibleKeys2;
         int& posKeyCnt = isT1 ? m_nPossibleKeyCounter1 : m_nPossibleKeyCounter2;
-        std::map<CString, long>& tmpMap = isT1 ? m_mapTmpMap1 : m_mapTmpMap2;
+        std::unordered_map<CString, long, CStringHash, CStringEqual>& tmpMap = isT1 ? m_mapTmpMap1 : m_mapTmpMap2;
         int& chKeyCnt = isT1 ? m_nCheckedKeysCounter1 : m_nCheckedKeysCounter2;
         std::vector<unsigned long long>& chKeys = isT1 ? m_nCheckedKeys1 : m_nCheckedKeys2;
 
@@ -337,7 +352,7 @@ private:
         int* const exKeys = isT1 ? m_nExaminedKeys1 : m_nExaminedKeys2;
         const Table& tbl = isT1 ? m_Table1 : m_Table2;
         ExcelConnector* const pExcel = isT1 ? m_pExcel1 : m_pExcel2;
-        std::map<CString, long>& tmpMap = isT1 ? m_mapTmpMap1 : m_mapTmpMap2;
+        std::unordered_map<CString, long, CStringHash, CStringEqual>& tmpMap = isT1 ? m_mapTmpMap1 : m_mapTmpMap2;
 
         CString szdata;
         tmpMap.clear();
@@ -576,6 +591,6 @@ private:
     int m_nPossibleKeyCounter2 = 0;
     BestKeyComb m_BestKeyComb = {};
 
-    std::map<CString, long> m_mapTmpMap1;
-    std::map<CString, long> m_mapTmpMap2;
+    std::unordered_map<CString, long, CStringHash, CStringEqual> m_mapTmpMap1;
+    std::unordered_map<CString, long, CStringHash, CStringEqual> m_mapTmpMap2;
 };
