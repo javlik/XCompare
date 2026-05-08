@@ -64,9 +64,9 @@ public:
     }
 
     /** @brief Returns @c true if the prerequisite data for table 1 is up to date. */
-    bool isPrereq1Valid() const { return m_bPrereq1valid; }
+    [[nodiscard]] bool isPrereq1Valid() const { return m_bPrereq1valid; }
     /** @brief Returns @c true if the prerequisite data for table 2 is up to date. */
-    bool isPrereq2Valid() const { return m_bPrereq2valid; }
+    [[nodiscard]] bool isPrereq2Valid() const { return m_bPrereq2valid; }
     /** @brief Marks the table-1 prerequisite data as stale (e.g. after a sheet change). */
     void invalidatePrereq1() { m_bPrereq1valid = false; }
     /** @brief Marks the table-2 prerequisite data as stale (e.g. after a sheet change). */
@@ -77,17 +77,17 @@ public:
      * @brief Builds the concatenated key string array for table 1 and the lookup map.
      * @return 0 on success, 1 if duplicate keys were found in table 1.
      */
-    int createKeyArrays1() { return createKeyArraysImpl(1); }
+    [[nodiscard]] int createKeyArrays1() { return createKeyArraysImpl(1); }
     /**
      * @brief Builds the concatenated key string array for table 2 and the lookup map.
      * @return 0 on success, 2 if duplicate keys were found in table 2.
      */
-    int createKeyArrays2() { return createKeyArraysImpl(2); }
+    [[nodiscard]] int createKeyArrays2() { return createKeyArraysImpl(2); }
 
     /** @brief Verifies that every key string in table 1 is unique. @return @c true if all keys are unique. */
-    bool checkKeysUniqueness1() { return checkKeysUniquenessImpl(1); }
+    [[nodiscard]] bool checkKeysUniqueness1() { return checkKeysUniquenessImpl(1); }
     /** @brief Verifies that every key string in table 2 is unique. @return @c true if all keys are unique. */
-    bool checkKeysUniqueness2() { return checkKeysUniquenessImpl(2); }
+    [[nodiscard]] bool checkKeysUniqueness2() { return checkKeysUniquenessImpl(2); }
 
     // --- First pass (main comparison algorithm) ---
     /**
@@ -245,7 +245,7 @@ public:
         ::PostMessage(m_hWnd, CM_FIRSTPASS_DONE, 0, 0);
     }
     /** @brief Returns the column index of the @p key-th key for @p table (1 or 2). */
-    int getNthKey(int table, int key) const { return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2; }
+    [[nodiscard]] int getNthKey(int table, int key) const { return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2; }
     /** @brief Overwrites the @p n-th key pair with new column indices. */
     void setNthKey(int n, int col1, int col2)
     {
@@ -273,7 +273,7 @@ public:
      * @brief Removes all key pairs that reference @p column in @p table (1 or 2).
      * @return Number of key pairs removed.
      */
-    int deleteKey(int table, int column)
+    [[nodiscard]] int deleteKey(int table, int column)
     {
         int rslt = 0;
         for (int i = 0; i < m_nKeyPairCounter; i++)
@@ -307,7 +307,7 @@ public:
         m_nKeyPairCounter++;
     }
     /** @brief Returns @c true if @p column in @p table (1 or 2) is part of any active key pair. */
-    bool isThisAKey(int table, int column) const
+    [[nodiscard]] bool isThisAKey(int table, int column) const
     {
         for (int i = 0; i < m_nKeyPairCounter; i++)
         {
@@ -319,27 +319,27 @@ public:
         return false;
     }
     /** @brief Returns @c true if at least one key pair has been defined. */
-    bool areThereAnyKeys() const { return m_nKeyPairCounter > 0; }
+    [[nodiscard]] bool areThereAnyKeys() const { return m_nKeyPairCounter > 0; }
     /** @brief Returns the number of active key pairs. */
-    int getKeyPairCounter() const { return m_nKeyPairCounter; }
+    [[nodiscard]] int getKeyPairCounter() const { return m_nKeyPairCounter; }
 
     // --- Data accessors ---
     /** @brief Returns the concatenated key string for row @p row in table 1. */
-    CString getKeyStr1(int row) const { return m_pszKeyArr11[row]; }
+    [[nodiscard]] CString getKeyStr1(int row) const { return m_pszKeyArr11[row]; }
     /** @brief Returns the concatenated key string for row @p row in table 2. */
-    CString getKeyStr2(int row) const { return m_pszKeyArr21[row]; }
+    [[nodiscard]] CString getKeyStr2(int row) const { return m_pszKeyArr21[row]; }
     /** @brief Returns @c true if row @p row in table 1 has no matching key in table 2. */
-    bool isKeyMissing1(int row) const { return m_pbKeyMissing1[row]; }
+    [[nodiscard]] bool isKeyMissing1(int row) const { return m_pbKeyMissing1[row]; }
     /** @brief Returns @c true if row @p row in table 2 has no matching key in table 1. */
-    bool isKeyMissing2(int row) const { return m_pbKeyMissing2[row]; }
+    [[nodiscard]] bool isKeyMissing2(int row) const { return m_pbKeyMissing2[row]; }
     /** @brief Returns @c true if column @p col in table 1 contains no data. */
-    bool isEmptyCol1(int col) const { return m_pbEmptyClms1[col]; }
+    [[nodiscard]] bool isEmptyCol1(int col) const { return m_pbEmptyClms1[col]; }
     /** @brief Returns @c true if column @p col in table 2 contains no data. */
-    bool isEmptyCol2(int col) const { return m_pbEmptyClms2[col]; }
+    [[nodiscard]] bool isEmptyCol2(int col) const { return m_pbEmptyClms2[col]; }
     /** @brief Returns the cached first character of cell (row, col) in table 1. */
-    char getMainChar1(int row, int col) const { return m_pchMainArr1[(row - 1) * m_Table1.NumberOfColumns + col]; }
+    [[nodiscard]] char getMainChar1(int row, int col) const { return m_pchMainArr1[(row - 1) * m_Table1.NumberOfColumns + col]; }
     /** @brief Returns the cached first character of cell (row, col) in table 2. */
-    char getMainChar2(int row, int col) const { return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col]; }
+    [[nodiscard]] char getMainChar2(int row, int col) const { return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col]; }
     /** @brief Returns a reference to the key-to-row lookup map for table 1. */
     CMap<CString, LPCTSTR, long, long>& getMap1() { return m_Map1; }
     /** @brief Returns a reference to the key-to-row lookup map for table 2. */

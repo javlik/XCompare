@@ -30,10 +30,10 @@ public:
     void increment(int x, int y) { m_values[index(x, y)] += 1; }
 
     // Return the match counter at (x, y).
-    int get(int x, int y) const { return m_values[index(x, y)]; }
+    [[nodiscard]] int get(int x, int y) const { return m_values[index(x, y)]; }
 
     // Return whether (x, y) is user-marked.
-    bool isMarked(int x, int y) const { return m_marked[index(x, y)]; }
+    [[nodiscard]] bool isMarked(int x, int y) const { return m_marked[index(x, y)]; }
 
     // Mark (x, y) as user-selected.
     void setMarked(int x, int y) { m_marked[index(x, y)] = true; }
