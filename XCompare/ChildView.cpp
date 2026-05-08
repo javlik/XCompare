@@ -141,9 +141,6 @@ CChildView::CChildView()
 }
 
 
-/// <summary>
-/// Finalizes an instance of the <see cref="CChildView"/> class.
-/// </summary>
 CChildView::~CChildView()
 {
 	// Dynamic arrays (std::vector) release memory automatically.
@@ -259,12 +256,6 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 END_MESSAGE_MAP()
 
 
-// CChildView message handlers
-/// <summary>
-/// Pre-creates window.
-/// </summary>
-/// <param name="cs">The cs.</param>
-/// <returns></returns>
 BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if (!CWnd::PreCreateWindow(cs))
@@ -281,9 +272,6 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 }
 
 
-/// <summary>
-/// Called when [paint].
-/// </summary>
 void CChildView::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
@@ -875,10 +863,6 @@ void CChildView::pickFile(bool* pNewFile, ExcelConnector* pExcel, Table* pTable,
 }
 
 
-
-/// <summary>
-/// Called when [pick first file].
-/// </summary>
 void CChildView::OnPickFirstFile()
 {
 	bool* pNewFile = &m_bNewFile1;
@@ -891,9 +875,6 @@ void CChildView::OnPickFirstFile()
 }
 
 
-/// <summary>
-/// Called when [pick second file].
-/// </summary>
 void CChildView::OnPickSecondFile()
 {
 	bool* pNewFile = &m_bNewFile2;
@@ -906,9 +887,6 @@ void CChildView::OnPickSecondFile()
 }
 
 
-/// <summary>
-/// Called when [create matrix].
-/// </summary>
 void CChildView::OnCreateMatrix()
 {
 	if (m_bLockPrg1 || m_bLockPrg2) {
@@ -934,10 +912,6 @@ void CChildView::OnCreateMatrix()
 }
 
 
-/// <summary>
-/// Called when [update pick first sheet].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdatePickFirstSheet(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -946,10 +920,6 @@ void CChildView::OnUpdatePickFirstSheet(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [update create matrix].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateCreateMatrix(CCmdUI* pCmdUI)
 {
 	if (m_nUiToBeRefreshed)
@@ -996,33 +966,18 @@ void CChildView::updateFileName(CCmdUI* pCmdUI, CString* pszFilename, int idStri
 }
 
 
-/// <summary>
-/// Called when [update filename1].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateFilename1(CCmdUI* pCmdUI)
 {
 	updateFileName(pCmdUI, &m_szFilename1, IDS_1ST_FILE);
 }
 
 
-/// <summary>
-/// Called when [update filename2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateFilename2(CCmdUI* pCmdUI)
 {
 	updateFileName(pCmdUI, &m_szFilename2, IDS_2ND_FILE);
 }
 
 
-/// <summary>
-/// Called when [mouse wheel].
-/// </summary>
-/// <param name="nFlags">The n flags.</param>
-/// <param name="zDelta">The z delta.</param>
-/// <param name="pt">The pt.</param>
-/// <returns></returns>
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	int nDelta;
@@ -1055,10 +1010,6 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 }
 
 
-/// <summary>
-/// Called when [update pick second sheet].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdatePickSecondSheet(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -1067,10 +1018,6 @@ void CChildView::OnUpdatePickSecondSheet(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [update progress1].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateProgress1(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -1078,12 +1025,6 @@ void CChildView::OnUpdateProgress1(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [v scroll].
-/// </summary>
-/// <param name="nSBCode">The n sb code.</param>
-/// <param name="nPos">The n position.</param>
-/// <param name="pScrollBar">The p scroll bar.</param>
 void CChildView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	int nDelta;
@@ -1136,12 +1077,6 @@ void CChildView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 }
 
 
-/// <summary>
-/// Called when [h scroll].
-/// </summary>
-/// <param name="nSBCode">The n sb code.</param>
-/// <param name="nPos">The n position.</param>
-/// <param name="pScrollBar">The p scroll bar.</param>
 void CChildView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	int nDelta;
@@ -1250,9 +1185,6 @@ void CChildView::pickSheet(ExcelConnector* pExcel, Table* pTable, CMFCRibbonComb
 }
 
 
-/// <summary>
-/// Called when [pick first sheet].
-/// </summary>
 void CChildView::OnPickFirstSheet()
 {
 	pickSheet(&m_excel1, &m_Table1, m_pSheetCombo1, m_pSpinner1_Names, m_pSpinner1_Fdata, m_pRows1, m_pCols1);
@@ -1260,9 +1192,6 @@ void CChildView::OnPickFirstSheet()
 }
 
 
-/// <summary>
-/// Called when [spin1 names].
-/// </summary>
 void CChildView::OnSpin1Names()
 {
 	CString tmps = m_pSpinner1_Names->GetEditText();
@@ -1277,10 +1206,6 @@ void CChildView::OnSpin1Names()
 }
 
 
-/// <summary>
-/// Called when [update spin1 names].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateSpin1Names(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -1289,10 +1214,6 @@ void CChildView::OnUpdateSpin1Names(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [update spin1 fdata].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateSpin1Fdata(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -1301,9 +1222,6 @@ void CChildView::OnUpdateSpin1Fdata(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [spin1 fdata].
-/// </summary>
 void CChildView::OnSpin1Fdata()
 {
 	CString tmps = m_pSpinner1_Fdata->GetEditText();
@@ -1317,9 +1235,6 @@ void CChildView::OnSpin1Fdata()
 }
 
 
-/// <summary>
-/// Updates the combos1.
-/// </summary>
 void CChildView::updateCombos1()
 {
 	CString szdata;
@@ -1344,9 +1259,6 @@ void CChildView::updateCombos1()
 }
 
 
-/// <summary>
-/// Called when [pick second sheet].
-/// </summary>
 void CChildView::OnPickSecondSheet()
 {
 	pickSheet(&m_excel2, &m_Table2, m_pSheetCombo2, m_pSpinner2_Names, m_pSpinner2_Fdata, m_pRows2, m_pCols2);
@@ -1354,9 +1266,6 @@ void CChildView::OnPickSecondSheet()
 }
 
 
-/// <summary>
-/// Updates the combos2.
-/// </summary>
 void CChildView::updateCombos2()
 {
 	CString szdata;
@@ -1380,10 +1289,6 @@ void CChildView::updateCombos2()
 }
 
 
-/// <summary>
-/// Called when [update spin2 fdata].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateSpin2Fdata(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -1392,9 +1297,6 @@ void CChildView::OnUpdateSpin2Fdata(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [spin2 fdata].
-/// </summary>
 void CChildView::OnSpin2Fdata()
 {
 	CString tmps = m_pSpinner2_Fdata->GetEditText();
@@ -1408,10 +1310,6 @@ void CChildView::OnSpin2Fdata()
 }
 
 
-/// <summary>
-/// Called when [update spin2 names].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateSpin2Names(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -1420,9 +1318,6 @@ void CChildView::OnUpdateSpin2Names(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [spin2 names].
-/// </summary>
 void CChildView::OnSpin2Names()
 {
 	CString tmps = m_pSpinner2_Names->GetEditText();
@@ -1437,11 +1332,6 @@ void CChildView::OnSpin2Names()
 }
 
 
-/// <summary>
-/// Called when [l button double CLK].
-/// </summary>
-/// <param name="nFlags">The n flags.</param>
-/// <param name="point">The point.</param>
 void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
 	if (m_bLockPrg1 || m_bLockPrg2) {
@@ -1461,10 +1351,6 @@ void CChildView::OnLButtonDblClk(UINT nFlags, CPoint point)
 }
 
 
-/// <summary>
-/// Checks the keys uniqueness1.
-/// </summary>
-/// <returns></returns>
 bool CChildView::checkKeysUniqueness1()
 {
 	m_bLockPrg1 = true;
@@ -1474,10 +1360,6 @@ bool CChildView::checkKeysUniqueness1()
 }
 
 
-/// <summary>
-/// Checks the keys uniqueness2.
-/// </summary>
-/// <returns></returns>
 bool CChildView::checkKeysUniqueness2()
 {
 	m_bLockPrg2 = true;
@@ -1487,9 +1369,6 @@ bool CChildView::checkKeysUniqueness2()
 }
 
 
-/// <summary>
-/// First pass (main algorithm).
-/// </summary>
 void CChildView::firstPass()
 {
 	m_bLockPrg1 = true;
@@ -1502,10 +1381,6 @@ void CChildView::firstPass()
 }
 
 
-/// <summary>
-/// Creates the key arrays1.
-/// </summary>
-/// <returns></returns>
 int CChildView::createKeyArrays1()
 {
 	m_engine.setTables(m_Table1, m_Table2);
@@ -1517,10 +1392,6 @@ int CChildView::createKeyArrays1()
 }
 
 
-/// <summary>
-/// Creates the key arrays2.
-/// </summary>
-/// <returns></returns>
 int CChildView::createKeyArrays2()
 {
 	m_engine.setTables(m_Table1, m_Table2);
@@ -1532,11 +1403,6 @@ int CChildView::createKeyArrays2()
 }
 
 
-/// <summary>
-/// Called when [mouse move].
-/// </summary>
-/// <param name="nFlags">The n flags.</param>
-/// <param name="point">The point.</param>
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	m_OldCell.x = M_CCell.x;
@@ -1632,9 +1498,6 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 }
 
 
-/// <summary>
-/// Called when [slider2].
-/// </summary>
 void CChildView::OnSimilarityThreshold()
 {
 	m_nSldr = m_pSlider->GetPos();
@@ -1648,10 +1511,6 @@ void CChildView::OnSimilarityThreshold()
 }
 
 
-/// <summary>
-/// Called when [update slider2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateSimilarityThreshold(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -1661,19 +1520,12 @@ void CChildView::OnUpdateSimilarityThreshold(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [check4].
-/// </summary>
 void CChildView::OnMarkInFile1()
 {
 	m_bIn1file = !m_bIn1file;
 }
 
 
-/// <summary>
-/// Called when [update check4].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateMarkInFile1(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -1683,19 +1535,12 @@ void CChildView::OnUpdateMarkInFile1(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [check5].
-/// </summary>
 void CChildView::OnMarkInFile2()
 {
 	m_bIn2file = !m_bIn2file;
 }
 
 
-/// <summary>
-/// Called when [update check5].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateMarkInFile2(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -1705,9 +1550,6 @@ void CChildView::OnUpdateMarkInFile2(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [button2].
-/// </summary>
 void CChildView::OnSuggestKeys()
 {
 	if (m_bLockPrg1 || m_bLockPrg2) {
@@ -1736,12 +1578,6 @@ void CChildView::OnSuggestKeys()
 }
 
 
-/// <summary>
-/// Converts the r1 c1.
-/// </summary>
-/// <param name="row">The row.</param>
-/// <param name="clm">The CLM.</param>
-/// <returns></returns>
 CString CChildView::convertR1C1(int row, int clm)
 {
 	CString result;
@@ -1758,11 +1594,6 @@ CString CChildView::convertR1C1(int row, int clm)
 }
 
 
-/// <summary>
-/// Marks a difference in the XLS(X) file.
-/// </summary>
-/// <param name="row">The row.</param>
-/// <param name="clm">The CLM.</param>
 void CChildView::markIn1(int row, int clm)
 {
 	CString cnv = convertR1C1(row, clm);
@@ -1770,11 +1601,6 @@ void CChildView::markIn1(int row, int clm)
 }
 
 
-/// <summary>
-/// Marks a difference in the XLS(X) file.
-/// </summary>
-/// <param name="row">The row.</param>
-/// <param name="clm">The CLM.</param>
 void CChildView::markIn2(int row, int clm)
 {
 	CString cnv = convertR1C1(row, clm);
@@ -1782,9 +1608,6 @@ void CChildView::markIn2(int row, int clm)
 }
 
 
-/// <summary>
-/// Initializes the scroll bars.
-/// </summary>
 void CChildView::initScrollBars()
 {
 	SCROLLINFO ScrollInfo;
@@ -1800,12 +1623,6 @@ void CChildView::initScrollBars()
 }
 
 
-/// <summary>
-/// Called when [size].
-/// </summary>
-/// <param name="nType">Type of the n.</param>
-/// <param name="cx">The cx.</param>
-/// <param name="cy">The cy.</param>
 void CChildView::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
@@ -1860,11 +1677,6 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 }
 
 
-/// <summary>
-/// Called when [create].
-/// </summary>
-/// <param name="lpCreateStruct">The lp create structure.</param>
-/// <returns></returns>
 int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
@@ -1882,10 +1694,6 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 }
 
 
-/// <summary>
-/// Called when [update progress2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateProgress2(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -1896,10 +1704,6 @@ void CChildView::OnUpdateProgress2(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [update check2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateVerifyKeys(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_bVerifyKeys);
@@ -1908,19 +1712,12 @@ void CChildView::OnUpdateVerifyKeys(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [check2].
-/// </summary>
 void CChildView::OnVerifyKeys()
 {
 	m_bVerifyKeys = !m_bVerifyKeys;
 }
 
 
-/// <summary>
-/// Called when [update button2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateSuggestKeys(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
@@ -1930,9 +1727,6 @@ void CChildView::OnUpdateSuggestKeys(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [check7].
-/// </summary>
 void CChildView::OnSameNamesOnly()
 {
 	m_bSameNames = !m_bSameNames;
@@ -1948,10 +1742,6 @@ void CChildView::OnSameNamesOnly()
 }
 
 
-/// <summary>
-/// Called when [update check7].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateSameNamesOnly(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_bSameNames);
@@ -1960,11 +1750,6 @@ void CChildView::OnUpdateSameNamesOnly(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Mies the thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT MyThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -1974,12 +1759,6 @@ UINT MyThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Called when [cm update progress].
-/// </summary>
-/// <param name="wParam">The w parameter.</param>
-/// <param name="lParam">The l parameter.</param>
-/// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 {
 	if ((UINT)lParam > 99)
@@ -2002,12 +1781,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>
-/// Called when [cm update progress2].
-/// </summary>
-/// <param name="wParam">The w parameter.</param>
-/// <param name="lParam">The l parameter.</param>
-/// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 {
 	if ((UINT)lParam > 99)
@@ -2023,12 +1796,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress2(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>
-/// Called when [cm update progress3].
-/// </summary>
-/// <param name="wParam">The w parameter.</param>
-/// <param name="lParam">The l parameter.</param>
-/// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar1->SetPos((UINT)lParam);
@@ -2036,9 +1803,6 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>
-/// Called when markInFiles completes: post-processes marking results in the UI thread.
-/// </summary>
 afx_msg LRESULT CChildView::OnCmMarkingReady(WPARAM wParam, LPARAM lParam)
 {
 	HWND hWnd = this->GetSafeHwnd();
@@ -2163,11 +1927,6 @@ afx_msg LRESULT CChildView::OnCmMarkingReady(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>
-/// Mies the thread proc2.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT MyThreadProc2(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2192,11 +1951,6 @@ UINT MyThreadProc2(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Creates the keys1 thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT CreateKeys1ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2218,11 +1972,6 @@ UINT CreateKeys1ThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Creates the keys2 thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT CreateKeys2ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2244,11 +1993,6 @@ UINT CreateKeys2ThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Makes the prereq1 thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT makePrereq1ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2258,11 +2002,6 @@ UINT makePrereq1ThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Makes the prereq2 thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT makePrereq2ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2272,11 +2011,6 @@ UINT makePrereq2ThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Mies the thread proc3.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT MyThreadProc3(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2286,9 +2020,6 @@ UINT MyThreadProc3(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Marks differences in XLS(X) files.
-/// </summary>
 void CChildView::markInFiles()
 {
 	m_bLockPrg2 = true;
@@ -2341,9 +2072,6 @@ void CChildView::markInFiles()
 }
 
 
-/// <summary>
-/// Called when [button5].
-/// </summary>
 void CChildView::OnColorPicker1()
 {
 	COLORREF i = (int)m_pColorPicker1->GetSelectedItem();
@@ -2351,10 +2079,6 @@ void CChildView::OnColorPicker1()
 }
 
 
-/// <summary>
-/// Called when [update button5].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateColorPicker1(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
@@ -2363,9 +2087,6 @@ void CChildView::OnUpdateColorPicker1(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [button3].
-/// </summary>
 void CChildView::OnColorPicker2()
 {
 	COLORREF i = (int)m_pColorPicker2->GetSelectedItem();
@@ -2373,10 +2094,6 @@ void CChildView::OnColorPicker2()
 }
 
 
-/// <summary>
-/// Called when [update button3].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateColorPicker2(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
@@ -2385,19 +2102,12 @@ void CChildView::OnUpdateColorPicker2(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [check3].
-/// </summary>
 void CChildView::OnAutoMark()
 {
 	m_bAutoMark = !m_bAutoMark;
 }
 
 
-/// <summary>
-/// Called when [update check3].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateAutoMark(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
@@ -2405,9 +2115,6 @@ void CChildView::OnUpdateAutoMark(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Resolves the AutoMark.
-/// </summary>
 void CChildView::resolveAutoMark()
 {
 	m_bDoAutoMark = false;
@@ -2541,9 +2248,6 @@ void CChildView::resolveAutoMark()
 }
 
 
-/// <summary>
-/// Drain the MSG queue. // TODO explain
-/// </summary>
 void CChildView::DrainMsgQueue(void)
 {
 	MSG     msg = { 0 };
@@ -2552,28 +2256,18 @@ void CChildView::DrainMsgQueue(void)
 }
 
 
-/// <summary>
-/// Called when [diffslist].
-/// </summary>
 void CChildView::OnDiffslist()
 {
 	// there is no required answer for this event - at least for now
 }
 
 
-/// <summary>
-/// Called when [update diffslist].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateDiffslist(CCmdUI* pCmdUI)
 {
 	// there is no required answer for this event - at least for now
 }
 
 
-/// <summary>
-/// Called when [sel1].
-/// </summary>
 void CChildView::OnGotoDiffInFile1()
 {
 	long row;
@@ -2595,10 +2289,6 @@ void CChildView::OnGotoDiffInFile1()
 }
 
 
-/// <summary>
-/// gets row from combo.
-/// </summary>
-/// <returns></returns>
 int CChildView::rowFromCombo()
 {
 	if (m_pFoundDifferences->GetCurSel() > -1)
@@ -2618,9 +2308,6 @@ int CChildView::rowFromCombo()
 }
 
 
-/// <summary>
-/// Called when [button6].
-/// </summary>
 void CChildView::OnGotoDiffInFile2()
 {
 	long row;
@@ -2643,28 +2330,18 @@ void CChildView::OnGotoDiffInFile2()
 }
 
 
-/// <summary>
-/// Called when [put2front].
-/// </summary>
 void CChildView::OnBringExcelToFront()
 {
 	m_bToFront = !m_bToFront;
 }
 
 
-/// <summary>
-/// Called when [update put2front].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateBringExcelToFront(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_bToFront);
 }
 
 
-/// <summary>
-/// Suggests the keys1.
-/// </summary>
 void CChildView::suggestKeys1()
 {
 	m_bLockPrg1 = true;
@@ -2672,9 +2349,6 @@ void CChildView::suggestKeys1()
 }
 
 
-/// <summary>
-/// Suggests the keys2.
-/// </summary>
 void CChildView::suggestKeys2()
 {
 	m_bLockPrg2 = true;
@@ -2682,21 +2356,12 @@ void CChildView::suggestKeys2()
 }
 
 
-/// <summary>
-/// Clears the possible keys.
-/// </summary>
 void CChildView::clearPossibleKeys()
 {
 	m_keyFinder.clearPossibleKeys();
 }
 
 
-/// <summary>
-/// Sorts three numbers
-/// </summary>
-/// <param name="a">a.</param>
-/// <param name="b">The b.</param>
-/// <param name="c">The c.</param>
 inline void CChildView::sort3(int& a, int& b, int& c)
 {
 	if (c < b) std::swap(c, b);
@@ -2705,11 +2370,6 @@ inline void CChildView::sort3(int& a, int& b, int& c)
 }
 
 
-/// <summary>
-/// Suggests the keys1 thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT SuggestKeys1ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2719,11 +2379,6 @@ UINT SuggestKeys1ThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Suggests the keys2 thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT SuggestKeys2ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2733,11 +2388,6 @@ UINT SuggestKeys2ThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Mutuals the check thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT MutualCheckThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2747,11 +2397,6 @@ UINT MutualCheckThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Finds the sims thread proc.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT FindSimsThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2761,11 +2406,6 @@ UINT FindSimsThreadProc(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Finds the sims thread proc1.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT FindSimsThreadProc1(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2775,11 +2415,6 @@ UINT FindSimsThreadProc1(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Finds the sims thread proc2.
-/// </summary>
-/// <param name="pParam">The p parameter.</param>
-/// <returns></returns>
 UINT FindSimsThreadProc2(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
@@ -2789,10 +2424,6 @@ UINT FindSimsThreadProc2(LPVOID pParam)
 }
 
 
-/// <summary>
-/// Mutuals the check.
-/// </summary>
-/// <returns></returns>
 bool CChildView::mutualCheck()
 {
 	m_keyFinder.resetBestKeyComb();
@@ -2877,9 +2508,6 @@ bool CChildView::mutualCheck()
 }
 
 
-/// <summary>
-/// Deletes all keys.
-/// </summary>
 void CChildView::deleteAllKeys()
 {
 	m_engine.deleteAllKeys();
@@ -2890,11 +2518,6 @@ void CChildView::deleteAllKeys()
 }
 
 
-/// <summary>
-/// Called when [r button up].
-/// </summary>
-/// <param name="nFlags">The n flags.</param>
-/// <param name="point">The point.</param>
 void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 {
 	if (M_CCell.x * M_CCell.y)
@@ -2912,10 +2535,6 @@ void CChildView::OnRButtonUp(UINT nFlags, CPoint point)
 }
 
 
-/// <summary>
-/// Uses the possible keys.
-/// </summary>
-/// <returns></returns>
 bool CChildView::usePossibleKeys()
 {
 	deleteAllKeys();
@@ -2934,20 +2553,12 @@ bool CChildView::usePossibleKeys()
 }
 
 
-/// <summary>
-/// Gets the number of possible keys.
-/// </summary>
-/// <returns></returns>
 int CChildView::getNumberOfPossibleKeys()
 {
 	return m_keyFinder.getNumberOfPossibleKeys();
 }
 
 
-/// <summary>
-/// Called when [update combo2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateKeySearchComplexity(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(true);
@@ -2963,9 +2574,6 @@ void CChildView::OnUpdateKeySearchComplexity(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [combo2].
-/// </summary>
 void CChildView::OnKeySearchComplexity()
 {
 	int complexity = 100000;
@@ -2976,22 +2584,12 @@ void CChildView::OnKeySearchComplexity()
 }
 
 
-/// <summary>
-/// Gets the number of possible keys.
-/// </summary>
-/// <param name="table">The table.</param>
-/// <param name="order">The order.</param>
-/// <param name="item">The item.</param>
-/// <returns></returns>
 int CChildView::getNumberOfPossibleKeys(int table, int order, int item)
 {
 	return m_keyFinder.getNumberOfPossibleKeys(table, order, item);
 }
 
 
-/// <summary>
-/// Finds the sims.
-/// </summary>
 void CChildView::findSims() // do not use in case there is a sufficient RAM capacity
 {
 	COleVariant vData;
@@ -3094,10 +2692,6 @@ void CChildView::findSims() // do not use in case there is a sufficient RAM capa
 }
 
 
-/// <summary>
-/// Shared similarity computation for a range of table-1 columns.
-/// Called by findSims1 (first half) and findSims2 (second half, uses cached values).
-/// </summary>
 void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, UINT doneMsg, bool useTmp)
 {
 	CString szdata;
@@ -3204,9 +2798,6 @@ void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, U
 }
 
 
-/// <summary>
-/// Finds the sims1 (first half of table-1 columns, live Excel values).
-/// </summary>
 void CChildView::findSims1()
 {
 	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
@@ -3214,9 +2805,6 @@ void CChildView::findSims1()
 }
 
 
-/// <summary>
-/// Finds the sims2 (second half of table-1 columns, cached Excel values).
-/// </summary>
 void CChildView::findSims2()
 {
 	int tmp_bnd_hlf = m_Table1.NumberOfColumns / 2;
@@ -3225,9 +2813,6 @@ void CChildView::findSims2()
 }
 
 
-/// <summary>
-/// Called when [similarpaircheckbox].
-/// </summary>
 void CChildView::OnShowSimilarColumns()
 {
 	if (m_Table1.NumberOfColumns * m_Table2.NumberOfColumns == 0)
@@ -3243,10 +2828,6 @@ void CChildView::OnShowSimilarColumns()
 }
 
 
-/// <summary>
-/// Called when [update similarpaircheckbox].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateShowSimilarColumns(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(m_Table1.NumberOfColumns * m_Table2.NumberOfColumns && m_bXSimilarityComputed);
@@ -3256,9 +2837,6 @@ void CChildView::OnUpdateShowSimilarColumns(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [findrel BTN].
-/// </summary>
 void CChildView::OnFindColumnRelations()
 {
 	if (m_Table1.NumberOfColumns * m_Table2.NumberOfColumns == 0)
@@ -3296,20 +2874,11 @@ void CChildView::OnFindColumnRelations()
 }
 
 
-/// <summary>
-/// Called when [idxcrt BTN].
-/// </summary>
 void CChildView::OnIdxcrtBtn()
 {
 }
 
 
-/// <summary>
-/// Called when [cm update key progress1].
-/// </summary>
-/// <param name="wParam">The w parameter.</param>
-/// <param name="lParam">The l parameter.</param>
-/// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam)
 {
 	m_pKeyProgressBar1->SetPos((UINT)lParam);
@@ -3317,12 +2886,6 @@ afx_msg LRESULT CChildView::OnCmUpdateKeyProgress1(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>
-/// Called when [cm update key progress2].
-/// </summary>
-/// <param name="wParam">The w parameter.</param>
-/// <param name="lParam">The l parameter.</param>
-/// <returns></returns>
 afx_msg LRESULT CChildView::OnCmUpdateKeyProgress2(WPARAM wParam, LPARAM lParam)
 {
 	m_pKeyProgressBar2->SetPos((UINT)lParam);
@@ -3330,7 +2893,6 @@ afx_msg LRESULT CChildView::OnCmUpdateKeyProgress2(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when createKeyArrays1 completes successfully.</summary>
 afx_msg LRESULT CChildView::OnCmKeys1Done(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar1->SetPos(0);
@@ -3358,7 +2920,6 @@ afx_msg LRESULT CChildView::OnCmKeys1Done(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when createKeyArrays2 completes successfully.</summary>
 afx_msg LRESULT CChildView::OnCmKeys2Done(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar2->SetPos(0);
@@ -3380,7 +2941,6 @@ afx_msg LRESULT CChildView::OnCmKeys2Done(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when suggestKeys1 completes.</summary>
 afx_msg LRESULT CChildView::OnCmGathering1Done(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar1->SetPos(0);
@@ -3409,7 +2969,6 @@ afx_msg LRESULT CChildView::OnCmGathering1Done(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when suggestKeys2 completes.</summary>
 afx_msg LRESULT CChildView::OnCmGathering2Done(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar2->SetPos(0);
@@ -3430,7 +2989,6 @@ afx_msg LRESULT CChildView::OnCmGathering2Done(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when mutualCheck finds a valid key combination.</summary>
 afx_msg LRESULT CChildView::OnCmKeysFound(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar1->SetPos(0);
@@ -3452,7 +3010,6 @@ afx_msg LRESULT CChildView::OnCmKeysFound(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when mutualCheck finds no compatible key combination.</summary>
 afx_msg LRESULT CChildView::OnCmKeysNotFound(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar1->SetPos(0);
@@ -3471,7 +3028,6 @@ afx_msg LRESULT CChildView::OnCmKeysNotFound(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when findSims1 completes.</summary>
 afx_msg LRESULT CChildView::OnCmSims1Done(WPARAM wParam, LPARAM lParam)
 {
 	m_pKeyProgressBar1->SetPos(0);
@@ -3484,7 +3040,6 @@ afx_msg LRESULT CChildView::OnCmSims1Done(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when findSims2 completes.</summary>
 afx_msg LRESULT CChildView::OnCmSims2Done(WPARAM wParam, LPARAM lParam)
 {
 	m_pKeyProgressBar2->SetPos(0);
@@ -3497,7 +3052,6 @@ afx_msg LRESULT CChildView::OnCmSims2Done(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>Called when firstPass completes.</summary>
 afx_msg LRESULT CChildView::OnCmFirstPassDone(WPARAM wParam, LPARAM lParam)
 {
 	m_pProgressBar1->SetPos(0);
@@ -3518,10 +3072,6 @@ afx_msg LRESULT CChildView::OnCmFirstPassDone(WPARAM wParam, LPARAM lParam)
 }
 
 
-/// <summary>
-/// Called when [update key progress1].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateKeyProgress1(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -3529,10 +3079,6 @@ void CChildView::OnUpdateKeyProgress1(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [update key progress2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateKeyProgress2(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -3540,9 +3086,6 @@ void CChildView::OnUpdateKeyProgress2(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Finishes the find relations.
-/// </summary>
 void CChildView::finishFindRelations()
 {
 	if (m_bXSimilarityComputed)
@@ -3589,10 +3132,6 @@ void CChildView::finishFindRelations()
 }
 
 
-/// <summary>
-/// Called when [update index checkbox].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateIdxCheckbox(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -3601,13 +3140,6 @@ void CChildView::OnUpdateIdxCheckbox(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Reverses the find.
-/// </summary>
-/// <param name="lpszData">The LPSZ data.</param>
-/// <param name="lpszSub">The LPSZ sub.</param>
-/// <param name="startpos">The startpos.</param>
-/// <returns></returns>
 int CChildView::ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos)
 {
 	int lenSub = lstrlen(lpszSub);
@@ -3624,9 +3156,6 @@ int CChildView::ReverseFind(LPCTSTR lpszData, LPCTSTR lpszSub, int startpos)
 }
 
 
-/// <summary>
-/// Called when [check index].
-/// </summary>
 void CChildView::OnCheckIdx()
 {
 	m_bUseIndexes = !m_bUseIndexes;
@@ -3634,10 +3163,6 @@ void CChildView::OnCheckIdx()
 }
 
 
-/// <summary>
-/// Called when [update check index].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateCheckIdx(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -3646,9 +3171,6 @@ void CChildView::OnUpdateCheckIdx(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [usidx check].
-/// </summary>
 void CChildView::OnUseKeyIndexing()
 {
 	m_bUseIndexes = !m_bUseIndexes;
@@ -3657,10 +3179,6 @@ void CChildView::OnUseKeyIndexing()
 }
 
 
-/// <summary>
-/// Called when [update usidx check].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateUseKeyIndexing(CCmdUI* pCmdUI)
 {
 	m_pRibbon = ((CFrameWndEx*)AfxGetMainWnd())->GetRibbonBar();
@@ -3669,10 +3187,6 @@ void CChildView::OnUpdateUseKeyIndexing(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [update rows1].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateRows1(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -3681,9 +3195,6 @@ void CChildView::OnUpdateRows1(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [rows1].
-/// </summary>
 void CChildView::OnRows1()
 {
 	long prevVal = m_Table1.NumberOfRows;
@@ -3701,10 +3212,6 @@ void CChildView::OnRows1()
 }
 
 
-/// <summary>
-/// Called when [update cols1].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateCols1(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename1 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -3713,9 +3220,6 @@ void CChildView::OnUpdateCols1(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [cols1].
-/// </summary>
 void CChildView::OnCols1()
 {
 	long prevVal = m_Table2.NumberOfColumns;
@@ -3733,10 +3237,6 @@ void CChildView::OnCols1()
 }
 
 
-/// <summary>
-/// Called when [update rows2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateRows2(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -3745,9 +3245,6 @@ void CChildView::OnUpdateRows2(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [rows2].
-/// </summary>
 void CChildView::OnRows2()
 {
 	long prevVal = m_Table2.NumberOfRows;
@@ -3765,10 +3262,6 @@ void CChildView::OnRows2()
 }
 
 
-/// <summary>
-/// Called when [update cols2].
-/// </summary>
-/// <param name="pCmdUI">The p command UI.</param>
 void CChildView::OnUpdateCols2(CCmdUI* pCmdUI)
 {
 	if (!(m_szFilename2 == "")) pCmdUI->Enable(true); else pCmdUI->Enable(false);
@@ -3777,9 +3270,6 @@ void CChildView::OnUpdateCols2(CCmdUI* pCmdUI)
 }
 
 
-/// <summary>
-/// Called when [cols2].
-/// </summary>
 void CChildView::OnCols2()
 {
 	long prevVal = m_Table2.NumberOfColumns;
