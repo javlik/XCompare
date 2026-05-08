@@ -1,6 +1,6 @@
 //
 //  Copyright (C) 2005 Serge Wautier - appTranslator
-//  
+//
 //  appTranslator - The ultimate localization tool for your Visual C++ applications
 //                  http://www.apptranslator.com
 //
@@ -39,11 +39,11 @@
  *   AfxMessageBox(CMsg(IDS_ERROR), MB_ICONERROR);
  * @endcode
  */
-class CMsg : public CString  
+class CMsg : public CString
 {
 public:
-	/** @brief Loads string @p nID from the resource string table. Asserts in debug if not found. */
-	CMsg(UINT nID);
+    /** @brief Loads string @p nID from the resource string table. Asserts in debug if not found. */
+    CMsg(UINT nID);
 };
 
 /**
@@ -58,12 +58,11 @@ public:
  *   AfxMessageBox(CFMsg(IDS_AGE, szName, nAge), MB_ICONINFORMATION);
  * @endcode
  */
-class CFMsg : public CString 
+class CFMsg : public CString
 {
 public:
-	/** @brief Builds a formatted string from a literal format string (FormatMessage notation). */
-	CFMsg(LPCTSTR pszFormat, ...);
-	/** @brief Builds a formatted string from a string-table format resource. */
-	CFMsg(UINT nFormatID, ...);
+    /** @brief Builds a formatted string from a literal format string (FormatMessage notation). */
+    CFMsg(LPCTSTR pszFormat, ...);
+    /** @brief Builds a formatted string from a string-table format resource. */
+    CFMsg(UINT nFormatID, ...);
 };
-

@@ -1,0 +1,34 @@
+---
+BasedOnStyle: Microsoft
+ColumnLimit: 120
+
+# Allman braces already set by Microsoft style; make explicit
+BreakBeforeBraces: Allman
+
+# Keep short functions on one line (e.g. one-liner wrappers and getters)
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Pointer/reference alignment: left (int* p, not int *p)
+PointerAlignment: Left
+
+# Constructor initialiser lists
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4
+
+# Keep Doxygen comment blocks intact
+CommentPragmas: '^\s*[@\\](brief|param|return|retval|note|warning|code|endcode|file|class|struct|def)'
+ReflowComments: false
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+# Keep public:/private:/protected: flush-left (compensate for IndentWidth)
+AccessModifierOffset: -4
+
+# Include sorting — keep existing order (MFC headers are order-sensitive)
+SortIncludes: Never
+---

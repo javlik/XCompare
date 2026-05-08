@@ -1,6 +1,6 @@
 //
 //  Copyright (C) 2005 Serge Wautier - appTranslator
-//  
+//
 //  appTranslator - The ultimate localization tool for your Visual C++ applications
 //                  http://www.apptranslator.com
 //
@@ -36,7 +36,7 @@
 
 #ifdef _DEBUG
 #undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
+static char THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -49,73 +49,73 @@ static char THIS_FILE[]=__FILE__;
 
 CMsg::CMsg(UINT nID) // nID = resource ID of string (in string table)
 {
-  if (!LoadString(nID))
-  { // Error : string not found !
-    TRACE(_T("Unknown resource string id : %d\n"),nID);
-    ASSERT(false);
-    CString::operator=(_T("???")); // In case of error, set string contents to ???. Compatible with VC6 and VC7.
-  }
+    if (!LoadString(nID))
+    { // Error : string not found !
+        TRACE(_T("Unknown resource string id : %d\n"), nID);
+        ASSERT(false);
+        CString::operator=(_T("???")); // In case of error, set string contents to ???. Compatible with VC6 and VC7.
+    }
 }
 
 //
 //   CFMsg: Creates a formatted message. Wrapper around the API FormatMessage(). Kind of super-printf().
 //          Since CFMsg derives from CString, it has an LPCTSTR operator, hence can replace a string literal.
-//          e.g.: AfxMessageBox( CFMsg(IDS_AGE, szName, nAge), MB_ICONINFORMATION ); 
+//          e.g.: AfxMessageBox( CFMsg(IDS_AGE, szName, nAge), MB_ICONINFORMATION );
 //                                     // IDS_AGE : %1 is %2!d! years old.
 //                                     // Message : Jane is 27 years old.
 //
 
-CFMsg::CFMsg(UINT nFormatID,...) // nFormatID = resource string containing text to format
-{                               // uses FormatMessage() arguments notation : %1 %2 ...
-	
-  // Get format string from string table
-	CString strFormat;
-	if (!strFormat.LoadString(nFormatID))
-  { // Format string not found -> Load error string : ???
-    TRACE(_T("Unknown resource string id : %d\n"),nFormatID);
-    ASSERT(false);
-    CString::operator=(_T("???")); // In case of error, set string contents to ???. Compatible with VC6 and VC7.
-  }
-  else
-  { // OK, format string was loaded successfully
+CFMsg::CFMsg(UINT nFormatID, ...) // nFormatID = resource string containing text to format
+{                                 // uses FormatMessage() arguments notation : %1 %2 ...
 
-	  // Format message into temporary buffer lpszTemp
-	  va_list argList;
-	  va_start(argList, nFormatID);
-	  LPTSTR lpszTemp;
-	  if (::FormatMessage(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER,
-		                    strFormat, 0, 0, (LPTSTR)&lpszTemp, 0, &argList) == 0 ||
-		    lpszTemp == NULL)
-	  {
-		  AfxThrowMemoryException();
-	  }
+    // Get format string from string table
+    CString strFormat;
+    if (!strFormat.LoadString(nFormatID))
+    { // Format string not found -> Load error string : ???
+        TRACE(_T("Unknown resource string id : %d\n"), nFormatID);
+        ASSERT(false);
+        CString::operator=(_T("???")); // In case of error, set string contents to ???. Compatible with VC6 and VC7.
+    }
+    else
+    { // OK, format string was loaded successfully
 
-	  // Copy lpszTemp into the result string
-	  CString::operator=(lpszTemp); // Compatible with VC6 and VC7.
+        // Format message into temporary buffer lpszTemp
+        va_list argList;
+        va_start(argList, nFormatID);
+        LPTSTR lpszTemp;
+        if (::FormatMessage(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ALLOCATE_BUFFER, strFormat, 0, 0,
+                            (LPTSTR)&lpszTemp, 0, &argList) == 0 ||
+            lpszTemp == NULL)
+        {
+            AfxThrowMemoryException();
+        }
 
-    // Clean-up
-	  LocalFree(lpszTemp);
-	  va_end(argList);
-  }
+        // Copy lpszTemp into the result string
+        CString::operator=(lpszTemp); // Compatible with VC6 and VC7.
+
+        // Clean-up
+        LocalFree(lpszTemp);
+        va_end(argList);
+    }
 }
 
-CFMsg::CFMsg(LPCTSTR lpszFormat,...)
+CFMsg::CFMsg(LPCTSTR lpszFormat, ...)
 {
-	// Format message into temporary buffer lpszTemp
-	va_list argList;
-	va_start(argList, lpszFormat);
-	LPTSTR lpszTemp;
-	if (::FormatMessage(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER,
-		lpszFormat, 0, 0, (LPTSTR)&lpszTemp, 0, &argList) == 0 ||
-		lpszTemp == NULL)
-	{
-		AfxThrowMemoryException();
-	}
+    // Format message into temporary buffer lpszTemp
+    va_list argList;
+    va_start(argList, lpszFormat);
+    LPTSTR lpszTemp;
+    if (::FormatMessage(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ALLOCATE_BUFFER, lpszFormat, 0, 0,
+                        (LPTSTR)&lpszTemp, 0, &argList) == 0 ||
+        lpszTemp == NULL)
+    {
+        AfxThrowMemoryException();
+    }
 
-	// Copy lpszTemp into the result string
-	CString::operator=(lpszTemp); // Compatible with VC6 and VC7.
+    // Copy lpszTemp into the result string
+    CString::operator=(lpszTemp); // Compatible with VC6 and VC7.
 
-  // Clean-up
-	LocalFree(lpszTemp);
-	va_end(argList);
+    // Clean-up
+    LocalFree(lpszTemp);
+    va_end(argList);
 }

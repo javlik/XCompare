@@ -32,15 +32,13 @@ class KeyFinder
 public:
     // --- Initialisation ---
     /** @brief Initialises the finder with window handle, Excel connections and table descriptors. */
-    void init(HWND hWnd,
-              ExcelConnector& excel1, ExcelConnector& excel2,
-              const Table& table1, const Table& table2)
+    void init(HWND hWnd, ExcelConnector& excel1, ExcelConnector& excel2, const Table& table1, const Table& table2)
     {
-        m_hWnd    = hWnd;
+        m_hWnd = hWnd;
         m_pExcel1 = &excel1;
         m_pExcel2 = &excel2;
-        m_Table1  = table1;
-        m_Table2  = table2;
+        m_Table1 = table1;
+        m_Table2 = table2;
         m_nCheckedKeys1.assign(MAX_ATTEMPTS + 2, 0ULL);
         m_nCheckedKeys2.assign(MAX_ATTEMPTS + 2, 0ULL);
     }
@@ -106,7 +104,7 @@ public:
                 if (prgHlpr0 > prgHlpr)
                 {
                     prgHlpr = prgHlpr0;
-                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2,    0, prgHlpr);
+                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr);
                     ::PostMessage(m_hWnd, CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
                 }
                 szdata = L"";
@@ -135,7 +133,7 @@ public:
                 if (prgHlpr0 > prgHlpr)
                 {
                     prgHlpr = prgHlpr0;
-                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2,    0, prgHlpr);
+                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr);
                     ::PostMessage(m_hWnd, CM_UPDATE_KEYPROGRESS2, 0, prgHlpr);
                 }
                 szdata = L"";
@@ -147,14 +145,15 @@ public:
                 if (m_mapTmpMap1.count(szdata))
                     found++;
             }
-            rslt = 100 * found / min(m_Table2.NumberOfRows - m_Table2.FirstRowWithData,
-                                     m_Table1.NumberOfRows - m_Table1.FirstRowWithData);
+            rslt = 100 * found /
+                   min(m_Table2.NumberOfRows - m_Table2.FirstRowWithData,
+                       m_Table1.NumberOfRows - m_Table1.FirstRowWithData);
             if (rslt > m_BestKeyComb.rating)
             {
-                m_BestKeyComb.pk1    = tab1;
-                m_BestKeyComb.pk2    = tab2;
+                m_BestKeyComb.pk1 = tab1;
+                m_BestKeyComb.pk2 = tab2;
                 m_BestKeyComb.rating = (int)rslt;
-                m_BestKeyComb.cnt    = found;
+                m_BestKeyComb.cnt = found;
             }
             tab2++;
         }
@@ -165,9 +164,9 @@ public:
 
     // --- Accessors used by CChildView ---
     /** @brief Returns the @p idx-th key column index for candidate @p item in table 1. */
-    int  getPossibleKey1(int item, int idx) const { return m_PossibleKeys1[item].k[idx]; }
+    int getPossibleKey1(int item, int idx) const { return m_PossibleKeys1[item].k[idx]; }
     /** @brief Returns the @p idx-th key column index for candidate @p item in table 2. */
-    int  getPossibleKey2(int item, int idx) const { return m_PossibleKeys2[item].k[idx]; }
+    int getPossibleKey2(int item, int idx) const { return m_PossibleKeys2[item].k[idx]; }
 
     /**
      * @brief Returns the number of key columns in the best candidate pair found so far.
@@ -179,8 +178,7 @@ public:
     {
         for (int tmp_i = 1; tmp_i < 255; tmp_i++)
         {
-            if (m_PossibleKeys1[m_BestKeyComb.pk1].k[tmp_i] == 0 &&
-                m_PossibleKeys2[m_BestKeyComb.pk2].k[tmp_i] == 0)
+            if (m_PossibleKeys1[m_BestKeyComb.pk1].k[tmp_i] == 0 && m_PossibleKeys2[m_BestKeyComb.pk2].k[tmp_i] == 0)
                 return tmp_i;
         }
         return 0;
@@ -203,13 +201,13 @@ public:
     }
 
     /** @brief Returns a copy of the best key combination found by @c checkKeys(). */
-    BestKeyComb getBestKeyComb()         const { return m_BestKeyComb; }
+    BestKeyComb getBestKeyComb() const { return m_BestKeyComb; }
     /** @brief Resets the best-key-combination record. */
-    void        resetBestKeyComb()             { m_BestKeyComb = {}; }
+    void resetBestKeyComb() { m_BestKeyComb = {}; }
     /** @brief Returns the number of candidate key sets found for table 1. */
-    int         getPossibleKeyCounter1() const { return m_nPossibleKeyCounter1; }
+    int getPossibleKeyCounter1() const { return m_nPossibleKeyCounter1; }
     /** @brief Returns the number of candidate key sets found for table 2. */
-    int         getPossibleKeyCounter2() const { return m_nPossibleKeyCounter2; }
+    int getPossibleKeyCounter2() const { return m_nPossibleKeyCounter2; }
 
 private:
     // --- Internal helpers ---
@@ -228,20 +226,20 @@ private:
 
         // --- Per-table references (ternary on lvalues of the same type yields a reference) ---
         const bool isT1 = (table == 1);
-        const UINT msgProgress = isT1 ? CM_UPDATE_PROGRESS      : CM_UPDATE_PROGRESS2;
-        const UINT msgKeyProg  = isT1 ? CM_UPDATE_KEYPROGRESS1   : CM_UPDATE_KEYPROGRESS2;
-        const UINT msgDone     = isT1 ? CM_GATHERING1_DONE       : CM_GATHERING2_DONE;
-        const UINT idNoSheet   = isT1 ? IDS_NO_SHEET_SELCTD_IN_FRST : IDS_NO_SHEET_SELCTD_IN_SCND;
+        const UINT msgProgress = isT1 ? CM_UPDATE_PROGRESS : CM_UPDATE_PROGRESS2;
+        const UINT msgKeyProg = isT1 ? CM_UPDATE_KEYPROGRESS1 : CM_UPDATE_KEYPROGRESS2;
+        const UINT msgDone = isT1 ? CM_GATHERING1_DONE : CM_GATHERING2_DONE;
+        const UINT idNoSheet = isT1 ? IDS_NO_SHEET_SELCTD_IN_FRST : IDS_NO_SHEET_SELCTD_IN_SCND;
 
-        const Table&                     tbl      = isT1 ? m_Table1               : m_Table2;
-        ExcelConnector* const            pExcel   = isT1 ? m_pExcel1              : m_pExcel2;
-        long* const                      invEnt   = isT1 ? m_nInvEntropy1         : m_nInvEntropy2;
-        int*  const                      exKeys   = isT1 ? m_nExaminedKeys1       : m_nExaminedKeys2;
-        PossibleKeys*                    posKeys  = isT1 ? m_PossibleKeys1        : m_PossibleKeys2;
-        int&                             posKeyCnt= isT1 ? m_nPossibleKeyCounter1 : m_nPossibleKeyCounter2;
-        std::map<CString, long>&         tmpMap   = isT1 ? m_mapTmpMap1           : m_mapTmpMap2;
-        int&                             chKeyCnt = isT1 ? m_nCheckedKeysCounter1 : m_nCheckedKeysCounter2;
-        std::vector<unsigned long long>& chKeys   = isT1 ? m_nCheckedKeys1        : m_nCheckedKeys2;
+        const Table& tbl = isT1 ? m_Table1 : m_Table2;
+        ExcelConnector* const pExcel = isT1 ? m_pExcel1 : m_pExcel2;
+        long* const invEnt = isT1 ? m_nInvEntropy1 : m_nInvEntropy2;
+        int* const exKeys = isT1 ? m_nExaminedKeys1 : m_nExaminedKeys2;
+        PossibleKeys* posKeys = isT1 ? m_PossibleKeys1 : m_PossibleKeys2;
+        int& posKeyCnt = isT1 ? m_nPossibleKeyCounter1 : m_nPossibleKeyCounter2;
+        std::map<CString, long>& tmpMap = isT1 ? m_mapTmpMap1 : m_mapTmpMap2;
+        int& chKeyCnt = isT1 ? m_nCheckedKeysCounter1 : m_nCheckedKeysCounter2;
+        std::vector<unsigned long long>& chKeys = isT1 ? m_nCheckedKeys1 : m_nCheckedKeys2;
 
         // --- Initialise state ---
         int attempts = 0;
@@ -284,7 +282,7 @@ private:
                 {
                     prgHlpr = prgHlpr0;
                     ::PostMessage(m_hWnd, msgProgress, 0, prgHlpr);
-                    ::PostMessage(m_hWnd, msgKeyProg,  0, prgHlpr);
+                    ::PostMessage(m_hWnd, msgKeyProg, 0, prgHlpr);
                 }
                 if (is2BExaminedOnce(table, SUGKEYS - 1))
                 {
@@ -336,10 +334,10 @@ private:
     int createTempKeyArrays(int table)
     {
         const bool isT1 = (table == 1);
-        int*  const              exKeys = isT1 ? m_nExaminedKeys1 : m_nExaminedKeys2;
-        const Table&             tbl    = isT1 ? m_Table1         : m_Table2;
-        ExcelConnector* const    pExcel = isT1 ? m_pExcel1        : m_pExcel2;
-        std::map<CString, long>& tmpMap = isT1 ? m_mapTmpMap1     : m_mapTmpMap2;
+        int* const exKeys = isT1 ? m_nExaminedKeys1 : m_nExaminedKeys2;
+        const Table& tbl = isT1 ? m_Table1 : m_Table2;
+        ExcelConnector* const pExcel = isT1 ? m_pExcel1 : m_pExcel2;
+        std::map<CString, long>& tmpMap = isT1 ? m_mapTmpMap1 : m_mapTmpMap2;
 
         CString szdata;
         tmpMap.clear();
@@ -378,7 +376,8 @@ private:
             {
                 if (m_PossibleKeys1[m_nPossibleKeyCounter1].k[i_i] > 0 && nonzerosNr < i_i)
                 {
-                    m_PossibleKeys1[m_nPossibleKeyCounter1].k[nonzerosNr] = m_PossibleKeys1[m_nPossibleKeyCounter1].k[i_i];
+                    m_PossibleKeys1[m_nPossibleKeyCounter1].k[nonzerosNr] =
+                        m_PossibleKeys1[m_nPossibleKeyCounter1].k[i_i];
                     m_PossibleKeys1[m_nPossibleKeyCounter1].k[i_i] = 0;
                     nonzerosNr++;
                 }
@@ -390,7 +389,8 @@ private:
             {
                 if (m_PossibleKeys2[m_nPossibleKeyCounter2].k[i_i] > 0 && nonzerosNr < i_i)
                 {
-                    m_PossibleKeys2[m_nPossibleKeyCounter2].k[nonzerosNr] = m_PossibleKeys2[m_nPossibleKeyCounter2].k[i_i];
+                    m_PossibleKeys2[m_nPossibleKeyCounter2].k[nonzerosNr] =
+                        m_PossibleKeys2[m_nPossibleKeyCounter2].k[i_i];
                     m_PossibleKeys2[m_nPossibleKeyCounter2].k[i_i] = 0;
                     nonzerosNr++;
                 }
@@ -481,10 +481,7 @@ private:
     }
 
     /** @brief Returns the column index ranked @p n-th by entropy for @p table (1 or 2). */
-    int getNthEntropy(int table, int n) const
-    {
-        return (table == 1) ? m_nSortedEntropy1[n] : m_nSortedEntropy2[n];
-    }
+    int getNthEntropy(int table, int n) const { return (table == 1) ? m_nSortedEntropy1[n] : m_nSortedEntropy2[n]; }
 
     /** @brief Sorts all columns by descending uniqueness and stores the ranking in @c m_nSortedEntropy1/2. */
     int CalculateEntropyRank(int table)
@@ -542,26 +539,28 @@ private:
     {
         if (table == 1)
             for (int i = 1; i <= max; i++)
-                if (m_nSortedEntropy1[i] == clm) return true;
-        else
-            for (int i = 1; i <= max; i++)
-                if (m_nSortedEntropy2[i] == clm) return true;
+                if (m_nSortedEntropy1[i] == clm)
+                    return true;
+                else
+                    for (int i = 1; i <= max; i++)
+                        if (m_nSortedEntropy2[i] == clm)
+                            return true;
         return false;
     }
 
     // --- External references ---
-    HWND            m_hWnd    = nullptr;
+    HWND m_hWnd = nullptr;
     ExcelConnector* m_pExcel1 = nullptr;
     ExcelConnector* m_pExcel2 = nullptr;
-    Table           m_Table1  = {};
-    Table           m_Table2  = {};
-    int             m_nComplexity = 100000;
+    Table m_Table1 = {};
+    Table m_Table2 = {};
+    int m_nComplexity = 100000;
 
     // --- Key-suggestion state ---
-    long m_nInvEntropy1[256]    = {};
-    long m_nInvEntropy2[256]    = {};
-    int  m_nSortedEntropy1[256] = {};
-    int  m_nSortedEntropy2[256] = {};
+    long m_nInvEntropy1[256] = {};
+    long m_nInvEntropy2[256] = {};
+    int m_nSortedEntropy1[256] = {};
+    int m_nSortedEntropy2[256] = {};
 
     int m_nExaminedKeys1[SUGKEYS + 4] = {};
     int m_nExaminedKeys2[SUGKEYS + 4] = {};
@@ -573,9 +572,9 @@ private:
 
     PossibleKeys m_PossibleKeys1[256] = {};
     PossibleKeys m_PossibleKeys2[256] = {};
-    int          m_nPossibleKeyCounter1 = 0;
-    int          m_nPossibleKeyCounter2 = 0;
-    BestKeyComb  m_BestKeyComb = {};
+    int m_nPossibleKeyCounter1 = 0;
+    int m_nPossibleKeyCounter2 = 0;
+    BestKeyComb m_BestKeyComb = {};
 
     std::map<CString, long> m_mapTmpMap1;
     std::map<CString, long> m_mapTmpMap2;

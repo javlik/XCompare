@@ -26,11 +26,9 @@ class ComparisonEngine
 public:
     // --- Initialisation ---
     /** @brief Initialises the engine with window handle, Excel connections and table descriptors. */
-    void init(HWND hWnd,
-              ExcelConnector& excel1, ExcelConnector& excel2,
-              const Table& table1, const Table& table2)
+    void init(HWND hWnd, ExcelConnector& excel1, ExcelConnector& excel2, const Table& table1, const Table& table2)
     {
-        m_hWnd   = hWnd;
+        m_hWnd = hWnd;
         m_pExcel1 = &excel1;
         m_pExcel2 = &excel2;
         m_Table1 = table1;
@@ -70,9 +68,9 @@ public:
     /** @brief Returns @c true if the prerequisite data for table 2 is up to date. */
     bool isPrereq2Valid() const { return m_bPrereq2valid; }
     /** @brief Marks the table-1 prerequisite data as stale (e.g. after a sheet change). */
-    void invalidatePrereq1()    { m_bPrereq1valid = false; }
+    void invalidatePrereq1() { m_bPrereq1valid = false; }
     /** @brief Marks the table-2 prerequisite data as stale (e.g. after a sheet change). */
-    void invalidatePrereq2()    { m_bPrereq2valid = false; }
+    void invalidatePrereq2() { m_bPrereq2valid = false; }
 
     // --- Key arrays ---
     /**
@@ -107,14 +105,13 @@ public:
      * @param nEffMax       Receives the number of successfully key-matched row pairs.
      * @param bDoAutoMark   Receives the effective auto-mark flag (mirrors @p bAutoMark).
      */
-    void firstPass(ComparisonMatrix& matrix,
-                   bool bAutoMark, bool bIn2file,
-                   std::vector<bool>& pbGreenClms1,
-                   std::vector<bool>& pbGreenClms2,
-                   int& nEffMax, bool& bDoAutoMark)
+    void firstPass(ComparisonMatrix& matrix, bool bAutoMark, bool bIn2file, std::vector<bool>& pbGreenClms1,
+                   std::vector<bool>& pbGreenClms2, int& nEffMax, bool& bDoAutoMark)
     {
-        if (!m_bPrereq1valid) makePrereq1();
-        if (!m_bPrereq2valid) makePrereq2();
+        if (!m_bPrereq1valid)
+            makePrereq1();
+        if (!m_bPrereq2valid)
+            makePrereq2();
         bDoAutoMark = bAutoMark;
         int prgHlpr = 0, prgHlpr0 = 0;
         char firstChar1, firstChar2;
@@ -148,7 +145,8 @@ public:
                             firstChar2 = m_pchMainArr2[fchar2_y + i4];
                             if (firstChar1 == firstChar2)
                             {
-                                if (firstChar1 == 0 || (m_pExcel1->getCellValue(i3, i1) == m_pExcel2->getCellValue(i4, keyRow2)))
+                                if (firstChar1 == 0 ||
+                                    (m_pExcel1->getCellValue(i3, i1) == m_pExcel2->getCellValue(i4, keyRow2)))
                                 {
                                     matrix.increment(i4, i3);
                                 }
@@ -180,7 +178,8 @@ public:
             if (bIn2file)
             {
                 long keyRow1;
-                prgHlpr = 0; prgHlpr0 = 0;
+                prgHlpr = 0;
+                prgHlpr0 = 0;
                 for (long i1_2 = m_Table2.FirstRowWithData; i1_2 <= m_Table2.NumberOfRows; i1_2++)
                 {
                     prgHlpr0 = 100 * i1_2 / m_Table2.NumberOfRows;
@@ -220,7 +219,8 @@ public:
                             firstChar2 = m_pchMainArr2[fchar2_y + i4];
                             if (firstChar1 == firstChar2)
                             {
-                                if (firstChar1 == 0 || (m_pExcel1->getCellValue(i3, i1) == m_pExcel2->getCellValue(i4, keyRow2)))
+                                if (firstChar1 == 0 ||
+                                    (m_pExcel1->getCellValue(i3, i1) == m_pExcel2->getCellValue(i4, keyRow2)))
                                     matrix.increment(i4, i3);
                             }
                         }
@@ -245,12 +245,13 @@ public:
         ::PostMessage(m_hWnd, CM_FIRSTPASS_DONE, 0, 0);
     }
     /** @brief Returns the column index of the @p key-th key for @p table (1 or 2). */
-    int getNthKey(int table, int key) const
-    {
-        return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2;
-    }
+    int getNthKey(int table, int key) const { return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2; }
     /** @brief Overwrites the @p n-th key pair with new column indices. */
-    void setNthKey(int n, int col1, int col2) { m_KeyPair[n].tab1 = col1; m_KeyPair[n].tab2 = col2; }
+    void setNthKey(int n, int col1, int col2)
+    {
+        m_KeyPair[n].tab1 = col1;
+        m_KeyPair[n].tab2 = col2;
+    }
     /** @brief Appends a new key pair (one column from each table) to the active key list. */
     void pushKey(int col1, int col2)
     {
@@ -261,7 +262,11 @@ public:
     /** @brief Removes all key pairs, resetting the key counter to zero. */
     void deleteAllKeys()
     {
-        for (int i = 0; i < m_nKeyPairCounter; i++) { m_KeyPair[i].tab1 = 0; m_KeyPair[i].tab2 = 0; }
+        for (int i = 0; i < m_nKeyPairCounter; i++)
+        {
+            m_KeyPair[i].tab1 = 0;
+            m_KeyPair[i].tab2 = 0;
+        }
         m_nKeyPairCounter = 0;
     }
     /**
@@ -273,8 +278,7 @@ public:
         int rslt = 0;
         for (int i = 0; i < m_nKeyPairCounter; i++)
         {
-            if ((table == 1 && m_KeyPair[i].tab1 == column) ||
-                (table == 2 && m_KeyPair[i].tab2 == column))
+            if ((table == 1 && m_KeyPair[i].tab1 == column) || (table == 2 && m_KeyPair[i].tab2 == column))
             {
                 deleteKeyAt(i--);
                 rslt++;
@@ -307,15 +311,17 @@ public:
     {
         for (int i = 0; i < m_nKeyPairCounter; i++)
         {
-            if (table == 1 && m_KeyPair[i].tab1 == column) return true;
-            if (table == 2 && m_KeyPair[i].tab2 == column) return true;
+            if (table == 1 && m_KeyPair[i].tab1 == column)
+                return true;
+            if (table == 2 && m_KeyPair[i].tab2 == column)
+                return true;
         }
         return false;
     }
     /** @brief Returns @c true if at least one key pair has been defined. */
     bool areThereAnyKeys() const { return m_nKeyPairCounter > 0; }
     /** @brief Returns the number of active key pairs. */
-    int  getKeyPairCounter() const { return m_nKeyPairCounter; }
+    int getKeyPairCounter() const { return m_nKeyPairCounter; }
 
     // --- Data accessors ---
     /** @brief Returns the concatenated key string for row @p row in table 1. */
@@ -323,17 +329,17 @@ public:
     /** @brief Returns the concatenated key string for row @p row in table 2. */
     CString getKeyStr2(int row) const { return m_pszKeyArr21[row]; }
     /** @brief Returns @c true if row @p row in table 1 has no matching key in table 2. */
-    bool    isKeyMissing1(int row) const { return m_pbKeyMissing1[row]; }
+    bool isKeyMissing1(int row) const { return m_pbKeyMissing1[row]; }
     /** @brief Returns @c true if row @p row in table 2 has no matching key in table 1. */
-    bool    isKeyMissing2(int row) const { return m_pbKeyMissing2[row]; }
+    bool isKeyMissing2(int row) const { return m_pbKeyMissing2[row]; }
     /** @brief Returns @c true if column @p col in table 1 contains no data. */
-    bool    isEmptyCol1(int col)   const { return m_pbEmptyClms1[col]; }
+    bool isEmptyCol1(int col) const { return m_pbEmptyClms1[col]; }
     /** @brief Returns @c true if column @p col in table 2 contains no data. */
-    bool    isEmptyCol2(int col)   const { return m_pbEmptyClms2[col]; }
+    bool isEmptyCol2(int col) const { return m_pbEmptyClms2[col]; }
     /** @brief Returns the cached first character of cell (row, col) in table 1. */
-    char    getMainChar1(int row, int col) const { return m_pchMainArr1[(row - 1) * m_Table1.NumberOfColumns + col]; }
+    char getMainChar1(int row, int col) const { return m_pchMainArr1[(row - 1) * m_Table1.NumberOfColumns + col]; }
     /** @brief Returns the cached first character of cell (row, col) in table 2. */
-    char    getMainChar2(int row, int col) const { return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col]; }
+    char getMainChar2(int row, int col) const { return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col]; }
     /** @brief Returns a reference to the key-to-row lookup map for table 1. */
     CMap<CString, LPCTSTR, long, long>& getMap1() { return m_Map1; }
     /** @brief Returns a reference to the key-to-row lookup map for table 2. */
@@ -341,7 +347,7 @@ public:
 
     NotUniqueKeys m_NotUniqueKeys1;
     NotUniqueKeys m_NotUniqueKeys2;
-    bool          m_bUseIndexes = false;
+    bool m_bUseIndexes = false;
 
 private:
     // --- Internal helpers ---
@@ -349,17 +355,17 @@ private:
     int createKeyArraysImpl(int table)
     {
         const bool isT1 = (table == 1);
-        NotUniqueKeys&                      notUniq    = isT1 ? m_NotUniqueKeys1 : m_NotUniqueKeys2;
-        const Table&                        tbl        = isT1 ? m_Table1         : m_Table2;
-        CMap<CString, LPCTSTR, long, long>& map        = isT1 ? m_Map1           : m_Map2;
-        std::vector<CString>&               keyArr     = isT1 ? m_pszKeyArr11    : m_pszKeyArr21;
-        std::vector<bool>&                  keyMissing = isT1 ? m_pbKeyMissing1  : m_pbKeyMissing2;
-        ExcelConnector* const               pExcel     = isT1 ? m_pExcel1        : m_pExcel2;
+        NotUniqueKeys& notUniq = isT1 ? m_NotUniqueKeys1 : m_NotUniqueKeys2;
+        const Table& tbl = isT1 ? m_Table1 : m_Table2;
+        CMap<CString, LPCTSTR, long, long>& map = isT1 ? m_Map1 : m_Map2;
+        std::vector<CString>& keyArr = isT1 ? m_pszKeyArr11 : m_pszKeyArr21;
+        std::vector<bool>& keyMissing = isT1 ? m_pbKeyMissing1 : m_pbKeyMissing2;
+        ExcelConnector* const pExcel = isT1 ? m_pExcel1 : m_pExcel2;
         const UINT msgProgress = isT1 ? CM_UPDATE_PROGRESS : CM_UPDATE_PROGRESS2;
-        const UINT msgDone     = isT1 ? CM_KEYS1_DONE      : CM_KEYS2_DONE;
-        const int  dupCode     = isT1 ? 1                  : 2;
+        const UINT msgDone = isT1 ? CM_KEYS1_DONE : CM_KEYS2_DONE;
+        const int dupCode = isT1 ? 1 : 2;
 
-        notUniq = { 0, 0, L"" };
+        notUniq = {0, 0, L""};
         long mapIdx;
         CString szdata;
         long idx = 0;
@@ -387,7 +393,8 @@ private:
             if (m_bUseIndexes)
             {
                 idx = 0;
-                do {
+                do
+                {
                     idx++;
                     testdata.Format(L"%s_idx%i", szdata, idx);
                 } while (map.Lookup(testdata, (long&)mapIdx));
@@ -397,7 +404,7 @@ private:
             {
                 if (map.Lookup(szdata, (long&)mapIdx))
                 {
-                    notUniq = { i_i, mapIdx, szdata };
+                    notUniq = {i_i, mapIdx, szdata};
                     map.RemoveAll();
                     return dupCode;
                 }
@@ -413,7 +420,7 @@ private:
     bool checkKeysUniquenessImpl(int table)
     {
         const bool isT1 = (table == 1);
-        const Table&                tbl    = isT1 ? m_Table1      : m_Table2;
+        const Table& tbl = isT1 ? m_Table1 : m_Table2;
         const std::vector<CString>& keyArr = isT1 ? m_pszKeyArr11 : m_pszKeyArr21;
         const UINT msgProgress = isT1 ? CM_UPDATE_PROGRESS : CM_UPDATE_PROGRESS2;
 
@@ -451,7 +458,11 @@ private:
             for (int i_c = 1; i_c <= m_Table1.NumberOfColumns; i_c++)
             {
                 prgHlpr0 = 100 * i_c / m_Table1.NumberOfColumns;
-                if (prgHlpr0 > prgHlpr) { prgHlpr = prgHlpr0; ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr); }
+                if (prgHlpr0 > prgHlpr)
+                {
+                    prgHlpr = prgHlpr0;
+                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr);
+                }
                 for (int i_r = 1; i_r <= m_Table1.NumberOfRows; i_r++)
                 {
                     CString szdata = m_pExcel1->getCellValue(i_c, i_r);
@@ -472,7 +483,11 @@ private:
             for (int i_c = 1; i_c <= m_Table2.NumberOfColumns; i_c++)
             {
                 prgHlpr0 = 100 * i_c / m_Table2.NumberOfColumns;
-                if (prgHlpr0 > prgHlpr) { prgHlpr = prgHlpr0; ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr); }
+                if (prgHlpr0 > prgHlpr)
+                {
+                    prgHlpr = prgHlpr0;
+                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr);
+                }
                 for (int i_r = 1; i_r <= m_Table2.NumberOfRows; i_r++)
                 {
                     CString szdata = m_pExcel2->getCellValue(i_c, i_r);
@@ -491,10 +506,18 @@ private:
         for (int i_c = 1; i_c <= m_Table1.NumberOfColumns; i_c++)
         {
             prgHlpr0 = 100 * i_c / m_Table1.NumberOfColumns;
-            if (prgHlpr0 > prgHlpr + 10) { prgHlpr = prgHlpr0; ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr); }
+            if (prgHlpr0 > prgHlpr + 10)
+            {
+                prgHlpr = prgHlpr0;
+                ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr);
+            }
             for (int i_r = m_Table1.FirstRowWithData; i_r <= m_Table1.NumberOfRows; i_r++)
             {
-                if (m_pchMainArr1[(i_r - 1) * m_Table1.NumberOfColumns + i_c]) { m_pbEmptyClms1[i_c] = false; break; }
+                if (m_pchMainArr1[(i_r - 1) * m_Table1.NumberOfColumns + i_c])
+                {
+                    m_pbEmptyClms1[i_c] = false;
+                    break;
+                }
             }
         }
         ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, 100);
@@ -508,37 +531,45 @@ private:
         for (int i_c = 1; i_c <= m_Table2.NumberOfColumns; i_c++)
         {
             prgHlpr0 = 100 * i_c / m_Table2.NumberOfColumns;
-            if (prgHlpr0 > prgHlpr + 10) { prgHlpr = prgHlpr0; ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr); }
+            if (prgHlpr0 > prgHlpr + 10)
+            {
+                prgHlpr = prgHlpr0;
+                ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr);
+            }
             for (int i_r = m_Table2.FirstRowWithData; i_r <= m_Table2.NumberOfRows; i_r++)
             {
-                if (m_pchMainArr2[(i_r - 1) * m_Table2.NumberOfColumns + i_c]) { m_pbEmptyClms2[i_c] = false; break; }
+                if (m_pchMainArr2[(i_r - 1) * m_Table2.NumberOfColumns + i_c])
+                {
+                    m_pbEmptyClms2[i_c] = false;
+                    break;
+                }
             }
         }
         ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, 100);
     }
 
     // --- Internal state ---
-    HWND             m_hWnd    = nullptr;
-    ExcelConnector*  m_pExcel1 = nullptr;
-    ExcelConnector*  m_pExcel2 = nullptr;
-    Table            m_Table1  = {};
-    Table            m_Table2  = {};
+    HWND m_hWnd = nullptr;
+    ExcelConnector* m_pExcel1 = nullptr;
+    ExcelConnector* m_pExcel2 = nullptr;
+    Table m_Table1 = {};
+    Table m_Table2 = {};
 
     bool m_bPrereq1valid = false;
     bool m_bPrereq2valid = false;
 
-    std::vector<char>    m_pchMainArr1;
-    std::vector<char>    m_pchMainArr2;
-    std::vector<bool>    m_pbEmptyClms1;
-    std::vector<bool>    m_pbEmptyClms2;
+    std::vector<char> m_pchMainArr1;
+    std::vector<char> m_pchMainArr2;
+    std::vector<bool> m_pbEmptyClms1;
+    std::vector<bool> m_pbEmptyClms2;
     std::vector<CString> m_pszKeyArr11;
     std::vector<CString> m_pszKeyArr21;
-    std::vector<bool>    m_pbKeyMissing1;
-    std::vector<bool>    m_pbKeyMissing2;
+    std::vector<bool> m_pbKeyMissing1;
+    std::vector<bool> m_pbKeyMissing2;
 
     CMap<CString, LPCTSTR, long, long> m_Map1;
     CMap<CString, LPCTSTR, long, long> m_Map2;
 
     KeyPair m_KeyPair[256] = {};
-    int     m_nKeyPairCounter = 0;
+    int m_nKeyPairCounter = 0;
 };
