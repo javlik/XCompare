@@ -285,8 +285,6 @@ private:
 	int createTempKeyArrays2();
 	/** @brief Resets all candidate key arrays in @c m_keyFinder. */
 	void clearPossibleKeys();
-	/** @brief Sorts three integers @p a, @p b, @p c in ascending order in-place. */
-	void sort3(int & a, int & b, int & c);
 	/**
 	 * @brief Computes column-similarity scores for a range of table-1 columns against all table-2 columns.
 	 * @param c_i1_start  First table-1 column index to process (1-based).

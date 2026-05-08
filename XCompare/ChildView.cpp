@@ -2362,14 +2362,6 @@ void CChildView::clearPossibleKeys()
 }
 
 
-inline void CChildView::sort3(int& a, int& b, int& c)
-{
-	if (c < b) std::swap(c, b);
-	if (b < a) std::swap(b, a);
-	if (c < b) std::swap(c, b);
-}
-
-
 UINT SuggestKeys1ThreadProc(LPVOID pParam)
 {
 	CChildView* pWnd = static_cast<CChildView*>(pParam);
