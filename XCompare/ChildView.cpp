@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include <cstring>
 #include <map>
 #include <vector>
@@ -392,24 +392,33 @@ void CChildView::OnPaint()
 
 void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
 {
+    // Sets font and draws comparison statistics in the top-left corner of the view.
     dc.SelectObject(ctx.font4);
-    CString prcnt;
-    prcnt = L"";
+    CString textPercentage = L""; // Renamed from prcnt to textPercentage
+    
+    // Display individual cell statistics if similarity view is disabled and a valid cell is selected
     if (!m_bToDisplaySimilarClms && M_CCell.x * M_CCell.y && m_nMatrixDone)
     {
         dc.SetBkMode(TRANSPARENT);
         if (M_CCell.x <= ctx.bnd_X_max && M_CCell.y <= ctx.bnd_Y_max)
         {
-            long sameness = m_matrix.get(M_CCell.x, M_CCell.y);
-            if (m_Table1.Columns[M_CCell.y] == m_Table2.Columns[M_CCell.x] && sameness < m_nEffMax)
-                dc.SetTextColor(RGB(255, 0, 0));
+            // Number of exactly matching rows between the two columns
+            long matchedRowsCount = m_matrix.get(M_CCell.x, M_CCell.y); // Renamed from sameness
+            if (m_Table1.Columns[M_CCell.y] == m_Table2.Columns[M_CCell.x] && matchedRowsCount < m_nEffMax)
+                dc.SetTextColor(RGB(255, 0, 0)); // Highlight in red if names match but rows differ
             else
-                dc.SetTextColor(RGB(0, 0, 0));
-            prcnt.Format(L"\u0394:%i", m_nEffMax - sameness);
-            dc.TextOutW(5, 20, prcnt);
+                dc.SetTextColor(RGB(0, 0, 0)); // Standard black text
+            
+            // Print the count of different rows (Delta)
+            textPercentage.Format(L"\u0394:%i", m_nEffMax - matchedRowsCount);
+            dc.TextOutW(5, 20, textPercentage);
+            
+            // Print the count of matching rows
             dc.SetTextColor(RGB(0, 255, 0));
-            prcnt.Format(L"=:%i", sameness);
-            dc.TextOutW(5, 50, prcnt);
+            textPercentage.Format(L"=:%i", matchedRowsCount);
+            dc.TextOutW(5, 50, textPercentage);
+            
+            // Mark if both columns are empty
             if (m_engine.isEmptyCol1(M_CCell.y) && m_engine.isEmptyCol2(M_CCell.x))
             {
                 dc.SetTextColor(RGB(0, 0, 0));
@@ -417,6 +426,8 @@ void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
             }
         }
     }
+    
+    // Draw the file names in the top-left corner
     if (!m_bOnlyPcnt)
     {
         if (m_bNewFile1 && m_szFilename1)
@@ -436,6 +447,8 @@ void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
             dc.TextOutW(112, 118, m_szFilename2.Mid(index, 22));
         }
     }
+    
+    // Draw similarity values if the similarity overlay is enabled
     if (M_CCell.x * M_CCell.y && m_bToDisplaySimilarClms)
     {
         if (M_CCell.x <= ctx.bnd_X_max && M_CCell.y <= ctx.bnd_Y_max)
@@ -445,30 +458,35 @@ void CChildView::paintInfoArea(CDC& dc, PaintCtx& ctx)
             dc.SelectObject(ctx.font1C);
             dc.TextOutW(5, 30, CMsg(IDS_KEY_SUITABILITY));
             dc.SelectObject(ctx.font4);
-            prcnt.Format(L"~ %i%%", 100 * m_vecSimilaritiesAcrossTables[M_CCell.y].similarity /
+            textPercentage.Format(L"~ %i%%", 100 * m_vecSimilaritiesAcrossTables[M_CCell.y].similarity /
                                         min(m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1,
                                             m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1));
-            dc.TextOutW(15, 60, prcnt);
+            dc.TextOutW(15, 60, textPercentage);
         }
     }
 }
 
 void CChildView::paintGridLines(CDC& dc, PaintCtx& ctx)
 {
+    // Prepare the background brushes and pens for the grid
     dc.SelectObject(ctx.brush0);
     dc.SelectObject(ctx.pen2);
     dc.SelectObject(ctx.brush1);
+    
+    // Draw vertical and horizontal grid lines to separate individual cells
     if (!m_bToDisplaySimilarClms)
     {
-        for (int i_0 = OFFSET_X + STEP_X; i_0 < m_Clnt.w; i_0 += STEP_X)
+        // Draw vertical lines
+        for (int coordX = OFFSET_X + STEP_X; coordX < m_Clnt.w; coordX += STEP_X)
         {
-            dc.MoveTo(i_0, 0);
-            dc.LineTo(i_0, m_Clnt.h);
+            dc.MoveTo(coordX, 0);
+            dc.LineTo(coordX, m_Clnt.h);
         }
-        for (int i_0 = OFFSET_Y + STEP_Y; i_0 < m_Clnt.h; i_0 += STEP_X)
+        // Draw horizontal lines
+        for (int coordY = OFFSET_Y + STEP_Y; coordY < m_Clnt.h; coordY += STEP_X)
         {
-            dc.MoveTo(0, i_0);
-            dc.LineTo(m_Clnt.w, i_0);
+            dc.MoveTo(0, coordY);
+            dc.LineTo(m_Clnt.w, coordY);
         }
     }
     dc.SelectObject(ctx.pen2);
@@ -477,26 +495,29 @@ void CChildView::paintGridLines(CDC& dc, PaintCtx& ctx)
 
 void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
 {
-    int mx_y_adj;
-    for (int mx_y = ctx.bnd_Y_min; mx_y <= ctx.bnd_Y_max; mx_y++)
+    // Iterate through visible rows on the screen to draw the left column headers (Table 1 columns)
+    int adjustedRowIndex; // Actual data row index accounting for scrolling (renamed from mx_y_adj)
+    for (int yIndex = ctx.bnd_Y_min; yIndex <= ctx.bnd_Y_max; yIndex++)
     {
-        bool cursor = false;
-        mx_y_adj = mx_y + m_VisTopLeft.top;
+        bool isHovered = false; // Indicates if the cursor is hovering over the cell
+        adjustedRowIndex = yIndex + m_VisTopLeft.top;
         dc.SetBkMode(OPAQUE);
-        if (m_engine.isThisAKey(1, mx_y_adj))
+        
+        // Highlight rows that are selected as primary keys
+        if (m_engine.isThisAKey(1, adjustedRowIndex))
         {
-            if (mx_y_adj == m_OldCell.y)
+            if (adjustedRowIndex == m_OldCell.y)
             {
                 dc.SelectObject(ctx.brush6);
             }
             else
             {
-                if (mx_y_adj == M_CCell.y)
+                if (adjustedRowIndex == M_CCell.y)
                 {
                     if (M_CCell.y > 0 && M_CCell.y <= m_Table1.NumberOfColumns &&
                         (M_CCell.x > 0 || m_bToDisplaySimilarClms) && M_CCell.x <= m_Table2.NumberOfColumns)
                     {
-                        cursor = true;
+                        isHovered = true;
                     }
                     else
                     {
@@ -513,16 +534,18 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
         {
             dc.SelectObject(ctx.brush0);
         }
-        if (mx_y_adj == M_CCell.y)
+        
+        // Final evaluation of hover state for drawing the hover boundary
+        if (adjustedRowIndex == M_CCell.y)
         {
             if (M_CCell.y > 0 && M_CCell.y <= m_Table1.NumberOfColumns && (M_CCell.x > 0 || m_bToDisplaySimilarClms) &&
                 M_CCell.x <= m_Table2.NumberOfColumns)
             {
-                cursor = true;
+                isHovered = true;
             }
             else
             {
-                if (m_engine.isThisAKey(1, mx_y_adj))
+                if (m_engine.isThisAKey(1, adjustedRowIndex))
                 {
                     dc.SelectObject(ctx.brush6);
                 }
@@ -534,42 +557,49 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
         }
         dc.SelectObject(ctx.pen2);
 		      
-        dc.Rectangle(0, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X, 1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
-        if (cursor)
+        // Draw the background rectangle of the header
+        dc.Rectangle(0, OFFSET_Y + yIndex * STEP_Y, 1 + OFFSET_X + STEP_X, 1 + OFFSET_Y + yIndex * STEP_Y + STEP_Y);
+        
+        // Draw the red selection rectangle if hovered
+        if (isHovered)
         {
             dc.SetBkMode(TRANSPARENT);
             dc.SelectObject(ctx.brush0);
             if (m_bToDisplaySimilarClms)
-                dc.SelectObject(ctx.pen12);
+                dc.SelectObject(ctx.pen12); // Blueish border in similarity mode
             else
-                dc.SelectObject(ctx.pen11);
-            dc.Rectangle(2, 2 + OFFSET_Y + mx_y * STEP_Y, OFFSET_X + STEP_X - 1,
-                         -1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
+                dc.SelectObject(ctx.pen11); // Red border in default mode
+            dc.Rectangle(2, 2 + OFFSET_Y + yIndex * STEP_Y, OFFSET_X + STEP_X - 1,
+                         -1 + OFFSET_Y + yIndex * STEP_Y + STEP_Y);
             dc.SetBkMode(OPAQUE);
             dc.SelectObject(ctx.brush0);
             dc.SelectObject(ctx.pen4);
         }
-        if (m_nMatrixDone && !m_bOnlyPcnt && ((mx_y - m_VisTopLeft.top) > 0))
+        
+        // Draw completely matched column indicator (green dot) or empty column indicator (yellow dot)
+        if (m_nMatrixDone && !m_bOnlyPcnt && ((yIndex - m_VisTopLeft.top) > 0))
         {
-            if (m_pbGreenClms1[mx_y])
+            if (m_pbGreenClms1[yIndex])
             {
                 dc.SelectObject(ctx.pen5);
                 dc.SelectObject(ctx.brush1);
-                dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - m_VisTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1,
-                           OFFSET_Y + STEP_Y + (mx_y - m_VisTopLeft.top) * STEP_Y);
+                dc.Ellipse(OFFSET_X, OFFSET_X + (yIndex - m_VisTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1,
+                           OFFSET_Y + STEP_Y + (yIndex - m_VisTopLeft.top) * STEP_Y);
             }
-            if (m_engine.isEmptyCol1(mx_y))
+            if (m_engine.isEmptyCol1(yIndex))
             {
                 dc.SelectObject(ctx.pen6);
                 dc.SelectObject(ctx.brush2);
-                dc.Ellipse(OFFSET_X, OFFSET_X + (mx_y - m_VisTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1,
-                           OFFSET_Y + STEP_Y + (mx_y - m_VisTopLeft.top) * STEP_Y);
+                dc.Ellipse(OFFSET_X, OFFSET_X + (yIndex - m_VisTopLeft.top) * STEP_Y, OFFSET_X + STEP_X - 1,
+                           OFFSET_Y + STEP_Y + (yIndex - m_VisTopLeft.top) * STEP_Y);
             }
         }
+        
+        // Draw the name of the column text
         dc.SetBkMode(TRANSPARENT);
-        if (m_engine.isThisAKey(1, mx_y_adj))
+        if (m_engine.isThisAKey(1, adjustedRowIndex))
         {
-            dc.SelectObject(ctx.font1B);
+            dc.SelectObject(ctx.font1B); // Bold if key
             dc.SetTextColor(RGB(0, 0, 170));
         }
         else
@@ -577,32 +607,35 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
             dc.SelectObject(ctx.font1);
             dc.SetTextColor(RGB(0, 0, 0));
         }
-        dc.TextOutW(2, OFFSET_Y + 5 + mx_y * STEP_Y, m_Table1.Columns[mx_y_adj]);
+        dc.TextOutW(2, OFFSET_Y + 5 + yIndex * STEP_Y, m_Table1.Columns[adjustedRowIndex]);
     }
 }
 
 void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
 {
-    int mx_x_adj;
-    for (int mx_x = ctx.bnd_X_min; mx_x <= ctx.bnd_X_max; mx_x++)
+    // Iterate through visible columns on the screen to draw the top column headers (Table 2 columns)
+    int adjustedColIndex; // Actual data column index accounting for scrolling (renamed from mx_x_adj)
+    for (int xIndex = ctx.bnd_X_min; xIndex <= ctx.bnd_X_max; xIndex++)
     {
-        bool cursor = false;
-        mx_x_adj = mx_x + m_VisTopLeft.left;
+        bool isHovered = false; // Indicates if the cursor is hovering over the cell
+        adjustedColIndex = xIndex + m_VisTopLeft.left;
         dc.SetBkMode(OPAQUE);
-        if (m_engine.isThisAKey(2, mx_x_adj))
+        
+        // Highlight columns that are selected as primary keys
+        if (m_engine.isThisAKey(2, adjustedColIndex))
         {
-            if (mx_x_adj == m_OldCell.x)
+            if (adjustedColIndex == m_OldCell.x)
             {
                 dc.SelectObject(ctx.brush6);
             }
             else
             {
-                if (mx_x_adj == M_CCell.x)
+                if (adjustedColIndex == M_CCell.x)
                 {
                     if (M_CCell.y > 0 && M_CCell.y <= m_Table1.NumberOfColumns &&
                         (M_CCell.x > 0 || m_bToDisplaySimilarClms) && M_CCell.x <= m_Table2.NumberOfColumns)
                     {
-                        cursor = true;
+                        isHovered = true;
                     }
                     else
                     {
@@ -619,16 +652,18 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
         {
             dc.SelectObject(ctx.brush0);
         }
-        if (mx_x_adj == M_CCell.x)
+        
+        // Final evaluation of hover state for drawing the hover boundary
+        if (adjustedColIndex == M_CCell.x)
         {
             if (M_CCell.y > 0 && M_CCell.y <= m_Table1.NumberOfColumns && (M_CCell.x > 0 || m_bToDisplaySimilarClms) &&
                 M_CCell.x <= m_Table2.NumberOfColumns)
             {
-                cursor = true;
+                isHovered = true;
             }
             else
             {
-                if (m_engine.isThisAKey(2, mx_x_adj))
+                if (m_engine.isThisAKey(2, adjustedColIndex))
                 {
                     dc.SelectObject(ctx.brush6);
                 }
@@ -639,43 +674,50 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
             }
         }
         dc.SelectObject(ctx.pen2);
-        //else
-        dc.Rectangle(OFFSET_X + mx_x * STEP_X, 0, 1 + OFFSET_X + mx_x * STEP_X + STEP_X, 1 + OFFSET_Y + STEP_Y);
-        if (cursor)
+        
+        // Draw the background rectangle of the header
+        dc.Rectangle(OFFSET_X + xIndex * STEP_X, 0, 1 + OFFSET_X + xIndex * STEP_X + STEP_X, 1 + OFFSET_Y + STEP_Y);
+        
+        // Draw the red selection rectangle if hovered
+        if (isHovered)
         {
             dc.SetBkMode(TRANSPARENT);
             dc.SelectObject(ctx.brush0);
             if (m_bToDisplaySimilarClms)
-                dc.SelectObject(ctx.pen12);
+                dc.SelectObject(ctx.pen12); // Blueish border in similarity mode
             else
-                dc.SelectObject(ctx.pen11);
-            dc.Rectangle(2 + OFFSET_X + mx_x * STEP_X, 2, -1 + OFFSET_X + mx_x * STEP_X + STEP_X,
+                dc.SelectObject(ctx.pen11); // Red border in default mode
+            dc.Rectangle(2 + OFFSET_X + xIndex * STEP_X, 2, -1 + OFFSET_X + xIndex * STEP_X + STEP_X,
                          OFFSET_Y + STEP_Y - 1);
             dc.SetBkMode(OPAQUE);
             dc.SelectObject(ctx.brush0);
             dc.SelectObject(ctx.pen4);
         }
-        if (m_nMatrixDone && !m_bOnlyPcnt && ((mx_x - m_VisTopLeft.left) > 0))
+        
+        // Draw completely matched column indicator (green dot) or empty column indicator (yellow dot)
+        if (m_nMatrixDone && !m_bOnlyPcnt && ((xIndex - m_VisTopLeft.left) > 0))
         {
-            if (m_pbGreenClms2[mx_x])
+            if (m_pbGreenClms2[xIndex])
             {
                 dc.SelectObject(ctx.pen5);
                 dc.SelectObject(ctx.brush1);
-                dc.Ellipse(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y,
-                           OFFSET_X + STEP_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
+                dc.Ellipse(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X, OFFSET_Y,
+                           OFFSET_X + STEP_X + (xIndex - m_VisTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
             }
-            if (m_engine.isEmptyCol2(mx_x))
+            if (m_engine.isEmptyCol2(xIndex))
             {
                 dc.SelectObject(ctx.pen6);
                 dc.SelectObject(ctx.brush2);
-                dc.Ellipse(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y,
-                           OFFSET_X + STEP_X + (mx_x - m_VisTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
+                dc.Ellipse(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X, OFFSET_Y,
+                           OFFSET_X + STEP_X + (xIndex - m_VisTopLeft.left) * STEP_X, OFFSET_Y + STEP_Y - 1);
             }
         }
+        
+        // Draw the name of the column text
         dc.SetBkMode(TRANSPARENT);
-        if (m_engine.isThisAKey(2, mx_x_adj))
+        if (m_engine.isThisAKey(2, adjustedColIndex))
         {
-            dc.SelectObject(ctx.font2B);
+            dc.SelectObject(ctx.font2B); // Bold if key
             dc.SetTextColor(RGB(0, 0, 170));
         }
         else
@@ -683,7 +725,7 @@ void CChildView::paintColumnHeaders(CDC& dc, PaintCtx& ctx)
             dc.SelectObject(ctx.font2);
             dc.SetTextColor(RGB(0, 0, 0));
         }
-        dc.TextOutW(OFFSET_X + 5 + mx_x * STEP_X, -2 + OFFSET_Y + STEP_Y, m_Table2.Columns[mx_x_adj]);
+        dc.TextOutW(OFFSET_X + 5 + xIndex * STEP_X, -2 + OFFSET_Y + STEP_Y, m_Table2.Columns[adjustedColIndex]);
     }
 }
 
@@ -692,115 +734,125 @@ void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
     dc.SelectObject(ctx.pen2);
     if (m_nMatrixDone && !m_bOnlyPcnt)
     {
+        // Set up DC for drawing percentages inside cells
         dc.SetBkMode(OPAQUE);
         dc.SelectObject(ctx.font3);
-        int valSimil;
-        CString strSimil;
-        int mx_y_adj, mx_x_adj;
+        int similarityPercentage; // Renamed from valSimil
+        CString similarityStr; // Renamed from strSimil
+        int adjustedRowIndex, adjustedColIndex; // Renamed from mx_y_adj, mx_x_adj
+        
         if (m_nEffMax)
         {
-            for (int mx_y = ctx.bnd_Y_min; mx_y <= ctx.bnd_Y_max - m_VisTopLeft.top; mx_y++)
+            // Iterate over the visible cells of the matrix
+            for (int yIndex = ctx.bnd_Y_min; yIndex <= ctx.bnd_Y_max - m_VisTopLeft.top; yIndex++)
             {
-                for (int mx_x = ctx.bnd_X_min; mx_x <= ctx.bnd_X_max - m_VisTopLeft.left; mx_x++)
+                for (int xIndex = ctx.bnd_X_min; xIndex <= ctx.bnd_X_max - m_VisTopLeft.left; xIndex++)
                 {
                     dc.SelectObject(ctx.pen2);
-                    mx_y_adj = mx_y + m_VisTopLeft.top;
-                    mx_x_adj = mx_x + m_VisTopLeft.left;
-                    valSimil = m_matrix.get(mx_x_adj, mx_y_adj) * 100 / m_nEffMax;
-                    strSimil.Format(L"%i", valSimil);
-                    strSimil += L"%";
+                    adjustedRowIndex = yIndex + m_VisTopLeft.top;
+                    adjustedColIndex = xIndex + m_VisTopLeft.left;
+                    
+                    // Calculate similarity score percentage and format as string
+                    similarityPercentage = m_matrix.get(adjustedColIndex, adjustedRowIndex) * 100 / m_nEffMax;
+                    similarityStr.Format(L"%i%%", similarityPercentage);
                     dc.SetBkMode(OPAQUE);
-                    if (!m_bSameNames || (m_Table1.Columns[mx_y_adj] == m_Table2.Columns[mx_x_adj]))
+                    
+                    // Determine background color based on matches and UI flags
+                    if (!m_bSameNames || (m_Table1.Columns[adjustedRowIndex] == m_Table2.Columns[adjustedColIndex]))
                     {
-                        if (valSimil == 100)
+                        if (similarityPercentage == 100)
                         {
-                            if (m_engine.isEmptyCol1(mx_y_adj) || m_engine.isEmptyCol2(mx_x_adj))
-                            {
-                                dc.SelectObject(ctx.brush2);
-                            }
+                            if (m_engine.isEmptyCol1(adjustedRowIndex) || m_engine.isEmptyCol2(adjustedColIndex))
+                                dc.SelectObject(ctx.brush2); // Yellow for empty but 100% match
                             else
-                            {
-                                dc.SelectObject(ctx.brush1);
-                            }
+                                dc.SelectObject(ctx.brush1); // Green for non-empty 100% match
                         }
-                        if (valSimil < 100)
+                        if (similarityPercentage < 100)
                         {
-                            if (valSimil > m_nSldr)
+                            if (similarityPercentage > m_nSldr) // Threshold slider check
                             {
-                                dc.SelectObject(ctx.brush4);
+                                dc.SelectObject(ctx.brush4); // Red/Orange for suspicious match
                             }
                             else
                             {
-                                if (m_engine.isThisAKey(1, mx_y_adj) || m_engine.isThisAKey(2, mx_x_adj))
-                                {
-                                    dc.SelectObject(ctx.brush6);
-                                }
+                                if (m_engine.isThisAKey(1, adjustedRowIndex) || m_engine.isThisAKey(2, adjustedColIndex))
+                                    dc.SelectObject(ctx.brush6); // Grey for key intersections
                                 else
-                                {
-                                    dc.SelectObject(ctx.brush0);
-                                }
+                                    dc.SelectObject(ctx.brush0); // White for default
                             }
                         }
                     }
                     else
                     {
-                        if (m_engine.isThisAKey(1, mx_y_adj) || m_engine.isThisAKey(2, mx_x_adj))
-                        {
-                            dc.SelectObject(ctx.brush6);
-                        }
+                        if (m_engine.isThisAKey(1, adjustedRowIndex) || m_engine.isThisAKey(2, adjustedColIndex))
+                            dc.SelectObject(ctx.brush6); // Grey for key intersections
                         else
-                        {
-                            dc.SelectObject(ctx.brush0);
-                        }
+                            dc.SelectObject(ctx.brush0); // White for default
                     }
-                    if (mx_y_adj == m_CClickedCell.y && mx_x_adj == m_CClickedCell.x)
+                    
+                    // Highlight the clicked cell
+                    if (adjustedRowIndex == m_CClickedCell.y && adjustedColIndex == m_CClickedCell.x)
                     {
                         dc.SelectObject(ctx.brush6);
                     }
-                    dc.Rectangle(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y,
-                                 1 + OFFSET_X + STEP_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y);
+                    
+                    // Draw the cell's main rectangle
+                    dc.Rectangle(OFFSET_X + xIndex * STEP_X, OFFSET_Y + yIndex * STEP_Y,
+                                 1 + OFFSET_X + STEP_X + xIndex * STEP_X, 1 + OFFSET_Y + STEP_Y + yIndex * STEP_Y);
+                    
+                    // Draw X mark for actively marked/pinned cells
                     dc.SetBkMode(TRANSPARENT);
-                    if (m_matrix.isMarked(mx_x_adj, mx_y_adj))
+                    if (m_matrix.isMarked(adjustedColIndex, adjustedRowIndex))
                     {
                         dc.SelectObject(ctx.pen4);
-                        dc.MoveTo(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y);
-                        dc.LineTo(OFFSET_X + STEP_X + mx_x * STEP_X, OFFSET_Y + STEP_Y + mx_y * STEP_Y);
-                        dc.MoveTo(OFFSET_X + STEP_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y);
-                        dc.LineTo(OFFSET_X + mx_x * STEP_X, OFFSET_Y + STEP_Y + mx_y * STEP_Y);
+                        dc.MoveTo(OFFSET_X + xIndex * STEP_X, OFFSET_Y + yIndex * STEP_Y);
+                        dc.LineTo(OFFSET_X + STEP_X + xIndex * STEP_X, OFFSET_Y + STEP_Y + yIndex * STEP_Y);
+                        dc.MoveTo(OFFSET_X + STEP_X + xIndex * STEP_X, OFFSET_Y + yIndex * STEP_Y);
+                        dc.LineTo(OFFSET_X + xIndex * STEP_X, OFFSET_Y + STEP_Y + yIndex * STEP_Y);
                         dc.SelectObject(ctx.pen2);
                     }
-                    if (m_bToDisplaySimilarClms && m_vecSimilaritiesAcrossTables[mx_y_adj].clm2 == mx_x_adj)
+                    
+                    // Draw similarity mode specific highlights
+                    if (m_bToDisplaySimilarClms && m_vecSimilaritiesAcrossTables[adjustedRowIndex].clm2 == adjustedColIndex)
                     {
                         dc.SetBkMode(TRANSPARENT);
                         dc.SelectObject(&m_KeyCurvePen);
                         dc.SelectObject(ctx.brush7);
-                        dc.Rectangle(OFFSET_X + (mx_x)*STEP_X + 1, OFFSET_Y + (mx_y)*STEP_Y + 1,
-                                     OFFSET_X + STEP_X + (mx_x)*STEP_X, OFFSET_Y + STEP_Y + (mx_y)*STEP_Y);
+                        dc.Rectangle(OFFSET_X + (xIndex)*STEP_X + 1, OFFSET_Y + (yIndex)*STEP_Y + 1,
+                                     OFFSET_X + STEP_X + (xIndex)*STEP_X, OFFSET_Y + STEP_Y + (yIndex)*STEP_Y);
                     }
+                    
+                    // Output the percentage text
                     dc.SetTextColor(RGB(0, 0, 0));
-                    dc.TextOutW(OFFSET_X + mx_x * STEP_X + 1, OFFSET_Y + mx_y * STEP_Y + 7, strSimil);
+                    dc.TextOutW(OFFSET_X + xIndex * STEP_X + 1, OFFSET_Y + yIndex * STEP_Y + 7, similarityStr);
                 }
             }
+            
+            // Second pass for borders and highlights over cells
             dc.SetBkMode(TRANSPARENT);
             dc.SelectObject(GetStockObject(NULL_BRUSH));
             dc.SelectObject(ctx.pen3);
-            for (int mx_y = ctx.bnd_Y_min; mx_y <= ctx.bnd_Y_max - m_VisTopLeft.top; mx_y++)
+            for (int yIndex = ctx.bnd_Y_min; yIndex <= ctx.bnd_Y_max - m_VisTopLeft.top; yIndex++)
             {
-                for (int mx_x = ctx.bnd_X_min; mx_x <= ctx.bnd_X_max - m_VisTopLeft.left; mx_x++)
+                for (int xIndex = ctx.bnd_X_min; xIndex <= ctx.bnd_X_max - m_VisTopLeft.left; xIndex++)
                 {
-                    mx_y_adj = mx_y + m_VisTopLeft.top;
-                    mx_x_adj = mx_x + m_VisTopLeft.left;
-                    if (m_Table1.Columns[mx_y_adj] == m_Table2.Columns[mx_x_adj])
+                    adjustedRowIndex = yIndex + m_VisTopLeft.top;
+                    adjustedColIndex = xIndex + m_VisTopLeft.left;
+                    
+                    // Highlight intersection of columns with the same name (diagonal in 1-to-1 match)
+                    if (m_Table1.Columns[adjustedRowIndex] == m_Table2.Columns[adjustedColIndex])
                     {
-                        dc.Rectangle(OFFSET_X + mx_x * STEP_X, OFFSET_Y + mx_y * STEP_Y,
-                                     1 + OFFSET_X + STEP_X + mx_x * STEP_X, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y);
+                        dc.Rectangle(OFFSET_X + xIndex * STEP_X, OFFSET_Y + yIndex * STEP_Y,
+                                     1 + OFFSET_X + STEP_X + xIndex * STEP_X, 1 + OFFSET_Y + STEP_Y + yIndex * STEP_Y);
                     }
-                    if (mx_y_adj == m_nOldy && mx_x_adj == m_nOldx)
+                    
+                    // Draw hover/focus state for the previously clicked cell (to visualize movement)
+                    if (adjustedRowIndex == m_nOldy && adjustedColIndex == m_nOldx)
                     {
                         dc.SelectObject(ctx.pen9);
-                        dc.Rectangle(OFFSET_X + mx_x * STEP_X + 3, 1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 4,
-                                     1 + OFFSET_X + STEP_X + mx_x * STEP_X - 2,
-                                     1 + OFFSET_Y + STEP_Y + mx_y * STEP_Y - 2);
+                        dc.Rectangle(OFFSET_X + xIndex * STEP_X + 3, 1 + OFFSET_Y + STEP_Y + yIndex * STEP_Y - 4,
+                                     1 + OFFSET_X + STEP_X + xIndex * STEP_X - 2,
+                                     1 + OFFSET_Y + STEP_Y + yIndex * STEP_Y - 2);
                         dc.SelectObject(ctx.pen3);
                     }
                 }
@@ -813,43 +865,54 @@ void CChildView::paintMatrixCells(CDC& dc, PaintCtx& ctx)
 
 void CChildView::paintSimilarityLines(CDC& dc, PaintCtx& ctx)
 {
+    // Draw curved lines connecting similar columns across the two tables
     if (m_bToDisplaySimilarClms)
     {
-        int mx_x, mx_y = 0;
+        int xIndex, yIndex = 0; // Renamed from mx_x, mx_y to represent visual coordinates
         long maxHit = m_vecSimilaritiesAcrossTablesSorted[1].similarity;
+        
+        // Pass 1: Draw background similarity curves for all matched pairs
         for (int s_i = m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder; s_i >= 0; s_i--)
         {
-            mx_y = m_vecSimilaritiesAcrossTablesSorted[s_i].clm1;
-            mx_x = m_vecSimilaritiesAcrossTablesSorted[s_i].clm2;
-            if ((mx_y * mx_x > 0) && ((mx_y - m_VisTopLeft.top) * (mx_x - m_VisTopLeft.left) > 0))
+            yIndex = m_vecSimilaritiesAcrossTablesSorted[s_i].clm1;
+            xIndex = m_vecSimilaritiesAcrossTablesSorted[s_i].clm2;
+            
+            // Only draw if both coordinates represent valid columns and are within the visible bounds
+            if ((yIndex * xIndex > 0) && ((yIndex - m_VisTopLeft.top) * (xIndex - m_VisTopLeft.left) > 0))
             {
+                // Select a pen color based on the relative similarity score
                 dc.SelectObject(&m_SimsPens[255 * m_vecSimilaritiesAcrossTablesSorted[s_i].similarity / maxHit]);
+                
+                // Define 4 control points for a Bezier curve connecting the two headers
                 CPoint pt[4] = {
-                    CPoint(OFFSET_X + STEP_X + 1, OFFSET_Y + (mx_y - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
-                    CPoint(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X,
-                           OFFSET_Y + (mx_y - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
-                    CPoint(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X + STEP_X / 2,
-                           OFFSET_Y + (mx_y - m_VisTopLeft.top) * STEP_Y),
-                    CPoint(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X + STEP_X / 2, OFFSET_Y + STEP_Y)};
+                    CPoint(OFFSET_X + STEP_X + 1, OFFSET_Y + (yIndex - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
+                    CPoint(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X,
+                           OFFSET_Y + (yIndex - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
+                    CPoint(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X + STEP_X / 2,
+                           OFFSET_Y + (yIndex - m_VisTopLeft.top) * STEP_Y),
+                    CPoint(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X + STEP_X / 2, OFFSET_Y + STEP_Y)};
                 dc.PolyBezier(pt, 4);
             }
         }
+        
+        // Pass 2: Draw primary key similarity curves (drawn on top of background curves)
         for (int s_i = m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder; s_i >= 0; s_i--)
         {
-            mx_y = m_vecSimilaritiesAcrossTablesSorted[s_i].clm1;
-            mx_x = m_vecSimilaritiesAcrossTablesSorted[s_i].clm2;
-            if ((mx_y * mx_x > 0) && ((mx_y - m_VisTopLeft.top) * (mx_x - m_VisTopLeft.left) > 0))
+            yIndex = m_vecSimilaritiesAcrossTablesSorted[s_i].clm1;
+            xIndex = m_vecSimilaritiesAcrossTablesSorted[s_i].clm2;
+            if ((yIndex * xIndex > 0) && ((yIndex - m_VisTopLeft.top) * (xIndex - m_VisTopLeft.left) > 0))
             {
-                if (m_engine.isThisAKey(1, mx_y) && m_engine.isThisAKey(2, mx_x))
+                // If both columns are marked as keys, draw them with the special key curve pen
+                if (m_engine.isThisAKey(1, yIndex) && m_engine.isThisAKey(2, xIndex))
                 {
                     dc.SelectObject(&m_SimsPens[255 * m_vecSimilaritiesAcrossTablesSorted[s_i].similarity / maxHit]);
                     CPoint pt[4] = {
-                        CPoint(OFFSET_X + STEP_X + 1, OFFSET_Y + (mx_y - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
-                        CPoint(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X,
-                               OFFSET_Y + (mx_y - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
-                        CPoint(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X + STEP_X / 2,
-                               OFFSET_Y + (mx_y - m_VisTopLeft.top) * STEP_Y),
-                        CPoint(OFFSET_X + (mx_x - m_VisTopLeft.left) * STEP_X + STEP_X / 2, OFFSET_Y + STEP_Y)};
+                        CPoint(OFFSET_X + STEP_X + 1, OFFSET_Y + (yIndex - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
+                        CPoint(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X,
+                               OFFSET_Y + (yIndex - m_VisTopLeft.top) * STEP_Y + STEP_Y / 2),
+                        CPoint(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X + STEP_X / 2,
+                               OFFSET_Y + (yIndex - m_VisTopLeft.top) * STEP_Y),
+                        CPoint(OFFSET_X + (xIndex - m_VisTopLeft.left) * STEP_X + STEP_X / 2, OFFSET_Y + STEP_Y)};
                     dc.SelectObject(&m_KeyCurvePen);
                     dc.PolyBezier(pt, 4);
                 }
@@ -863,44 +926,58 @@ void CChildView::pickFile(bool* pNewFile, ExcelConnector* pExcel, Table* pTable,
 {
     *pNewFile = false;
     if (g_pMainFrame)
-        g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL)); // CMsg(IDS_WAIT_TILL_IN_EXCEL)
+        g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_TILL_IN_EXCEL));
+        
     CString fileName;
-    wchar_t* p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
+    wchar_t* pFileBuffer = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE); // Renamed from p to pFileBuffer
+    
+    // Display Open File Dialog
     CFileDialog dlgFile(TRUE);
     OPENFILENAME& ofn = dlgFile.GetOFN();
-    ofn.lpstrFile = p;
+    ofn.lpstrFile = pFileBuffer;
     ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
     dlgFile.DoModal();
     fileName.ReleaseBuffer();
-    wchar_t* pBufEnd = p + FILE_LIST_BUFFER_SIZE - 2;
-    wchar_t* start = p;
-    while ((p < pBufEnd) && (*p))
-        p++;
-    if (p > start)
+    
+    // Extract individual filenames (handles potential multi-select buffer format)
+    wchar_t* pBufEnd = pFileBuffer + FILE_LIST_BUFFER_SIZE - 2;
+    wchar_t* startPointer = pFileBuffer; // Renamed from start to startPointer
+    while ((pFileBuffer < pBufEnd) && (*pFileBuffer))
+        pFileBuffer++;
+        
+    if (pFileBuffer > startPointer)
     {
-        _tprintf(CMsg(IDS_PATH_TO_FILE), start); // CMsg(IDS_PATH_TO_FILE)
-        p++;
+        _tprintf(CMsg(IDS_PATH_TO_FILE), startPointer);
+        pFileBuffer++;
         int fileCount = 1;
-        while ((p < pBufEnd) && (*p))
+        while ((pFileBuffer < pBufEnd) && (*pFileBuffer))
         {
-            start = p;
-            while ((p < pBufEnd) && (*p))
-                p++;
-            if (p > start)
-                _tprintf(_T("%2d. %s\r\n"), fileCount, start);
-            p++;
+            startPointer = pFileBuffer;
+            while ((pFileBuffer < pBufEnd) && (*pFileBuffer))
+                pFileBuffer++;
+            if (pFileBuffer > startPointer)
+                _tprintf(_T("%2d. %s\r\n"), fileCount, startPointer);
+            pFileBuffer++;
             fileCount++;
         }
     }
+    
+    // Close the currently opened Excel book in this connector
     pExcel->closeBook();
+    
+    // If a valid filename was selected, open it
     if (!(CString(fileName) == L""))
     {
+        // Reset table column names
         for (int i = 0; i < 255; i++)
         {
             pTable->Columns[i] = "";
         }
+        
+        // Attempt to open the file via Excel COM application
         if (pExcel->openFile(fileName, m_App))
         {
+            // Successfully opened, so populate the sheet selection combobox
             pSheetCombo->RemoveAllItems();
             CWorksheets& sheets = pExcel->getSheets();
             for (int i = 1; i <= sheets.get_Count(); i++)
@@ -916,9 +993,13 @@ void CChildView::pickFile(bool* pNewFile, ExcelConnector* pExcel, Table* pTable,
             }
         }
     }
+    
+    // Store results
     *pFilename = fileName;
     *pNewFile = true;
-    m_nUiToBeRefreshed = 3;
+    m_nUiToBeRefreshed = 3; // Trigger UI refresh for labels
+    
+    // Reset comparison matrix state
     if (m_nMatrixDone > 0)
     {
         m_matrix.clear(m_Table2.NumberOfColumns + 1, m_Table1.NumberOfColumns + 1);
@@ -926,10 +1007,12 @@ void CChildView::pickFile(bool* pNewFile, ExcelConnector* pExcel, Table* pTable,
         m_OldCell.x = 0;
         m_OldCell.y = 0;
     }
+    
     if (g_pMainFrame)
-        g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED)); // CMsg(IDS_FILE_SUCCESFULLY_LOADED)
+        g_pMainFrame->updateStatusBar(CMsg(IDS_FILE_SUCCESFULLY_LOADED));
+        
     deleteAllKeys();
-    this->Invalidate();
+    this->Invalidate(); // Trigger a redraw of the view
 }
 
 void CChildView::OnPickFirstFile()
@@ -1201,37 +1284,52 @@ void CChildView::pickSheet(ExcelConnector* pExcel, Table* pTable, CMFCRibbonComb
                            CMFCRibbonEdit* pSpinner_Names, CMFCRibbonEdit* pSpinner_Fdata, CMFCRibbonEdit* pRows,
                            CMFCRibbonEdit* pCols)
 {
-    int tmpWSN = pSheetCombo->GetCurSel() + 1;
-    CString tmpWSS = pSheetCombo->GetEditText();
+    int selectedSheetIndex = pSheetCombo->GetCurSel() + 1; // 1-based index (renamed from tmpWSN)
+    CString selectedSheetName = pSheetCombo->GetEditText(); // Renamed from tmpWSS
+    
     if (g_pMainFrame)
         g_pMainFrame->updateStatusBar(CMsg(IDS_WAIT_PRELIM_CHK));
-    if (tmpWSN > 0)
+        
+    if (selectedSheetIndex > 0)
     {
-        pTable->WorkSheetNumber = tmpWSN;
-        long iRows;
-        long iCols;
-        pExcel->selectSheet(tmpWSS, iRows, iCols);
-        pTable->MaxNumberOfRows = iRows;
-        pTable->MaxNumberOfCols = iCols;
-        pTable->NumberOfColumns = iCols;
-        pTable->NumberOfRows = iRows;
+        pTable->WorkSheetNumber = selectedSheetIndex;
+        long totalRows; // Renamed from iRows
+        long totalCols; // Renamed from iCols
+        
+        // Select sheet in Excel via COM and retrieve actual dimensions
+        pExcel->selectSheet(selectedSheetName, totalRows, totalCols);
+        
+        // Update table metadata
+        pTable->MaxNumberOfRows = totalRows;
+        pTable->MaxNumberOfCols = totalCols;
+        pTable->NumberOfColumns = totalCols;
+        pTable->NumberOfRows = totalRows;
         pTable->RowWithNames = 1;
-        CString tmps;
-        tmps.Format(_T("%d"), 1);
-        pSpinner_Names->SetEditText(tmps);
+        
+        // Update ribbon UI controls with default row/column values
+        CString strValue; // Renamed from tmps
+        strValue.Format(_T("%d"), 1);
+        pSpinner_Names->SetEditText(strValue); // Header row defaults to 1
         pTable->RowWithNames = 1;
-        tmps.Format(_T("%d"), 2);
-        pSpinner_Fdata->SetEditText(tmps);
+        
+        strValue.Format(_T("%d"), 2);
+        pSpinner_Fdata->SetEditText(strValue); // First data row defaults to 2
         pTable->FirstRowWithData = 2;
-        tmps.Format(_T("%d"), pTable->NumberOfRows);
-        pRows->SetEditText(tmps);
-        tmps.Format(_T("%d"), pTable->NumberOfColumns);
-        pCols->SetEditText(tmps);
+        
+        strValue.Format(_T("%d"), pTable->NumberOfRows);
+        pRows->SetEditText(strValue);
+        
+        strValue.Format(_T("%d"), pTable->NumberOfColumns);
+        pCols->SetEditText(strValue);
+        
+        // Setup initial cell dimensions and view extents for the scrollbar calculation
         m_nCellWidth = STEP_X;
         m_nCellHeight = STEP_Y;
         m_nRibbonWidth = 0;
         m_nViewWidth = STEP_X + OFFSET_X + ((pTable->NumberOfColumns + 1) * m_nCellWidth) + m_nRibbonWidth;
         m_nViewHeight = STEP_Y + OFFSET_Y + m_nCellHeight * (pTable->NumberOfColumns + 1);
+        
+        // Configure vertical scrollbar properties
         SCROLLINFO si;
         si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
         si.nMin = 0;
@@ -1239,7 +1337,10 @@ void CChildView::pickSheet(ExcelConnector* pExcel, Table* pTable, CMFCRibbonComb
         si.nPos = m_nVScrollPos;
         si.nPage = m_nVPageSize;
         SetScrollInfo(SB_VERT, &si, TRUE);
-        this->Invalidate();
+        
+        this->Invalidate(); // Redraw UI
+        
+        // Clear any existing comparison matrix as the active sheet has changed
         m_nMatrixDone = false;
         deleteAllKeys();
         if (m_nMatrixDone > 0)
@@ -1251,10 +1352,12 @@ void CChildView::pickSheet(ExcelConnector* pExcel, Table* pTable, CMFCRibbonComb
             M_CCell.x = 0;
             M_CCell.y = 0;
         }
+        
         if (g_pMainFrame)
-            g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED)); // CMsg(IDS_DATA_VERIFIED)
+            g_pMainFrame->updateStatusBar(CMsg(IDS_DATA_VERIFIED));
+            
         m_engine.setTables(m_Table1, m_Table2);
-        AfxBeginThread(makePrereq1ThreadProc, this);
+        AfxBeginThread(makePrereq1ThreadProc, this); // Start parsing table headers in background
     }
 }
 
@@ -1315,25 +1418,28 @@ void CChildView::OnSpin1Fdata()
 
 void CChildView::updateCombos1()
 {
-    CString szdata;
+    CString cellContent; // Renamed from szdata
     COleVariant vData;
-    for (int i = 1; i <= m_Table1.NumberOfColumns; i++)
+    
+    // Fetch header names from Excel and ensure they are unique to avoid map collisions
+    for (int colIndex = 1; colIndex <= m_Table1.NumberOfColumns; colIndex++) // Renamed i to colIndex
     {
-        // Loop through the data and report the contents.
-        szdata = m_excel1.getCellValue(i, m_Table1.RowWithNames);
-        if (szdata == "")
-            szdata = CMsg(IDS_NO_NAME);
-        for (int i1 = 1; i1 < i; i1++)
+        cellContent = m_excel1.getCellValue(colIndex, m_Table1.RowWithNames);
+        if (cellContent == "")
+            cellContent = CMsg(IDS_NO_NAME); // Default name if header cell is empty
+            
+        // Check for duplicate names among previously read columns and append an index suffix if duplicate
+        for (int prevCol = 1; prevCol < colIndex; prevCol++) // Renamed i1 to prevCol
         {
-            if (szdata == m_Table1.Columns[i1])
+            if (cellContent == m_Table1.Columns[prevCol])
             {
-                CString s;
-                s.Format(L"[%i]", i);
-                szdata += s;
+                CString suffix;
+                suffix.Format(L"[%i]", colIndex);
+                cellContent += suffix;
                 break;
             }
         }
-        m_Table1.Columns[i] = szdata;
+        m_Table1.Columns[colIndex] = cellContent;
     }
 }
 
@@ -1345,24 +1451,28 @@ void CChildView::OnPickSecondSheet()
 
 void CChildView::updateCombos2()
 {
-    CString szdata;
+    CString cellContent; // Renamed from szdata
     COleVariant vData;
-    for (int i = 1; i <= m_Table2.NumberOfColumns; i++)
+    
+    // Fetch header names from Excel and ensure they are unique to avoid map collisions
+    for (int colIndex = 1; colIndex <= m_Table2.NumberOfColumns; colIndex++) // Renamed i to colIndex
     {
-        szdata = m_excel2.getCellValue(i, m_Table2.RowWithNames);
-        if (szdata == "")
-            szdata = CMsg(IDS_NO_NAME);
-        for (int i1 = 1; i1 < i; i1++)
+        cellContent = m_excel2.getCellValue(colIndex, m_Table2.RowWithNames);
+        if (cellContent == "")
+            cellContent = CMsg(IDS_NO_NAME); // Default name if header cell is empty
+            
+        // Check for duplicate names among previously read columns and append an index suffix if duplicate
+        for (int prevCol = 1; prevCol < colIndex; prevCol++) // Renamed i1 to prevCol
         {
-            if (szdata == m_Table2.Columns[i1])
+            if (cellContent == m_Table2.Columns[prevCol])
             {
-                CString s;
-                s.Format(L"[%i]", i);
-                szdata += s;
+                CString suffix;
+                suffix.Format(L"[%i]", colIndex);
+                cellContent += suffix;
                 break;
             }
         }
-        m_Table2.Columns[i] = szdata;
+        m_Table2.Columns[colIndex] = cellContent;
     }
 }
 
@@ -1484,6 +1594,8 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
     m_OldCell.x = M_CCell.x;
     m_OldCell.y = M_CCell.y;
+    
+    // Calculate current hovered column index (Table 2) based on mouse X coordinate
     if (point.x > OFFSET_X + STEP_X)
     {
         M_CCell.x = (point.x - OFFSET_X) / STEP_X + m_VisTopLeft.left;
@@ -1492,6 +1604,8 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
     {
         M_CCell.x = 0;
     }
+    
+    // Calculate current hovered row index (Table 1) based on mouse Y coordinate
     if (point.y > OFFSET_Y + STEP_Y)
     {
         M_CCell.y = (point.y - OFFSET_Y) / STEP_Y + m_VisTopLeft.top;
@@ -1500,12 +1614,14 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
     {
         M_CCell.y = 0;
     }
+    
+    // If in similarity display mode, snap the X coordinate to the most similar column
     if (m_bToDisplaySimilarClms)
     {
         if (M_CCell.y > 0 && M_CCell.y <= m_Table1.NumberOfColumns)
         {
-            int tmpCellx = m_vecSimilaritiesAcrossTables[M_CCell.y].clm2;
-            if (tmpCellx > 0 && tmpCellx <= m_Table2.NumberOfColumns)
+            int similarColIndex = m_vecSimilaritiesAcrossTables[M_CCell.y].clm2; // Renamed from tmpCellx
+            if (similarColIndex > 0 && similarColIndex <= m_Table2.NumberOfColumns)
             {
                 M_CCell.x = m_vecSimilaritiesAcrossTables[M_CCell.y].clm2;
             }
@@ -1519,64 +1635,80 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
             M_CCell.x = M_CCell.y = 0;
         }
     }
+    
+    // Update the status bar with the current hovered coordinates
     if (M_CCell.x * M_CCell.y > 0)
     {
-        CString s;
-        CString sx, sy;
-        sx.Format(L"%i", M_CCell.x);
-        sy.Format(L"%i", M_CCell.y);
-        sx = CMsg(IDS_COORDS);
-        s.Format(CMsg(IDS_COORDS), M_CCell.y, M_CCell.x); // CMsg(IDS_COORDS)
+        CString statusText; // Renamed from s, sx and sy removed as they were redundant
+        statusText.Format(CMsg(IDS_COORDS), M_CCell.y, M_CCell.x);
         if (g_pMainFrame)
-            g_pMainFrame->updateStatusBar(s);
+            g_pMainFrame->updateStatusBar(statusText);
     }
+    
+    // Only trigger redraw logic if the hovered cell has changed
     if (!(m_OldCell.x == M_CCell.x) || !(m_OldCell.y == M_CCell.y))
     {
         if (!m_bForceNotOnlyPcnt)
         {
-            m_bOnlyPcnt = true;
+            m_bOnlyPcnt = true; // Optimization flag to avoid full redraw
         }
         else
         {
             m_bOnlyPcnt = false;
             m_bForceNotOnlyPcnt = false;
         }
-        RECT rct;
-        rct.left = 0;
-        rct.top = 0;
-        rct.right = OFFSET_X + STEP_X / 2;
-        rct.bottom = OFFSET_Y + STEP_Y / 2;
-        this->InvalidateRect(&rct, 1);
+        
+        RECT invalidRect; // Renamed from rct
+        
+        // Invalidate top-left corner area
+        invalidRect.left = 0;
+        invalidRect.top = 0;
+        invalidRect.right = OFFSET_X + STEP_X / 2;
+        invalidRect.bottom = OFFSET_Y + STEP_Y / 2;
+        this->InvalidateRect(&invalidRect, 1);
+        
+        // Invalidate current hovered cell headers to show focus highlights
         if (M_CCell.y > 0 && M_CCell.y <= m_Table1.NumberOfColumns && M_CCell.x > 0 &&
             M_CCell.x <= m_Table2.NumberOfColumns)
         {
-            rct.left = OFFSET_X + (M_CCell.x - m_VisTopLeft.left) * STEP_X + 1;
-            rct.top = 2;
-            rct.right = 1 + OFFSET_X + STEP_X + (M_CCell.x - m_VisTopLeft.left) * STEP_X;
-            rct.bottom = OFFSET_Y + STEP_Y;
-            this->InvalidateRect(&rct, 0);
-            rct.left = 2;
-            rct.top = OFFSET_Y + (M_CCell.y - m_VisTopLeft.top) * STEP_Y + 1;
-            rct.right = OFFSET_X + STEP_X;
-            rct.bottom = 1 + OFFSET_Y + (M_CCell.y - m_VisTopLeft.top) * STEP_Y + STEP_Y;
-            this->InvalidateRect(&rct, 0);
+            // Invalidate column header area
+            invalidRect.left = OFFSET_X + (M_CCell.x - m_VisTopLeft.left) * STEP_X + 1;
+            invalidRect.top = 2;
+            invalidRect.right = 1 + OFFSET_X + STEP_X + (M_CCell.x - m_VisTopLeft.left) * STEP_X;
+            invalidRect.bottom = OFFSET_Y + STEP_Y;
+            this->InvalidateRect(&invalidRect, 0);
+            
+            // Invalidate row header area
+            invalidRect.left = 2;
+            invalidRect.top = OFFSET_Y + (M_CCell.y - m_VisTopLeft.top) * STEP_Y + 1;
+            invalidRect.right = OFFSET_X + STEP_X;
+            invalidRect.bottom = 1 + OFFSET_Y + (M_CCell.y - m_VisTopLeft.top) * STEP_Y + STEP_Y;
+            this->InvalidateRect(&invalidRect, 0);
         }
+        
+        // Invalidate previously hovered cell headers to clear their highlights
         if (m_OldCell.y > 0 && m_OldCell.y <= m_Table1.NumberOfColumns && m_OldCell.x > 0 &&
             m_OldCell.x <= m_Table2.NumberOfColumns)
         {
-            rct.left = OFFSET_X + (m_OldCell.x - m_VisTopLeft.left) * STEP_X + 1;
-            rct.top = 2;
-            rct.right = 1 + OFFSET_X + STEP_X + (m_OldCell.x - m_VisTopLeft.left) * STEP_X;
-            rct.bottom = OFFSET_Y + STEP_Y;
-            this->InvalidateRect(&rct, 1);
-            rct.left = 2;
-            rct.top = OFFSET_Y + (m_OldCell.y - m_VisTopLeft.top) * STEP_Y + 1;
-            rct.right = OFFSET_X + STEP_X;
-            rct.bottom = 1 + OFFSET_Y + (m_OldCell.y - m_VisTopLeft.top) * STEP_Y + STEP_Y;
-            this->InvalidateRect(&rct, 1);
+            // Clear column header highlight
+            invalidRect.left = OFFSET_X + (m_OldCell.x - m_VisTopLeft.left) * STEP_X + 1;
+            invalidRect.top = 2;
+            invalidRect.right = 1 + OFFSET_X + STEP_X + (m_OldCell.x - m_VisTopLeft.left) * STEP_X;
+            invalidRect.bottom = OFFSET_Y + STEP_Y;
+            this->InvalidateRect(&invalidRect, 1);
+            
+            // Clear row header highlight
+            invalidRect.left = 2;
+            invalidRect.top = OFFSET_Y + (m_OldCell.y - m_VisTopLeft.top) * STEP_Y + 1;
+            invalidRect.right = OFFSET_X + STEP_X;
+            invalidRect.bottom = 1 + OFFSET_Y + (m_OldCell.y - m_VisTopLeft.top) * STEP_Y + STEP_Y;
+            this->InvalidateRect(&invalidRect, 1);
         }
+        
         m_bOnlyPcnt = false;
         m_bForceNotOnlyPcnt = true;
+        
+        // Reset coordinates if we hovered outside the valid bounds
         if (M_CCell.x * M_CCell.y == 0)
         {
             M_CCell.x = 0;
@@ -1885,132 +2017,152 @@ afx_msg LRESULT CChildView::OnCmUpdateProgress3(WPARAM wParam, LPARAM lParam)
 afx_msg LRESULT CChildView::OnCmMarkingReady(WPARAM wParam, LPARAM lParam)
 {
     HWND hWnd = this->GetSafeHwnd();
-    long nor;
-    int prgHlpr, prgHlpr0;
-    prgHlpr = 0;
-    prgHlpr0 = 0;
-    CString fndDfrnc, fndDfrnc1, fndDfrnc2, selKey;
-    int dfrnCntr = 0;
-    long dfrncRow2;
-    CString temps = L"";
-    CString starts = L"";
-    CString ends = L"";
+    long totalRowsTable1; // Renamed from nor
+    int currentProgress = 0, lastReportedProgress = 0; // Renamed from prgHlpr, prgHlpr0
+    CString diffEntry, diffPart1, diffPart2, keyPart; // Renamed from fndDfrnc, fndDfrnc1, fndDfrnc2, selKey
+    int differencesCount = 0; // Renamed from dfrnCntr
+    long diffRowInTable2; // Renamed from dfrncRow2
+    CString selectionStartCell = L""; // Renamed from starts
+    CString selectionEndCell = L"";   // Renamed from ends
+    
     BeginWaitCursor();
     if (g_pMainFrame)
-        g_pMainFrame->updateStatusBar(
-            CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)); // CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING)
+        g_pMainFrame->updateStatusBar(CMsg(IDS_ANOTHER_PROCESS_STILL_RUNNING));
+        
     m_pProgressBar1->SetPos(0);
     m_pFoundDifferences->RemoveAllItems();
     m_pFoundDifferences->SetEditText(L"");
+    
+    // Process Table 1 to identify and display differences, and optionally highlight them in Excel
+    totalRowsTable1 = m_Table1.NumberOfRows + 1;
+    for (int rowTable1 = 1; rowTable1 < totalRowsTable1; rowTable1++) // Renamed i1 to rowTable1
     {
-        nor = m_Table1.NumberOfRows + 1;
-        for (int i1 = 1; i1 < nor; i1++)
+        // Calculate and report progress
+        currentProgress = (rowTable1 * 100) / totalRowsTable1;
+        if (currentProgress > lastReportedProgress)
         {
-            prgHlpr = (i1 * 100) / nor;
-            if (prgHlpr > prgHlpr0)
+            SendMessage(CM_UPDATE_PROGRESS2, 0, currentProgress);
+            lastReportedProgress = currentProgress;
+        }
+        
+        diffRowInTable2 = m_pnFoundDifferences[rowTable1];
+        if (diffRowInTable2 > 0)
+        {
+            // We found a difference between the two tables
+            if (++differencesCount < 500) // Limit the number of differences displayed to avoid overwhelming UI
             {
-                SendMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-                prgHlpr0 = prgHlpr;
-            }
-            dfrncRow2 = m_pnFoundDifferences[i1];
-            if (dfrncRow2 > 0)
-            {
-                if (++dfrnCntr < 500)
-                {
-                    fndDfrnc1 = L"";
-                    fndDfrnc1.Format(L"(1r%i):", i1);
-                    fndDfrnc1 += m_excel1.getCellValue(m_nOldy, i1);
-                    fndDfrnc1 = fndDfrnc1.Left(26);
-                    fndDfrnc2 = L"";
-                    fndDfrnc2.Format(L"   (2r%i):", dfrncRow2);
-                    fndDfrnc2 += m_excel2.getCellValue(m_nOldx, dfrncRow2);
-                    fndDfrnc2 = fndDfrnc2.Left(26);
-                    selKey = L"";
-                    selKey.Format(L"%s%s   (key): %s", fndDfrnc1.GetString(), fndDfrnc2.GetString(), m_engine.getKeyStr1(i1).GetString());
-                    fndDfrnc = selKey.Left(54);
-                    //fndDfrnc = fndDfrnc1 + fndDfrnc2 + selKey;
-                    m_pFoundDifferences->AddItem((LPCTSTR)fndDfrnc);
-                }
-            }
-            if (m_bIn1file)
-            {
-                if (m_pbMarkIn1Arr[i1])
-                {
-                    if (starts == L"")
-                    {
-                        starts = convertR1C1(i1, m_nOldy);
-                    }
-                    ends = convertR1C1(i1, m_nOldy);
-                }
-                else
-                {
-                    if (!(starts == L"") && !(ends == L""))
-                    {
-                        m_excel1.markCellRange(starts, ends,
-                                               RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green,
-                                                   m_Palette[m_nChosenColor1].blue));
-                        starts = L"";
-                        ends = L"";
-                    }
-                }
+                // Format the difference string for Table 1
+                diffPart1 = L"";
+                diffPart1.Format(L"(1r%i):", rowTable1);
+                diffPart1 += m_excel1.getCellValue(m_nOldy, rowTable1);
+                diffPart1 = diffPart1.Left(26);
+                
+                // Format the difference string for Table 2
+                diffPart2 = L"";
+                diffPart2.Format(L"   (2r%i):", diffRowInTable2);
+                diffPart2 += m_excel2.getCellValue(m_nOldx, diffRowInTable2);
+                diffPart2 = diffPart2.Left(26);
+                
+                // Combine with the primary key string
+                keyPart = L"";
+                keyPart.Format(L"%s%s   (key): %s", diffPart1.GetString(), diffPart2.GetString(), m_engine.getKeyStr1(rowTable1).GetString());
+                diffEntry = keyPart.Left(54);
+                
+                m_pFoundDifferences->AddItem((LPCTSTR)diffEntry);
             }
         }
-        if (m_bIn1file && !(starts == L"") && !(ends == L""))
+        
+        // Handle marking background colors in Excel for Table 1
+        if (m_bIn1file)
         {
-            m_excel1.markCellRange(
-                starts, ends,
-                RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
-            starts = L"";
-            ends = L"";
-        }
-    }
-    temps = L"";
-    starts = L"";
-    ends = L"";
-    if (m_bIn2file)
-    {
-        nor = m_Table2.NumberOfRows + 1;
-        for (int i2 = 1; i2 < nor; i2++)
-        {
-            prgHlpr = (i2 * 100) / nor;
-            if (prgHlpr > prgHlpr0)
+            if (m_pbMarkIn1Arr[rowTable1])
             {
-                SendMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr);
-                prgHlpr0 = prgHlpr;
-            }
-            if (m_pbMarkIn2Arr[i2])
-            {
-                if (starts == L"")
+                // Extend the continuous selection range
+                if (selectionStartCell == L"")
                 {
-                    starts = convertR1C1(i2, m_nOldx);
+                    selectionStartCell = convertR1C1(rowTable1, m_nOldy);
                 }
-                ends = convertR1C1(i2, m_nOldx);
+                selectionEndCell = convertR1C1(rowTable1, m_nOldy);
             }
             else
             {
-                if (!(starts == L"") && !(ends == L""))
+                // The continuous block ended, apply the color to the range
+                if (!(selectionStartCell == L"") && !(selectionEndCell == L""))
                 {
-                    m_excel2.markCellRange(starts, ends,
-                                           RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green,
-                                               m_Palette[m_nChosenColor2].blue));
-                    starts = L"";
-                    ends = L"";
+                    m_excel1.markCellRange(selectionStartCell, selectionEndCell,
+                                           RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green,
+                                               m_Palette[m_nChosenColor1].blue));
+                    selectionStartCell = L"";
+                    selectionEndCell = L"";
                 }
             }
         }
-        if (!(starts == L"") && !(ends == L""))
+    }
+    
+    // Process any remaining marking ranges for Table 1
+    if (m_bIn1file && !(selectionStartCell == L"") && !(selectionEndCell == L""))
+    {
+        m_excel1.markCellRange(
+            selectionStartCell, selectionEndCell,
+            RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
+        selectionStartCell = L"";
+        selectionEndCell = L"";
+    }
+    
+    // Handle marking background colors in Excel for Table 2
+    if (m_bIn2file)
+    {
+        long totalRowsTable2 = m_Table2.NumberOfRows + 1; // Renamed from nor
+        for (int rowTable2 = 1; rowTable2 < totalRowsTable2; rowTable2++) // Renamed i2 to rowTable2
+        {
+            // Calculate and report progress
+            currentProgress = (rowTable2 * 100) / totalRowsTable2;
+            if (currentProgress > lastReportedProgress)
+            {
+                SendMessage(CM_UPDATE_PROGRESS2, 0, currentProgress);
+                lastReportedProgress = currentProgress;
+            }
+            
+            if (m_pbMarkIn2Arr[rowTable2])
+            {
+                // Extend the continuous selection range
+                if (selectionStartCell == L"")
+                {
+                    selectionStartCell = convertR1C1(rowTable2, m_nOldx);
+                }
+                selectionEndCell = convertR1C1(rowTable2, m_nOldx);
+            }
+            else
+            {
+                // The continuous block ended, apply the color to the range
+                if (!(selectionStartCell == L"") && !(selectionEndCell == L""))
+                {
+                    m_excel2.markCellRange(selectionStartCell, selectionEndCell,
+                                           RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green,
+                                               m_Palette[m_nChosenColor2].blue));
+                    selectionStartCell = L"";
+                    selectionEndCell = L"";
+                }
+            }
+        }
+        
+        // Process any remaining marking ranges for Table 2
+        if (!(selectionStartCell == L"") && !(selectionEndCell == L""))
         {
             m_excel2.markCellRange(
-                starts, ends,
+                selectionStartCell, selectionEndCell,
                 RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
-            starts = L"";
-            ends = L"";
+            selectionStartCell = L"";
+            selectionEndCell = L"";
         }
     }
+    
     SendMessage(CM_UPDATE_PROGRESS2, 0, 100);
     m_bLockPrg2 = false;
+    
     if (g_pMainFrame)
-        g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
+        g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE));
+        
     EndWaitCursor();
     DrainMsgQueue();
     return 0;
@@ -2108,15 +2260,18 @@ UINT MyThreadProc3(LPVOID pParam)
 void CChildView::markInFiles()
 {
     m_bLockPrg2 = true;
-    int prgHlpr = 0, prgHlpr0 = 0;
-    int cx, cy;
-    cx = M_CCell.x;
-    cy = M_CCell.y;
-    m_nOldy = cy;
-    m_nOldx = cx;
+    int currentProgress = 0, lastReportedProgress = 0; // Renamed from prgHlpr, prgHlpr0
+    int focusedColIndex = M_CCell.x; // Renamed from cx
+    int focusedRowIndex = M_CCell.y; // Renamed from cy
+    
+    m_nOldy = focusedRowIndex;
+    m_nOldx = focusedColIndex;
+    
+    // Initialize marking arrays to track which rows need highlighting in Excel
     m_pbMarkIn1Arr.assign(m_Table1.NumberOfRows + 2, false);
     m_pbMarkIn2Arr.assign(m_Table2.NumberOfRows + 2, false);
     m_pnFoundDifferences.assign(m_Table1.NumberOfRows + 2, 0L);
+    
     for (int i1 = 0; i1 <= m_Table1.NumberOfRows + 1; i1++)
     {
         m_pbMarkIn1Arr[i1] = false;
@@ -2126,22 +2281,33 @@ void CChildView::markInFiles()
     {
         m_pbMarkIn2Arr[i2] = false;
     }
-    int i1 = m_Table1.FirstRowWithData - 1;
+    
+    // Find differences between the selected columns in Table 1 and Table 2 using primary keys
+    int rowsProcessed = m_Table1.FirstRowWithData - 1; // Renamed from i1
     for (const auto& [key, keyRow1] : m_engine.getMap1())
     {
-        i1++;
-        prgHlpr0 = 100 * i1 / m_Table1.NumberOfRows;
-        if (prgHlpr0 > prgHlpr)
+        rowsProcessed++;
+        
+        // Report progress back to the main UI thread
+        lastReportedProgress = 100 * rowsProcessed / m_Table1.NumberOfRows;
+        if (lastReportedProgress > currentProgress)
         {
-            prgHlpr = prgHlpr0;
-            PostMessage(CM_UPDATE_PROGRESS3, 0, prgHlpr);
+            currentProgress = lastReportedProgress;
+            PostMessage(CM_UPDATE_PROGRESS3, 0, currentProgress);
         }
+        
+        // Check if the key exists in Table 2
         if (auto it2 = m_engine.getMap2().find(key); it2 != m_engine.getMap2().end())
         {
             const long keyRow2 = it2->second;
-            if (!(m_excel1.getCellValue(cy, keyRow1) == m_excel2.getCellValue(cx, keyRow2)))
+            
+            // Compare the cell values directly across the selected columns
+            if (!(m_excel1.getCellValue(focusedRowIndex, keyRow1) == m_excel2.getCellValue(focusedColIndex, keyRow2)))
             {
+                // Record the difference
                 m_pnFoundDifferences[keyRow1] = keyRow2;
+                
+                // Mark for highlighting if enabled by the user
                 if (m_bIn1file)
                     m_pbMarkIn1Arr[keyRow1] = true;
                 if (m_bIn2file)
@@ -2149,6 +2315,8 @@ void CChildView::markInFiles()
             }
         }
     }
+    
+    // Signal the UI thread that marking calculation is ready
     PostMessage(CM_MARKING_READY, 0, 0);
     m_bLockPrg2 = false;
 }
@@ -2194,148 +2362,164 @@ void CChildView::resolveAutoMark()
 {
     m_bDoAutoMark = false;
     if (g_pMainFrame)
-        g_pMainFrame->updateStatusBar(
-            CMsg(IDS_DURING_MARKING_THREAD_BLOCKED)); // CMsg(IDS_DURING_MARKING_THREAD_BLOCKED)
+        g_pMainFrame->updateStatusBar(CMsg(IDS_DURING_MARKING_THREAD_BLOCKED));
+        
     m_bLockPrg2 = true;
     HWND hWnd = this->GetSafeHwnd();
-    int prgHlpr_x, prgHlpr0_x, prgHlpr_y, prgHlpr0_y;
-    prgHlpr_x = 0;
-    prgHlpr0_x = 0;
-    prgHlpr_y = 0;
-    prgHlpr0_y = 0;
-    CString starts = L"";
-    CString ends = L"";
+    int progressCol = 0, lastProgressCol = 0, progressRow = 0, lastProgressRow = 0; // Renamed from prgHlpr_x, etc.
+    CString selectionStartCell = L""; // Renamed from starts
+    CString selectionEndCell = L"";   // Renamed from ends
+    
     m_pProgressBar1->SetPos(0);
     BeginWaitCursor();
-    for (int c1 = 1; c1 <= m_Table1.NumberOfColumns; c1++)
+    
+    // Iterate through all columns to find identically named columns across tables
+    for (int colIndex1 = 1; colIndex1 <= m_Table1.NumberOfColumns; colIndex1++) // Renamed c1 to colIndex1
     {
-        prgHlpr0_x = 90 * c1 / m_Table1.NumberOfColumns;
-        if (prgHlpr0_x > prgHlpr_x)
+        lastProgressCol = 90 * colIndex1 / m_Table1.NumberOfColumns;
+        if (lastProgressCol > progressCol)
         {
-            prgHlpr_x = prgHlpr0_x;
-            PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr_x);
+            progressCol = lastProgressCol;
+            PostMessage(CM_UPDATE_PROGRESS, 0, progressCol);
         }
-        for (int c2 = 1; c2 <= m_Table2.NumberOfColumns; c2++)
+        
+        for (int colIndex2 = 1; colIndex2 <= m_Table2.NumberOfColumns; colIndex2++) // Renamed c2 to colIndex2
         {
-            if (m_Table1.Columns[c1] == m_Table2.Columns[c2])
+            // If the column names match, proceed to auto-mark their differences
+            if (m_Table1.Columns[colIndex1] == m_Table2.Columns[colIndex2])
             {
+                // Handle Auto-Marking in Table 1
                 if (m_bIn1file)
                 {
-                    prgHlpr_y = 0;
-                    prgHlpr0_y = 0;
-                    for (long r1 = m_Table1.FirstRowWithData; r1 <= m_Table1.NumberOfRows; r1++)
+                    progressRow = 0;
+                    lastProgressRow = 0;
+                    for (long row1 = m_Table1.FirstRowWithData; row1 <= m_Table1.NumberOfRows; row1++) // Renamed r1 to row1
                     {
-                        prgHlpr0_y = 100 * r1 / m_Table1.NumberOfRows;
-                        if (prgHlpr0_y > prgHlpr_y + 10)
+                        lastProgressRow = 100 * row1 / m_Table1.NumberOfRows;
+                        if (lastProgressRow > progressRow + 10)
                         {
-                            prgHlpr_y = prgHlpr0_y;
-                            PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
+                            progressRow = lastProgressRow;
+                            PostMessage(CM_UPDATE_PROGRESS2, 0, progressRow);
                         }
-                        if (m_engine.getMainChar1(r1, c1) == 1)
+                        
+                        // Check if the cell has different content across the mapped key
+                        if (m_engine.getMainChar1(row1, colIndex1) == 1)
                         {
-                            if (starts == L"")
+                            if (selectionStartCell == L"")
                             {
-                                starts = convertR1C1(r1, c1);
+                                selectionStartCell = convertR1C1(row1, colIndex1);
                             }
-                            ends = convertR1C1(r1, c1);
+                            selectionEndCell = convertR1C1(row1, colIndex1);
                         }
                         else
                         {
-                            if (!(starts == L"") && !(ends == L""))
+                            if (!(selectionStartCell == L"") && !(selectionEndCell == L""))
                             {
-                                m_excel1.markCellRange(starts, ends,
+                                m_excel1.markCellRange(selectionStartCell, selectionEndCell,
                                                        RGB(m_Palette[m_nChosenColor1].red,
                                                            m_Palette[m_nChosenColor1].green,
                                                            m_Palette[m_nChosenColor1].blue));
-                                starts = L"";
-                                ends = L"";
+                                selectionStartCell = L"";
+                                selectionEndCell = L"";
                             }
                         }
                     }
-                    if (!(starts == L"") && !(ends == L""))
+                    if (!(selectionStartCell == L"") && !(selectionEndCell == L""))
                     {
-                        m_excel1.markCellRange(starts, ends,
+                        m_excel1.markCellRange(selectionStartCell, selectionEndCell,
                                                RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green,
                                                    m_Palette[m_nChosenColor1].blue));
-                        starts = L"";
-                        ends = L"";
+                        selectionStartCell = L"";
+                        selectionEndCell = L"";
                     }
                 }
-                starts = L"";
-                ends = L"";
+                
+                selectionStartCell = L"";
+                selectionEndCell = L"";
+                
+                // Handle Auto-Marking in Table 2
                 if (m_bIn2file)
                 {
-                    prgHlpr_y = 0;
-                    prgHlpr0_y = 0;
-                    for (long r2 = m_Table2.FirstRowWithData; r2 <= m_Table2.NumberOfRows; r2++)
+                    progressRow = 0;
+                    lastProgressRow = 0;
+                    for (long row2 = m_Table2.FirstRowWithData; row2 <= m_Table2.NumberOfRows; row2++) // Renamed r2 to row2
                     {
-                        prgHlpr0_y = 100 * r2 / m_Table2.NumberOfRows;
-                        if (prgHlpr0_y > prgHlpr_y + 10)
+                        lastProgressRow = 100 * row2 / m_Table2.NumberOfRows;
+                        if (lastProgressRow > progressRow + 10)
                         {
-                            prgHlpr_y = prgHlpr0_y;
-                            PostMessage(CM_UPDATE_PROGRESS2, 0, prgHlpr_y);
+                            progressRow = lastProgressRow;
+                            PostMessage(CM_UPDATE_PROGRESS2, 0, progressRow);
                         }
-                        if (m_engine.getMainChar2(r2, c2) == 1)
+                        
+                        // Check if the cell has different content across the mapped key
+                        if (m_engine.getMainChar2(row2, colIndex2) == 1)
                         {
-                            if (starts == L"")
+                            if (selectionStartCell == L"")
                             {
-                                starts = convertR1C1(r2, c2);
+                                selectionStartCell = convertR1C1(row2, colIndex2);
                             }
-                            ends = convertR1C1(r2, c2);
+                            selectionEndCell = convertR1C1(row2, colIndex2);
                         }
                         else
                         {
-                            if (!(starts == L"") && !(ends == L""))
+                            if (!(selectionStartCell == L"") && !(selectionEndCell == L""))
                             {
-                                m_excel2.markCellRange(starts, ends,
+                                m_excel2.markCellRange(selectionStartCell, selectionEndCell,
                                                        RGB(m_Palette[m_nChosenColor2].red,
                                                            m_Palette[m_nChosenColor2].green,
                                                            m_Palette[m_nChosenColor2].blue));
-                                starts = L"";
-                                ends = L"";
+                                selectionStartCell = L"";
+                                selectionEndCell = L"";
                             }
                         }
                     }
-                    if (!(starts == L"") && !(ends == L""))
+                    if (!(selectionStartCell == L"") && !(selectionEndCell == L""))
                     {
-                        m_excel2.markCellRange(starts, ends,
+                        m_excel2.markCellRange(selectionStartCell, selectionEndCell,
                                                RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green,
                                                    m_Palette[m_nChosenColor2].blue));
-                        starts = L"";
-                        ends = L"";
+                        selectionStartCell = L"";
+                        selectionEndCell = L"";
                     }
                 }
             }
         }
     }
-    for (long r1 = m_Table1.FirstRowWithData; r1 <= m_Table1.NumberOfRows; r1++)
+    
+    // Highlight missing keys entirely in Table 1
+    for (long row1 = m_Table1.FirstRowWithData; row1 <= m_Table1.NumberOfRows; row1++)
     {
-        if (m_engine.isKeyMissing1(r1))
+        if (m_engine.isKeyMissing1(row1))
         {
-            starts = convertR1C1(r1, 1);
-            ends = convertR1C1(r1, m_Table1.NumberOfColumns);
+            selectionStartCell = convertR1C1(row1, 1);
+            selectionEndCell = convertR1C1(row1, m_Table1.NumberOfColumns);
             m_excel1.markCellRange(
-                starts, ends,
+                selectionStartCell, selectionEndCell,
                 RGB(m_Palette[m_nChosenColor1].red, m_Palette[m_nChosenColor1].green, m_Palette[m_nChosenColor1].blue));
         }
     }
-    for (long r2 = m_Table2.FirstRowWithData; r2 <= m_Table2.NumberOfRows; r2++)
+    
+    // Highlight missing keys entirely in Table 2
+    for (long row2 = m_Table2.FirstRowWithData; row2 <= m_Table2.NumberOfRows; row2++)
     {
-        if (m_engine.isKeyMissing2(r2)) // c1 - because we need it to run just once
+        if (m_engine.isKeyMissing2(row2))
         {
-            starts = convertR1C1(r2, 1);
-            ends = convertR1C1(r2, m_Table2.NumberOfColumns);
+            selectionStartCell = convertR1C1(row2, 1);
+            selectionEndCell = convertR1C1(row2, m_Table2.NumberOfColumns);
             m_excel2.markCellRange(
-                starts, ends,
+                selectionStartCell, selectionEndCell,
                 RGB(m_Palette[m_nChosenColor2].red, m_Palette[m_nChosenColor2].green, m_Palette[m_nChosenColor2].blue));
         }
     }
+    
     PostMessage(CM_UPDATE_PROGRESS, 0, 100);
     PostMessage(CM_UPDATE_PROGRESS2, 0, 100);
     m_bLockPrg2 = false;
     EndWaitCursor();
+    
     if (g_pMainFrame)
-        g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE)); // CMsg(IDS_MARKING_DONE)
+        g_pMainFrame->updateStatusBar(CMsg(IDS_MARKING_DONE));
+        
     DrainMsgQueue();
 }
 
@@ -2494,13 +2678,16 @@ UINT FindSimsThreadProc2(LPVOID pParam)
 bool CChildView::mutualCheck()
 {
     m_keyFinder.resetBestKeyComb();
-    int tmpRslt = 0;
-    // Cascade check
+    int mutualCheckResult = 0; // Renamed from tmpRslt
+    
+    // Reset key progress bars before starting the cascade check
     if (m_pKeyProgressBar1 && m_pKeyProgressBar2)
     {
         PostMessage(CM_UPDATE_KEYPROGRESS1, 0, 0);
         PostMessage(CM_UPDATE_KEYPROGRESS2, 0, 0);
     }
+    
+    // Basic validation to ensure at least one table has possible keys
     if (m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, 0) == 0 &&
         m_keyFinder.getNumberOfPossibleKeys(2, SUGKEYS, 0) == 0)
     {
@@ -2517,60 +2704,70 @@ bool CChildView::mutualCheck()
         MessageBox(CMsg(IDS_NO_KEY_FND_IN_SCND)); // CMsg(IDS_NO_KEY_FND_IN_SCND)
         return false;
     }
-    int m_i = 0;
+    
+    int currentKeyIndex = 0; // Renamed from m_i
     m_bLockPrg1 = true;
-    int prgHlpr = 0, prgHlpr0 = 0;
-    int order = 1;
-    int pkCnt1 = m_keyFinder.getPossibleKeyCounter1();
-    while (m_i <= pkCnt1 && tmpRslt < 100)
+    int currentProgress = 0, lastReportedProgress = 0; // Renamed from prgHlpr, prgHlpr0
+    int similarityOrder = 1; // Renamed from order
+    int possibleKeyCount1 = m_keyFinder.getPossibleKeyCounter1(); // Renamed from pkCnt1
+    
+    // First pass: Verify the top candidate keys
+    while (currentKeyIndex <= possibleKeyCount1 && mutualCheckResult < 100)
     {
-        prgHlpr0 = 100 * m_i / (pkCnt1 > 0 ? pkCnt1 : 1);
-        if (prgHlpr0 > prgHlpr)
+        lastReportedProgress = 100 * currentKeyIndex / (possibleKeyCount1 > 0 ? possibleKeyCount1 : 1);
+        if (lastReportedProgress > currentProgress)
         {
-            prgHlpr = prgHlpr0;
-            PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-            PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
+            currentProgress = lastReportedProgress;
+            PostMessage(CM_UPDATE_PROGRESS, 0, currentProgress);
+            PostMessage(CM_UPDATE_KEYPROGRESS1, 0, currentProgress);
         }
-        if (m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, m_i) == order)
+        
+        if (m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, currentKeyIndex) == similarityOrder)
         {
-            tmpRslt = m_keyFinder.checkKeys(m_i);
+            mutualCheckResult = m_keyFinder.checkKeys(currentKeyIndex);
         }
         else
         {
             break;
         }
-        m_i++;
+        currentKeyIndex++;
     }
-    order++;
-    int maxOrder = m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, (pkCnt1 - 1 >= 0 ? pkCnt1 - 1 : 0));
-    while (tmpRslt < 90 && order <= maxOrder)
+    
+    similarityOrder++;
+    int maxSimilarityOrder = m_keyFinder.getNumberOfPossibleKeys(1, SUGKEYS, (possibleKeyCount1 - 1 >= 0 ? possibleKeyCount1 - 1 : 0)); // Renamed from maxOrder
+    
+    // Second pass: Exhaustively verify remaining keys of lower similarity orders if first pass was not confident enough
+    while (mutualCheckResult < 90 && similarityOrder <= maxSimilarityOrder)
     {
-        while (m_i <= pkCnt1 && tmpRslt < 90)
+        while (currentKeyIndex <= possibleKeyCount1 && mutualCheckResult < 90)
         {
-            prgHlpr0 = 100 * m_i / (pkCnt1 > 0 ? pkCnt1 : 1);
-            if (prgHlpr0 > prgHlpr)
+            lastReportedProgress = 100 * currentKeyIndex / (possibleKeyCount1 > 0 ? possibleKeyCount1 : 1);
+            if (lastReportedProgress > currentProgress)
             {
-                prgHlpr = prgHlpr0;
-                PostMessage(CM_UPDATE_PROGRESS, 0, prgHlpr);
-                PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
+                currentProgress = lastReportedProgress;
+                PostMessage(CM_UPDATE_PROGRESS, 0, currentProgress);
+                PostMessage(CM_UPDATE_KEYPROGRESS1, 0, currentProgress);
             }
-            if (m_keyFinder.getNumberOfPossibleKeys(1, order, m_i) == order)
+            
+            if (m_keyFinder.getNumberOfPossibleKeys(1, similarityOrder, currentKeyIndex) == similarityOrder)
             {
-                tmpRslt = m_keyFinder.checkKeys(m_i);
+                mutualCheckResult = m_keyFinder.checkKeys(currentKeyIndex);
             }
             else
             {
                 break;
             }
-            m_i++;
+            currentKeyIndex++;
         }
-        order++;
+        similarityOrder++;
     }
-    if (tmpRslt)
+    
+    if (mutualCheckResult)
     {
         PostMessage(CM_KEYS_FOUND, 0, 0);
         return true;
     }
+    
     PostMessage(CM_KEYS_NOT_FOUND, 0, 0);
     return false;
 }
@@ -2653,215 +2850,262 @@ int CChildView::getNumberOfPossibleKeys(int table, int order, int item)
     return m_keyFinder.getNumberOfPossibleKeys(table, order, item);
 }
 
-void CChildView::findSims() // do not use in case there is a sufficient RAM capacity
+void CChildView::findSims() // Fallback function: do not use in case there is sufficient RAM capacity
 {
     COleVariant vData;
-    CString szdata;
-    long tmpSim;
-    int prgHlpr0, prgHlpr;
-    prgHlpr = prgHlpr0 = 0;
+    CString cellContent; // Renamed from szdata
+    long currentSimilarityScore; // Renamed from tmpSim
+    int lastReportedProgress = 0, currentProgress = 0; // Renamed from prgHlpr0, prgHlpr
+    
+    // Reset the cross-table similarity containers
     m_vecSimilaritiesAcrossTables.clear();
     m_vecSimilaritiesAcrossTablesSorted.clear();
+    
+    // Initialize the vector with zeroed values up to the column count of Table 1
     SimilaritiesAcrossTables tempSimilarity;
     m_vecSimilaritiesAcrossTables.push_back(tempSimilarity);
-    for (int tmp_i = 1; tmp_i <= m_Table1.NumberOfColumns + 1; tmp_i++)
+    for (int colIndex1 = 1; colIndex1 <= m_Table1.NumberOfColumns + 1; colIndex1++) // Renamed from tmp_i
     {
         tempSimilarity.similarityOrder = 0;
         tempSimilarity.similarity = 0;
-        tempSimilarity.clm1 = tmp_i;
+        tempSimilarity.clm1 = colIndex1;
         tempSimilarity.clm2 = 0;
         m_vecSimilaritiesAcrossTables.push_back(tempSimilarity);
-        ;
     }
-    for (int c_i1 = 1; c_i1 <= m_Table1.NumberOfColumns; c_i1++)
+    
+    // Compare each column in Table 1 against all columns in Table 2
+    for (int colIndex1 = 1; colIndex1 <= m_Table1.NumberOfColumns; colIndex1++) // Renamed from c_i1
     {
-        prgHlpr0 = 100 * c_i1 / m_Table1.NumberOfColumns; // only 3 keys
-        if (prgHlpr0 > prgHlpr)
+        lastReportedProgress = 100 * colIndex1 / m_Table1.NumberOfColumns;
+        if (lastReportedProgress > currentProgress)
         {
-            prgHlpr = prgHlpr0;
-            PostMessage(CM_UPDATE_KEYPROGRESS1, 0, prgHlpr);
+            currentProgress = lastReportedProgress;
+            PostMessage(CM_UPDATE_KEYPROGRESS1, 0, currentProgress);
         }
+        
         m_mapTmpMap1.clear();
-        for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
+        
+        // Populate the frequency map for the current column in Table 1
+        for (int row1 = m_Table1.FirstRowWithData; row1 <= m_Table1.NumberOfRows; row1++) // Renamed from r_i1
         {
-            szdata = m_excel1.getCellValue(c_i1, r_i1);
-            if ((szdata != L"") && (m_mapTmpMap1.find(szdata) == m_mapTmpMap1.end()))
+            cellContent = m_excel1.getCellValue(colIndex1, row1);
+            if ((cellContent != L"") && (m_mapTmpMap1.find(cellContent) == m_mapTmpMap1.end()))
             {
-                m_mapTmpMap1[szdata] = r_i1;
+                m_mapTmpMap1[cellContent] = row1;
             }
         }
-        for (int c_i2 = 1; c_i2 <= m_Table2.NumberOfColumns; c_i2++)
+        
+        // Check this frequency map against every column in Table 2
+        for (int colIndex2 = 1; colIndex2 <= m_Table2.NumberOfColumns; colIndex2++) // Renamed from c_i2
         {
-            tmpSim = 0;
+            currentSimilarityScore = 0;
             m_mapTmpMap2.clear();
-            for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
+            
+            for (int row2 = m_Table2.FirstRowWithData; row2 <= m_Table2.NumberOfRows; row2++) // Renamed from r_i2
             {
-                szdata = m_excel2.getCellValue(c_i2, r_i2);
-                if ((szdata != L"") && (m_mapTmpMap1.find(szdata) != m_mapTmpMap1.end()))
+                cellContent = m_excel2.getCellValue(colIndex2, row2);
+                if ((cellContent != L"") && (m_mapTmpMap1.find(cellContent) != m_mapTmpMap1.end()))
                 {
-                    if (m_mapTmpMap2.find(szdata) == m_mapTmpMap2.end())
+                    // If the content is found in both columns, count it as a similarity match
+                    if (m_mapTmpMap2.find(cellContent) == m_mapTmpMap2.end())
                     {
-                        m_mapTmpMap2[szdata] = r_i2;
-                        tmpSim++;
+                        m_mapTmpMap2[cellContent] = row2;
+                        currentSimilarityScore++;
                     }
                 }
             }
-            if (tmpSim > m_vecSimilaritiesAcrossTables[c_i1].similarity)
+            
+            // Record the highest similarity score for the current column in Table 1
+            if (currentSimilarityScore > m_vecSimilaritiesAcrossTables[colIndex1].similarity)
             {
-                m_vecSimilaritiesAcrossTables[c_i1].similarity = tmpSim;
-                m_vecSimilaritiesAcrossTables[c_i1].clm1 = c_i1;
-                m_vecSimilaritiesAcrossTables[c_i1].clm2 = c_i2;
+                m_vecSimilaritiesAcrossTables[colIndex1].similarity = currentSimilarityScore;
+                m_vecSimilaritiesAcrossTables[colIndex1].clm1 = colIndex1;
+                m_vecSimilaritiesAcrossTables[colIndex1].clm2 = colIndex2;
             }
         }
     }
-    int simOrder = 1;
+    
+    // Sort and rank the similarities to find the best overall column matches
+    int similarityRank = 1; // Renamed from simOrder
     tempSimilarity.clm1 = 0;
     tempSimilarity.clm2 = 0;
     tempSimilarity.similarity = 0;
     tempSimilarity.similarityOrder = 0;
     m_vecSimilaritiesAcrossTablesSorted.push_back(tempSimilarity);
-    for (int i0 = 1; i0 <= m_Table1.NumberOfColumns; i0++)
+    
+    for (int loopIndex = 1; loopIndex <= m_Table1.NumberOfColumns; loopIndex++) // Renamed from i0
     {
         tempSimilarity.clm1 = 0;
         tempSimilarity.clm2 = 0;
         tempSimilarity.similarity = 0;
         tempSimilarity.similarityOrder = 0;
-        for (int i1 = 1; i1 <= m_Table1.NumberOfColumns; i1++)
+        
+        for (int colIndex1 = 1; colIndex1 <= m_Table1.NumberOfColumns; colIndex1++) // Renamed from i1
         {
-            if (m_vecSimilaritiesAcrossTables[i1].similarity > 0 &&
-                m_vecSimilaritiesAcrossTables[i1].similarity > tempSimilarity.similarity &&
-                m_vecSimilaritiesAcrossTables[i1].similarityOrder ==
-                    0) // clm2 only serves here for storing of the actual measured similarity
+            if (m_vecSimilaritiesAcrossTables[colIndex1].similarity > 0 &&
+                m_vecSimilaritiesAcrossTables[colIndex1].similarity > tempSimilarity.similarity &&
+                m_vecSimilaritiesAcrossTables[colIndex1].similarityOrder == 0) // Ensure we only rank unranked columns
             {
-                tempSimilarity.similarityOrder = simOrder;
-                tempSimilarity.similarity = m_vecSimilaritiesAcrossTables[i1].similarity;
-                tempSimilarity.clm1 = m_vecSimilaritiesAcrossTables[i1].clm1;
-                tempSimilarity.clm2 = m_vecSimilaritiesAcrossTables[i1].clm2;
+                tempSimilarity.similarityOrder = similarityRank;
+                tempSimilarity.similarity = m_vecSimilaritiesAcrossTables[colIndex1].similarity;
+                tempSimilarity.clm1 = m_vecSimilaritiesAcrossTables[colIndex1].clm1;
+                tempSimilarity.clm2 = m_vecSimilaritiesAcrossTables[colIndex1].clm2;
             }
         }
+        
         if (tempSimilarity.similarity > 0)
         {
-            simOrder++;
+            similarityRank++;
             m_vecSimilaritiesAcrossTablesSorted.push_back(tempSimilarity);
-            m_vecSimilaritiesAcrossTables[tempSimilarity.clm1].similarityOrder = simOrder;
+            m_vecSimilaritiesAcrossTables[tempSimilarity.clm1].similarityOrder = similarityRank;
         }
     }
-    m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder =
-        simOrder -
-        1; // at the zero position, there will be stored the total number of all the columns that have a "lookalike" in the second file
+    
+    // Store the total number of matched columns at index 0
+    m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder = similarityRank - 1; 
+    
     PostMessage(CM_UPDATE_PROGRESS, 0, 0);
     this->Invalidate();
-    if (simOrder > 1)
+    
+    // If we found at least one similarity, enable the similarity display functionality
+    if (similarityRank > 1)
     {
         m_bToDisplaySimilarClms = true;
         m_bXSimilarityComputed = true;
     }
+    
     m_bLockPrg1 = false;
     return;
 }
 
-void CChildView::findSimsRange(int c_i1_start, int c_i1_end, UINT progressMsg, UINT doneMsg, bool useTmp)
+void CChildView::findSimsRange(int startColIndex, int endColIndex, UINT progressMsg, UINT doneMsg, bool useTmp)
 {
-    CString szdata;
-    long long tmpSim;
-    int prgHlpr0, prgHlpr;
-    prgHlpr = prgHlpr0 = 0;
-    std::map<CString, long> thdSafe_tmpMap1;
-    std::map<CString, long> thdSafe_tmpMap2;
-    CString what = L"";
-    long occurence1 = 0;
-    long occurence2 = 0;
-    long size1 = 0;
-    long size2 = 0;
-    long minsize = 0;
-    long maxsize = 0;
-    double tmpUnitSim = 0.f;
-    long tmp_varRat = 0;
-    long sim = 0;
-    long sumOccurence1 = 0;
-    long sumOccurence2 = 0;
-    long pureSim;
-    int rangeSize = c_i1_end - c_i1_start;
-    rangeSize = rangeSize ? rangeSize : 1;
-    for (int c_i1 = c_i1_start; c_i1 <= c_i1_end; c_i1++)
+    CString cellContent; // Renamed from szdata
+    long long currentSimilarityScore; // Renamed from tmpSim
+    int lastReportedProgress = 0, currentProgress = 0; // Renamed from prgHlpr0, prgHlpr
+    
+    std::map<CString, long> table1FreqMap; // Renamed from thdSafe_tmpMap1
+    std::map<CString, long> table2FreqMap; // Renamed from thdSafe_tmpMap2
+    CString mapKey = L""; // Renamed from what
+    long occurrenceCount1 = 0; // Renamed from occurence1
+    long occurrenceCount2 = 0; // Renamed from occurence2
+    long table1RowCount = 0; // Renamed from size1
+    long table2RowCount = 0; // Renamed from size2
+    long minRowCount = 0; // Renamed from minsize
+    long maxRowCount = 0; // Renamed from maxsize
+    double unitSimilarity = 0.f; // Renamed from tmpUnitSim
+    long sizeRatio = 0; // Renamed from tmp_varRat
+    long finalSimilarityScore = 0; // Renamed from sim
+    long totalOccurrences1 = 0; // Renamed from sumOccurence1
+    long totalOccurrences2 = 0; // Renamed from sumOccurence2
+    long exactPureSimilarity; // Renamed from pureSim
+    
+    int rangeSize = endColIndex - startColIndex;
+    rangeSize = rangeSize ? rangeSize : 1; // Prevent division by zero
+    
+    // Iterate over the specified range of columns in Table 1
+    for (int colIndex1 = startColIndex; colIndex1 <= endColIndex; colIndex1++) // Renamed from c_i1
     {
-        prgHlpr0 = 100 * (c_i1 - c_i1_start) / rangeSize;
-        if (prgHlpr0 > prgHlpr)
+        lastReportedProgress = 100 * (colIndex1 - startColIndex) / rangeSize;
+        if (lastReportedProgress > currentProgress)
         {
-            prgHlpr = prgHlpr0;
-            PostMessage(progressMsg, 0, prgHlpr);
+            currentProgress = lastReportedProgress;
+            PostMessage(progressMsg, 0, currentProgress);
         }
-        thdSafe_tmpMap1.clear();
-        for (int r_i1 = m_Table1.FirstRowWithData; r_i1 <= m_Table1.NumberOfRows; r_i1++)
+        
+        table1FreqMap.clear();
+        
+        // Build the frequency map of strings for the current column in Table 1
+        for (int row1 = m_Table1.FirstRowWithData; row1 <= m_Table1.NumberOfRows; row1++) // Renamed from r_i1
         {
-            szdata = useTmp ? m_excel1.getTmpCellValue(c_i1, r_i1) : m_excel1.getCellValue(c_i1, r_i1);
-            if (szdata != L"")
+            cellContent = useTmp ? m_excel1.getTmpCellValue(colIndex1, row1) : m_excel1.getCellValue(colIndex1, row1);
+            if (cellContent != L"")
             {
-                if (thdSafe_tmpMap1.find(szdata) == thdSafe_tmpMap1.end())
-                    thdSafe_tmpMap1[szdata] = 1;
+                if (table1FreqMap.find(cellContent) == table1FreqMap.end())
+                    table1FreqMap[cellContent] = 1;
                 else
-                    thdSafe_tmpMap1[szdata] = thdSafe_tmpMap1[szdata] + 1;
+                    table1FreqMap[cellContent] = table1FreqMap[cellContent] + 1;
             }
         }
-        for (int c_i2 = 1; c_i2 <= m_Table2.NumberOfColumns; c_i2++)
+        
+        // Compare the frequency map against all columns in Table 2
+        for (int colIndex2 = 1; colIndex2 <= m_Table2.NumberOfColumns; colIndex2++) // Renamed from c_i2
         {
-            thdSafe_tmpMap2.clear();
-            for (int r_i2 = m_Table2.FirstRowWithData; r_i2 <= m_Table2.NumberOfRows; r_i2++)
+            table2FreqMap.clear();
+            
+            // Build the frequency map for the current column in Table 2, but only for strings that exist in the Table 1 map
+            for (int row2 = m_Table2.FirstRowWithData; row2 <= m_Table2.NumberOfRows; row2++) // Renamed from r_i2
             {
-                szdata = useTmp ? m_excel2.getTmpCellValue(c_i2, r_i2) : m_excel2.getCellValue(c_i2, r_i2);
-                if ((szdata != L"") && (thdSafe_tmpMap1.find(szdata) != thdSafe_tmpMap1.end()))
+                cellContent = useTmp ? m_excel2.getTmpCellValue(colIndex2, row2) : m_excel2.getCellValue(colIndex2, row2);
+                if ((cellContent != L"") && (table1FreqMap.find(cellContent) != table1FreqMap.end()))
                 {
-                    if (thdSafe_tmpMap2.find(szdata) == thdSafe_tmpMap2.end())
-                        thdSafe_tmpMap2[szdata] = 1;
+                    if (table2FreqMap.find(cellContent) == table2FreqMap.end())
+                        table2FreqMap[cellContent] = 1;
                     else
-                        thdSafe_tmpMap2[szdata] = thdSafe_tmpMap2[szdata] + 1;
+                        table2FreqMap[cellContent] = table2FreqMap[cellContent] + 1;
                 }
             }
-            sumOccurence1 = sumOccurence2 = 0;
-            tmpSim = 0;
-            for (auto iterator : thdSafe_tmpMap1)
+            
+            totalOccurrences1 = totalOccurrences2 = 0;
+            currentSimilarityScore = 0;
+            
+            // Calculate similarity penalty based on frequency mismatches between the two columns
+            for (auto mapIterator : table1FreqMap) // Renamed from iterator
             {
-                what = iterator.first;
-                occurence1 = iterator.second;
-                sumOccurence1 += occurence1;
-                occurence2 = 0;
-                if (thdSafe_tmpMap2.find(what) != thdSafe_tmpMap2.end())
+                mapKey = mapIterator.first;
+                occurrenceCount1 = mapIterator.second;
+                totalOccurrences1 += occurrenceCount1;
+                occurrenceCount2 = 0;
+                
+                if (table2FreqMap.find(mapKey) != table2FreqMap.end())
                 {
-                    occurence2 = thdSafe_tmpMap2[what];
-                    sumOccurence2 += occurence2;
-                    tmpUnitSim = max(occurence1, occurence2) - min(occurence1, occurence2);
-                    tmpSim += (tmpUnitSim);
+                    occurrenceCount2 = table2FreqMap[mapKey];
+                    totalOccurrences2 += occurrenceCount2;
+                    // The difference in occurrence counts acts as a penalty
+                    unitSimilarity = max(occurrenceCount1, occurrenceCount2) - min(occurrenceCount1, occurrenceCount2);
+                    currentSimilarityScore += (unitSimilarity);
                 }
             }
-            sim = tmpSim;
-            size1 = m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1;
-            size2 = m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1;
-            minsize = min(size1, size2);
-            minsize = minsize ? minsize : 1;
-            maxsize = max(size1, size2);
+            
+            finalSimilarityScore = currentSimilarityScore;
+            table1RowCount = m_Table1.NumberOfRows - m_Table1.FirstRowWithData + 1;
+            table2RowCount = m_Table2.NumberOfRows - m_Table2.FirstRowWithData + 1;
+            minRowCount = min(table1RowCount, table2RowCount);
+            minRowCount = minRowCount ? minRowCount : 1;
+            maxRowCount = max(table1RowCount, table2RowCount);
+            
+            // Normalize the similarity score to account for differently sized tables
             {
-                tmp_varRat = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
-                if (tmp_varRat)
+                sizeRatio = min(table1FreqMap.size(), table2FreqMap.size());
+                if (sizeRatio)
                 {
-                    tmp_varRat = tmp_varRat ? tmp_varRat : 1;
-                    tmp_varRat = (minsize < tmp_varRat ? 1 : minsize / tmp_varRat);
-                    sim = (minsize - sim) / tmp_varRat + 1;
+                    sizeRatio = sizeRatio ? sizeRatio : 1;
+                    sizeRatio = (minRowCount < sizeRatio ? 1 : minRowCount / sizeRatio);
+                    finalSimilarityScore = (minRowCount - finalSimilarityScore) / sizeRatio + 1;
                 }
-                if (sim == 0 && thdSafe_tmpMap1.size() == thdSafe_tmpMap2.size() && tmp_varRat > 0)
+                
+                // If tables are identical in matched size and perfect match, force a score of 1
+                if (finalSimilarityScore == 0 && table1FreqMap.size() == table2FreqMap.size() && sizeRatio > 0)
                 {
-                    sim = 1;
+                    finalSimilarityScore = 1;
                 }
             }
-            pureSim = (maxsize - abs(sumOccurence2 - sumOccurence1)) - tmpSim;
-            if (pureSim > m_vecSimilaritiesAcrossTables[c_i1].pureSim && sim > 0)
+            
+            // Calculate the pure similarity score that takes into account the discrepancy in overall occurrences
+            exactPureSimilarity = (maxRowCount - abs(totalOccurrences2 - totalOccurrences1)) - currentSimilarityScore;
+            
+            // Update the global similarity metrics if this column combination is better than previous ones
+            if (exactPureSimilarity > m_vecSimilaritiesAcrossTables[colIndex1].pureSim && finalSimilarityScore > 0)
             {
-                m_vecSimilaritiesAcrossTables[c_i1].similarity = min(thdSafe_tmpMap1.size(), thdSafe_tmpMap2.size());
-                m_vecSimilaritiesAcrossTables[c_i1].clm1 = c_i1;
-                m_vecSimilaritiesAcrossTables[c_i1].clm2 = c_i2;
-                m_vecSimilaritiesAcrossTables[c_i1].pureSim = pureSim;
+                m_vecSimilaritiesAcrossTables[colIndex1].similarity = min(table1FreqMap.size(), table2FreqMap.size());
+                m_vecSimilaritiesAcrossTables[colIndex1].clm1 = colIndex1;
+                m_vecSimilaritiesAcrossTables[colIndex1].clm2 = colIndex2;
+                m_vecSimilaritiesAcrossTables[colIndex1].pureSim = exactPureSimilarity;
             }
         }
     }
+    
+    // Notify thread that computation is complete
     PostMessage(doneMsg, 0, 0);
 }
 
@@ -3157,43 +3401,52 @@ void CChildView::finishFindRelations()
     {
         return;
     }
+    
     SimilaritiesAcrossTables tempSimilarity;
-    int simOrder = 1;
+    int similarityRank = 1; // Renamed from simOrder
     tempSimilarity.clm1 = 0;
     tempSimilarity.clm2 = 0;
     tempSimilarity.similarity = 0;
     tempSimilarity.similarityOrder = 0;
+    
     m_vecSimilaritiesAcrossTablesSorted.clear();
-    m_vecSimilaritiesAcrossTablesSorted.push_back(tempSimilarity);
-    for (int i0 = 1; i0 <= m_Table1.NumberOfColumns; i0++)
+    m_vecSimilaritiesAcrossTablesSorted.push_back(tempSimilarity); // Index 0 will hold metadata
+    
+    // Sort and rank all columns by their similarity scores computed by background threads
+    for (int loopIndex = 1; loopIndex <= m_Table1.NumberOfColumns; loopIndex++) // Renamed from i0
     {
         tempSimilarity.clm1 = 0;
         tempSimilarity.clm2 = 0;
         tempSimilarity.similarity = -1;
         tempSimilarity.similarityOrder = 0;
-        for (int i1 = 1; i1 <= m_Table1.NumberOfColumns; i1++)
+        
+        for (int colIndex1 = 1; colIndex1 <= m_Table1.NumberOfColumns; colIndex1++) // Renamed from i1
         {
-            if (m_vecSimilaritiesAcrossTables[i1].similarity > tempSimilarity.similarity &&
-                m_vecSimilaritiesAcrossTables[i1].similarityOrder ==
-                    0) // clm2 only serves here for storing of the actual measured similarity
+            if (m_vecSimilaritiesAcrossTables[colIndex1].similarity > tempSimilarity.similarity &&
+                m_vecSimilaritiesAcrossTables[colIndex1].similarityOrder == 0) // Ensure column isn't already ranked
             {
-                tempSimilarity.similarityOrder = simOrder;
-                tempSimilarity.similarity = m_vecSimilaritiesAcrossTables[i1].similarity;
-                tempSimilarity.clm1 = m_vecSimilaritiesAcrossTables[i1].clm1;
-                tempSimilarity.clm2 = m_vecSimilaritiesAcrossTables[i1].clm2;
+                tempSimilarity.similarityOrder = similarityRank;
+                tempSimilarity.similarity = m_vecSimilaritiesAcrossTables[colIndex1].similarity;
+                tempSimilarity.clm1 = m_vecSimilaritiesAcrossTables[colIndex1].clm1;
+                tempSimilarity.clm2 = m_vecSimilaritiesAcrossTables[colIndex1].clm2;
             }
         }
+        
+        // Push the highest available similarity into the sorted list
         {
-            simOrder++;
+            similarityRank++;
             m_vecSimilaritiesAcrossTablesSorted.push_back(tempSimilarity);
-            m_vecSimilaritiesAcrossTables[tempSimilarity.clm1].similarityOrder = simOrder;
+            m_vecSimilaritiesAcrossTables[tempSimilarity.clm1].similarityOrder = similarityRank;
         }
     }
-    m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder =
-        simOrder -
-        1; // at the zero position, there will be stored the total number of all the columns that have a "lookalike" in the second file
+    
+    // At the zero position, store the total number of columns that have a "lookalike" in the second file
+    m_vecSimilaritiesAcrossTablesSorted[0].similarityOrder = similarityRank - 1;
+    
     this->Invalidate();
-    if (simOrder > 1)
+    
+    // If we successfully ranked columns, enable the similarity visualization feature
+    if (similarityRank > 1)
     {
         m_bToDisplaySimilarClms = true;
         m_bXSimilarityComputed = true;
