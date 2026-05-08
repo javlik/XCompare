@@ -533,7 +533,7 @@ void CChildView::paintRowHeaders(CDC& dc, PaintCtx& ctx)
             }
         }
         dc.SelectObject(ctx.pen2);
-        //else
+		      
         dc.Rectangle(0, OFFSET_Y + mx_y * STEP_Y, 1 + OFFSET_X + STEP_X, 1 + OFFSET_Y + mx_y * STEP_Y + STEP_Y);
         if (cursor)
         {
@@ -868,7 +868,6 @@ void CChildView::pickFile(bool* pNewFile, ExcelConnector* pExcel, Table* pTable,
     wchar_t* p = fileName.GetBuffer(FILE_LIST_BUFFER_SIZE);
     CFileDialog dlgFile(TRUE);
     OPENFILENAME& ofn = dlgFile.GetOFN();
-    //ofn.Flags |= OFN_ALLOWMULTISELECT; // for future scalability
     ofn.lpstrFile = p;
     ofn.nMaxFile = FILE_LIST_BUFFER_SIZE;
     dlgFile.DoModal();
@@ -1063,7 +1062,6 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
         SetScrollPos(SB_VERT, m_nVScrollPos, TRUE);
         RECT rect;
         GetClientRect(&rect);
-        //rect.left = OFFSET_X + STEP_X;
         rect.top = OFFSET_Y + STEP_Y;
         ScrollWindow(0, -nDelta, &rect);
         this->Invalidate();
@@ -1577,12 +1575,6 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
             rct.bottom = 1 + OFFSET_Y + (m_OldCell.y - m_VisTopLeft.top) * STEP_Y + STEP_Y;
             this->InvalidateRect(&rct, 1);
         }
-        //if (oldCell.x && oldCell.y)
-        //{
-        //	CString traces = L"";
-        //	traces.Format(L"%i, %i, %i, %i\n", oldCell.x, oldCell.y, cCell.x, cCell.y);
-        //	TRACE(traces);
-        //}
         m_bOnlyPcnt = false;
         m_bForceNotOnlyPcnt = true;
         if (M_CCell.x * M_CCell.y == 0)
