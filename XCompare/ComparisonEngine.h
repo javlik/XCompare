@@ -245,10 +245,15 @@ public:
         ::PostMessage(m_hWnd, CM_FIRSTPASS_DONE, 0, 0);
     }
     /** @brief Returns the column index of the @p key-th key for @p table (1 or 2). */
-    [[nodiscard]] int getNthKey(int table, int key) const { return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2; }
+    [[nodiscard]] int getNthKey(int table, int key) const
+    {
+        ASSERT(key >= 0 && key < m_nKeyPairCounter);
+        return (table == 1) ? m_KeyPair[key].tab1 : m_KeyPair[key].tab2;
+    }
     /** @brief Overwrites the @p n-th key pair with new column indices. */
     void setNthKey(int n, int col1, int col2)
     {
+        ASSERT(n >= 0 && n < m_nKeyPairCounter);
         m_KeyPair[n].tab1 = col1;
         m_KeyPair[n].tab2 = col2;
     }
@@ -325,21 +330,55 @@ public:
 
     // --- Data accessors ---
     /** @brief Returns the concatenated key string for row @p row in table 1. */
-    [[nodiscard]] CString getKeyStr1(int row) const { return m_pszKeyArr11[row]; }
+    [[nodiscard]] CString getKeyStr1(int row) const
+    {
+        ASSERT(row >= 1 && row < (int)m_pszKeyArr11.size());
+        return m_pszKeyArr11[row];
+    }
     /** @brief Returns the concatenated key string for row @p row in table 2. */
-    [[nodiscard]] CString getKeyStr2(int row) const { return m_pszKeyArr21[row]; }
+    [[nodiscard]] CString getKeyStr2(int row) const
+    {
+        ASSERT(row >= 1 && row < (int)m_pszKeyArr21.size());
+        return m_pszKeyArr21[row];
+    }
     /** @brief Returns @c true if row @p row in table 1 has no matching key in table 2. */
-    [[nodiscard]] bool isKeyMissing1(int row) const { return m_pbKeyMissing1[row]; }
+    [[nodiscard]] bool isKeyMissing1(int row) const
+    {
+        ASSERT(row >= 1 && row < (int)m_pbKeyMissing1.size());
+        return m_pbKeyMissing1[row];
+    }
     /** @brief Returns @c true if row @p row in table 2 has no matching key in table 1. */
-    [[nodiscard]] bool isKeyMissing2(int row) const { return m_pbKeyMissing2[row]; }
+    [[nodiscard]] bool isKeyMissing2(int row) const
+    {
+        ASSERT(row >= 1 && row < (int)m_pbKeyMissing2.size());
+        return m_pbKeyMissing2[row];
+    }
     /** @brief Returns @c true if column @p col in table 1 contains no data. */
-    [[nodiscard]] bool isEmptyCol1(int col) const { return m_pbEmptyClms1[col]; }
+    [[nodiscard]] bool isEmptyCol1(int col) const
+    {
+        ASSERT(col >= 1 && col < (int)m_pbEmptyClms1.size());
+        return m_pbEmptyClms1[col];
+    }
     /** @brief Returns @c true if column @p col in table 2 contains no data. */
-    [[nodiscard]] bool isEmptyCol2(int col) const { return m_pbEmptyClms2[col]; }
+    [[nodiscard]] bool isEmptyCol2(int col) const
+    {
+        ASSERT(col >= 1 && col < (int)m_pbEmptyClms2.size());
+        return m_pbEmptyClms2[col];
+    }
     /** @brief Returns the cached first character of cell (row, col) in table 1. */
-    [[nodiscard]] char getMainChar1(int row, int col) const { return m_pchMainArr1[(row - 1) * m_Table1.NumberOfColumns + col]; }
+    [[nodiscard]] char getMainChar1(int row, int col) const
+    {
+        ASSERT(row >= 1 && row <= m_Table1.NumberOfRows);
+        ASSERT(col >= 1 && col <= m_Table1.NumberOfColumns);
+        return m_pchMainArr1[(row - 1) * m_Table1.NumberOfColumns + col];
+    }
     /** @brief Returns the cached first character of cell (row, col) in table 2. */
-    [[nodiscard]] char getMainChar2(int row, int col) const { return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col]; }
+    [[nodiscard]] char getMainChar2(int row, int col) const
+    {
+        ASSERT(row >= 1 && row <= m_Table2.NumberOfRows);
+        ASSERT(col >= 1 && col <= m_Table2.NumberOfColumns);
+        return m_pchMainArr2[(row - 1) * m_Table2.NumberOfColumns + col];
+    }
     /** @brief Returns a reference to the key-to-row lookup map for table 1. */
     CMap<CString, LPCTSTR, long, long>& getMap1() { return m_Map1; }
     /** @brief Returns a reference to the key-to-row lookup map for table 2. */
