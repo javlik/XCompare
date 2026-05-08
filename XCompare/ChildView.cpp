@@ -1934,7 +1934,7 @@ afx_msg LRESULT CChildView::OnCmMarkingReady(WPARAM wParam, LPARAM lParam)
                     fndDfrnc2 += m_excel2.getCellValue(m_nOldx, dfrncRow2);
                     fndDfrnc2 = fndDfrnc2.Left(26);
                     selKey = L"";
-                    selKey.Format(L"%s%s   (key): %s", fndDfrnc1, fndDfrnc2, m_engine.getKeyStr1(i1));
+                    selKey.Format(L"%s%s   (key): %s", fndDfrnc1.GetString(), fndDfrnc2.GetString(), m_engine.getKeyStr1(i1).GetString());
                     fndDfrnc = selKey.Left(54);
                     //fndDfrnc = fndDfrnc1 + fndDfrnc2 + selKey;
                     m_pFoundDifferences->AddItem((LPCTSTR)fndDfrnc);

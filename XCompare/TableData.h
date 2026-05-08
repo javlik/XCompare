@@ -17,16 +17,16 @@ struct Palette
 /** @brief Describes the layout of one loaded Excel sheet (table). */
 struct Table
 {
-    int WorkSheetNumber;  ///< 1-based sheet index within the workbook.
-    long MaxNumberOfRows; ///< Maximum row capacity (used-range upper bound from Excel).
-    long MaxNumberOfCols; ///< Maximum column capacity (used-range upper bound from Excel).
-    long NumberOfRows;    ///< Actual number of data rows (excluding the header row).
-    int FirstRowWithData; ///< 1-based row index of the first data row.
-    int RowWithNames;     ///< 1-based row index of the column-name header row.
-    int NumberOfColumns;  ///< Number of columns present in the sheet.
-    CString Columns[256]; ///< Column header names, indexed 1–NumberOfColumns.
-    bool keys[256];       ///< Per-column flag: true if that column is part of the active key.
-    int keysCnt;          ///< Number of key columns currently selected.
+    int WorkSheetNumber  = 0; ///< 1-based sheet index within the workbook.
+    long MaxNumberOfRows = 0; ///< Maximum row capacity (used-range upper bound from Excel).
+    long MaxNumberOfCols = 0; ///< Maximum column capacity (used-range upper bound from Excel).
+    long NumberOfRows    = 0; ///< Actual number of data rows (excluding the header row).
+    int FirstRowWithData = 0; ///< 1-based row index of the first data row.
+    int RowWithNames     = 0; ///< 1-based row index of the column-name header row.
+    int NumberOfColumns  = 0; ///< Number of columns present in the sheet.
+    CString Columns[256];     ///< Column header names, indexed 1–NumberOfColumns.
+    bool keys[256]  = {};     ///< Per-column flag: true if that column is part of the active key.
+    int keysCnt     = 0;      ///< Number of key columns currently selected.
 };
 
 /** @brief Top-left corner of the visible comparison matrix, in cell-unit coordinates. */
@@ -79,7 +79,7 @@ struct BestKeyComb
 /** @brief Details of the first duplicate key value encountered during uniqueness checking. */
 struct NotUniqueKeys
 {
-    long firstRow;     ///< Row of the first occurrence of the duplicate.
-    long secondRow;    ///< Row of the second occurrence of the duplicate.
-    CString keyString; ///< The duplicated key value (as a string).
+    long firstRow  = 0;    ///< Row of the first occurrence of the duplicate.
+    long secondRow = 0;    ///< Row of the second occurrence of the duplicate.
+    CString keyString;     ///< The duplicated key value (as a string).
 };

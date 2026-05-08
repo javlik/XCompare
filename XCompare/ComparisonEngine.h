@@ -396,7 +396,7 @@ private:
                 do
                 {
                     idx++;
-                    testdata.Format(L"%s_idx%i", szdata, idx);
+                    testdata.Format(L"%s_idx%i", szdata.GetString(), idx);
                 } while (map.Lookup(testdata, (long&)mapIdx));
                 szdata = testdata;
             }

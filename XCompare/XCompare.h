@@ -40,7 +40,7 @@ public:
     // Implementation
 
 public:
-    UINT m_nAppLook; ///< ID of the currently active visual style (persisted in the registry).
+    UINT m_nAppLook = 0; ///< ID of the currently active visual style (persisted in the registry).
     /** @brief Registers the Edit pop-up context menu before the state is loaded. */
     virtual void PreLoadState();
     /** @brief Placeholder for loading custom persistent state (currently empty). */

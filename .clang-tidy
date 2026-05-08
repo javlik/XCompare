@@ -1,0 +1,49 @@
+---
+# Cílené kontroly pro XCompare (MFC/MSVC projekt)
+# Zaměření: mrtvolné výrazy, nevyužité proměnné, const-korektnost, bugprone.
+# Vypnuty kontroly generující falešné pozitivy s MFC makry.
+
+Checks: >
+  clang-analyzer-deadcode.DeadStores,
+  misc-unused-parameters,
+  readability-make-member-function-const,
+  readability-const-return-type,
+  readability-avoid-const-params-in-decls,
+  bugprone-argument-comment,
+  bugprone-assignment-in-if-condition,
+  bugprone-bool-pointer-implicit-conversion,
+  bugprone-branch-clone,
+  bugprone-copy-constructor-init,
+  bugprone-infinite-loop,
+  bugprone-integer-division,
+  bugprone-misplaced-operator-in-strlen-in-alloc,
+  bugprone-signed-char-misuse,
+  bugprone-sizeof-expression,
+  bugprone-string-constructor,
+  bugprone-suspicious-semicolon,
+  bugprone-swapped-arguments,
+  bugprone-too-small-loop-variable,
+  bugprone-unused-return-value,
+  -modernize-*,
+  -google-*,
+  -llvm-*,
+  -fuchsia-*,
+  -android-*,
+  -altera-*,
+  -abseil-*,
+  -hicpp-*,
+  -cppcoreguidelines-*,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-named-parameter,
+  -readability-uppercase-literal-suffix,
+  -clang-diagnostic-*
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: 'XCompare\.(ComparisonEngine|KeyFinder|ComparisonMatrix|TableData|Constants|ExcelConnector)\.h'
+
+CheckOptions:
+  - key: misc-unused-parameters.StrictMode
+    value: '0'
+...
