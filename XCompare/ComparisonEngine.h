@@ -79,167 +79,17 @@ public:
      * @brief Builds the concatenated key string array for table 1 and the lookup map.
      * @return 0 on success, 1 if duplicate keys were found in table 1.
      */
-    int createKeyArrays1()
-    {
-        m_NotUniqueKeys1 = { 0, 0, L"" };
-        long mapIdx;
-        CString szdata;
-        long idx = 0;
-        m_Map1.RemoveAll();
-        CString testdata;
-        m_pszKeyArr11.assign(m_Table1.NumberOfRows + 2, L"");
-        m_pbKeyMissing1.assign(m_Table1.NumberOfRows + 2, false);
-        int prgHlpr = 0, prgHlpr0 = 0;
-        for (int i_i = m_Table1.FirstRowWithData; i_i <= m_Table1.NumberOfRows; i_i++)
-        {
-            prgHlpr0 = 100 * i_i / m_Table1.NumberOfRows;
-            if (prgHlpr0 > prgHlpr)
-            {
-                prgHlpr = prgHlpr0;
-                ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr);
-            }
-            szdata = L"";
-            for (int k_i = 0; k_i < m_nKeyPairCounter; k_i++)
-            {
-                int nthKey = getNthKey(1, k_i);
-                if (nthKey)
-                    szdata += m_pExcel1->getCellValue(nthKey, i_i);
-            }
-            m_pbKeyMissing1[i_i] = false;
-            if (m_bUseIndexes)
-            {
-                idx = 0;
-                do {
-                    idx++;
-                    testdata.Format(L"%s_idx%i", szdata, idx);
-                } while (m_Map1.Lookup(testdata, (long&)mapIdx));
-                szdata = testdata;
-            }
-            else
-            {
-                if (m_Map1.Lookup(szdata, (long&)mapIdx))
-                {
-                    m_NotUniqueKeys1 = { i_i, mapIdx, szdata };
-                    m_Map1.RemoveAll();
-                    return 1;
-                }
-            }
-            m_pszKeyArr11[i_i] = szdata;
-            m_Map1.SetAt(szdata, i_i);
-        }
-        ::PostMessage(m_hWnd, CM_KEYS1_DONE, 0, 0);
-        return 0;
-    }
-
+    int createKeyArrays1() { return createKeyArraysImpl(1); }
     /**
      * @brief Builds the concatenated key string array for table 2 and the lookup map.
      * @return 0 on success, 2 if duplicate keys were found in table 2.
      */
-    int createKeyArrays2()
-    {
-        m_NotUniqueKeys2 = { 0, 0, L"" };
-        long mapIdx;
-        CString szdata;
-        long idx = 0;
-        m_Map2.RemoveAll();
-        CString testdata;
-        m_pszKeyArr21.assign(m_Table2.NumberOfRows + 2, L"");
-        m_pbKeyMissing2.assign(m_Table2.NumberOfRows + 2, false);
-        int prgHlpr = 0, prgHlpr0 = 0;
-        for (int i_i = m_Table2.FirstRowWithData; i_i <= m_Table2.NumberOfRows; i_i++)
-        {
-            prgHlpr0 = 100 * i_i / m_Table2.NumberOfRows;
-            if (prgHlpr0 > prgHlpr)
-            {
-                prgHlpr = prgHlpr0;
-                ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr);
-            }
-            szdata = L"";
-            for (int k_i = 0; k_i < m_nKeyPairCounter; k_i++)
-            {
-                int nthKey = getNthKey(2, k_i);
-                if (nthKey)
-                    szdata += m_pExcel2->getCellValue(nthKey, i_i);
-            }
-            m_pbKeyMissing2[i_i] = false;
-            if (m_bUseIndexes)
-            {
-                idx = 0;
-                do {
-                    idx++;
-                    testdata.Format(L"%s_idx%i", szdata, idx);
-                } while (m_Map2.Lookup(testdata, (long&)mapIdx));
-                szdata = testdata;
-            }
-            else
-            {
-                if (m_Map2.Lookup(szdata, (long&)mapIdx))
-                {
-                    m_NotUniqueKeys2 = { i_i, mapIdx, szdata };
-                    m_Map2.RemoveAll();
-                    return 2;
-                }
-            }
-            m_pszKeyArr21[i_i] = szdata;
-            m_Map2.SetAt(szdata, i_i);
-        }
-        ::PostMessage(m_hWnd, CM_KEYS2_DONE, 0, 0);
-        return 0;
-    }
+    int createKeyArrays2() { return createKeyArraysImpl(2); }
 
     /** @brief Verifies that every key string in table 1 is unique. @return @c true if all keys are unique. */
-    bool checkKeysUniqueness1()
-    {
-        int prgHlpr = 0, prgHlpr0 = 0;
-        CString szTaken_A, szTaken_B;
-        for (int i0 = m_Table1.FirstRowWithData; i0 <= m_Table1.NumberOfRows; i0++)
-        {
-            prgHlpr0 = 100 * i0 / m_Table1.NumberOfRows;
-            if (prgHlpr0 > prgHlpr)
-            {
-                prgHlpr = prgHlpr0;
-                ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, prgHlpr);
-            }
-            szTaken_A = m_pszKeyArr11[i0];
-            for (int i1 = i0 + 1; i1 <= m_Table1.NumberOfRows; i1++)
-            {
-                szTaken_B = m_pszKeyArr11[i1];
-                if (szTaken_A == szTaken_B)
-                {
-                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS, 0, 100);
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
+    bool checkKeysUniqueness1() { return checkKeysUniquenessImpl(1); }
     /** @brief Verifies that every key string in table 2 is unique. @return @c true if all keys are unique. */
-    bool checkKeysUniqueness2()
-    {
-        int prgHlpr = 0, prgHlpr0 = 0;
-        CString szTaken_A, szTaken_B;
-        for (int i0 = m_Table2.FirstRowWithData; i0 <= m_Table2.NumberOfRows; i0++)
-        {
-            prgHlpr0 = 100 * i0 / m_Table2.NumberOfRows;
-            if (prgHlpr0 > prgHlpr)
-            {
-                prgHlpr = prgHlpr0;
-                ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, prgHlpr);
-            }
-            szTaken_A = m_pszKeyArr21[i0];
-            for (int i1 = i0 + 1; i1 <= m_Table2.NumberOfRows; i1++)
-            {
-                szTaken_B = m_pszKeyArr21[i1];
-                if (szTaken_A == szTaken_B)
-                {
-                    ::PostMessage(m_hWnd, CM_UPDATE_PROGRESS2, 0, 100);
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    bool checkKeysUniqueness2() { return checkKeysUniquenessImpl(2); }
 
     // --- First pass (main comparison algorithm) ---
     /**
@@ -495,6 +345,102 @@ public:
 
 private:
     // --- Internal helpers ---
+    /** @brief Shared implementation for createKeyArrays1() and createKeyArrays2(). */
+    int createKeyArraysImpl(int table)
+    {
+        const bool isT1 = (table == 1);
+        NotUniqueKeys&                      notUniq    = isT1 ? m_NotUniqueKeys1 : m_NotUniqueKeys2;
+        const Table&                        tbl        = isT1 ? m_Table1         : m_Table2;
+        CMap<CString, LPCTSTR, long, long>& map        = isT1 ? m_Map1           : m_Map2;
+        std::vector<CString>&               keyArr     = isT1 ? m_pszKeyArr11    : m_pszKeyArr21;
+        std::vector<bool>&                  keyMissing = isT1 ? m_pbKeyMissing1  : m_pbKeyMissing2;
+        ExcelConnector* const               pExcel     = isT1 ? m_pExcel1        : m_pExcel2;
+        const UINT msgProgress = isT1 ? CM_UPDATE_PROGRESS : CM_UPDATE_PROGRESS2;
+        const UINT msgDone     = isT1 ? CM_KEYS1_DONE      : CM_KEYS2_DONE;
+        const int  dupCode     = isT1 ? 1                  : 2;
+
+        notUniq = { 0, 0, L"" };
+        long mapIdx;
+        CString szdata;
+        long idx = 0;
+        map.RemoveAll();
+        CString testdata;
+        keyArr.assign(tbl.NumberOfRows + 2, L"");
+        keyMissing.assign(tbl.NumberOfRows + 2, false);
+        int prgHlpr = 0, prgHlpr0 = 0;
+        for (int i_i = tbl.FirstRowWithData; i_i <= tbl.NumberOfRows; i_i++)
+        {
+            prgHlpr0 = 100 * i_i / tbl.NumberOfRows;
+            if (prgHlpr0 > prgHlpr)
+            {
+                prgHlpr = prgHlpr0;
+                ::PostMessage(m_hWnd, msgProgress, 0, prgHlpr);
+            }
+            szdata = L"";
+            for (int k_i = 0; k_i < m_nKeyPairCounter; k_i++)
+            {
+                int nthKey = getNthKey(table, k_i);
+                if (nthKey)
+                    szdata += pExcel->getCellValue(nthKey, i_i);
+            }
+            keyMissing[i_i] = false;
+            if (m_bUseIndexes)
+            {
+                idx = 0;
+                do {
+                    idx++;
+                    testdata.Format(L"%s_idx%i", szdata, idx);
+                } while (map.Lookup(testdata, (long&)mapIdx));
+                szdata = testdata;
+            }
+            else
+            {
+                if (map.Lookup(szdata, (long&)mapIdx))
+                {
+                    notUniq = { i_i, mapIdx, szdata };
+                    map.RemoveAll();
+                    return dupCode;
+                }
+            }
+            keyArr[i_i] = szdata;
+            map.SetAt(szdata, i_i);
+        }
+        ::PostMessage(m_hWnd, msgDone, 0, 0);
+        return 0;
+    }
+
+    /** @brief Shared implementation for checkKeysUniqueness1() and checkKeysUniqueness2(). */
+    bool checkKeysUniquenessImpl(int table)
+    {
+        const bool isT1 = (table == 1);
+        const Table&                tbl    = isT1 ? m_Table1      : m_Table2;
+        const std::vector<CString>& keyArr = isT1 ? m_pszKeyArr11 : m_pszKeyArr21;
+        const UINT msgProgress = isT1 ? CM_UPDATE_PROGRESS : CM_UPDATE_PROGRESS2;
+
+        int prgHlpr = 0, prgHlpr0 = 0;
+        CString szTaken_A, szTaken_B;
+        for (int i0 = tbl.FirstRowWithData; i0 <= tbl.NumberOfRows; i0++)
+        {
+            prgHlpr0 = 100 * i0 / tbl.NumberOfRows;
+            if (prgHlpr0 > prgHlpr)
+            {
+                prgHlpr = prgHlpr0;
+                ::PostMessage(m_hWnd, msgProgress, 0, prgHlpr);
+            }
+            szTaken_A = keyArr[i0];
+            for (int i1 = i0 + 1; i1 <= tbl.NumberOfRows; i1++)
+            {
+                szTaken_B = keyArr[i1];
+                if (szTaken_A == szTaken_B)
+                {
+                    ::PostMessage(m_hWnd, msgProgress, 0, 100);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     /** @brief Reads each cell in table 1 and stores its first character in m_pchMainArr1. */
     void makeCharArr1()
     {
