@@ -267,3 +267,8 @@ ModelManifest.xml
 *.svclog
 *.scc
 *.exe
+
+# Resource Compiler (rc.exe) temporary preprocessed files
+# (occasionally left behind in source dir after interrupted builds)
+RC[a-zA-Z0-9][a-zA-Z0-9]*
+RD[a-zA-Z0-9][a-zA-Z0-9]*
