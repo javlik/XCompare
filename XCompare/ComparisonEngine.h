@@ -108,6 +108,7 @@ public:
     void firstPass(ComparisonMatrix& matrix, bool bAutoMark, bool bIn2file, std::vector<bool>& pbGreenClms1,
                    std::vector<bool>& pbGreenClms2, int& nEffMax, bool& bDoAutoMark)
     {
+        // Ensure the cached first-character arrays exist before comparing rows.
         if (!m_bPrereq1valid)
             makePrereq1();
         if (!m_bPrereq2valid)
@@ -123,6 +124,7 @@ public:
 
         if (bAutoMark)
         {
+            // Walk table 1, locate the row with the same key in table 2, and compare every column pair.
             for (long i1 = m_Table1.FirstRowWithData; i1 <= m_Table1.NumberOfRows; i1++)
             {
                 prgHlpr0 = 99 * i1 / m_Table1.NumberOfRows;
@@ -144,6 +146,7 @@ public:
                         for (int i4 = 1; i4 <= m_Table2.NumberOfColumns; i4++)
                         {
                             firstChar2 = m_pchMainArr2[fchar2_y + i4];
+                            // The cached first character avoids most expensive Excel value reads.
                             if (firstChar1 == firstChar2)
                             {
                                 if (firstChar1 == 0 ||
@@ -153,6 +156,7 @@ public:
                                 }
                                 else
                                 {
+                                    // Same-named columns with different values are marked for diff highlighting.
                                     if (m_Table1.Columns[i3] == m_Table2.Columns[i4])
                                     {
                                         m_pchMainArr1[fchar1_y + i3] = 1;
@@ -162,6 +166,7 @@ public:
                             }
                             else
                             {
+                                // A different first character is already enough to mark same-named columns as changed.
                                 if (m_Table1.Columns[i3] == m_Table2.Columns[i4])
                                 {
                                     m_pchMainArr1[fchar1_y + i3] = 1;
@@ -173,11 +178,13 @@ public:
                 }
                 else
                 {
+                    // This table-1 row has no counterpart in table 2.
                     m_pbKeyMissing1[i1] = true;
                 }
             }
             if (bIn2file)
             {
+                // Optionally mark rows that exist only in table 2.
                 prgHlpr = 0;
                 prgHlpr0 = 0;
                 for (long i1_2 = m_Table2.FirstRowWithData; i1_2 <= m_Table2.NumberOfRows; i1_2++)
@@ -197,6 +204,7 @@ public:
         }
         else
         {
+            // Same comparison pass without collecting row/column diff markers.
             for (long i1 = m_Table1.FirstRowWithData; i1 <= m_Table1.NumberOfRows; i1++)
             {
                 prgHlpr0 = 100 * i1 / m_Table1.NumberOfRows;
@@ -218,6 +226,7 @@ public:
                         for (int i4 = 1; i4 <= m_Table2.NumberOfColumns; i4++)
                         {
                             firstChar2 = m_pchMainArr2[fchar2_y + i4];
+                            // Count a column pair when all key-matched rows share the same value.
                             if (firstChar1 == firstChar2)
                             {
                                 if (firstChar1 == 0 ||
@@ -230,6 +239,7 @@ public:
             }
         }
 
+        // Columns are green when a column pair matched for every key-matched row.
         pbGreenClms1.assign(m_Table1.NumberOfColumns + 2, false);
         pbGreenClms2.assign(m_Table2.NumberOfColumns + 2, false);
         for (int i_c = 1; i_c <= m_Table2.NumberOfColumns; i_c++)
